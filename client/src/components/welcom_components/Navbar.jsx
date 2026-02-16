@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import logoImage from '../../assets/images/logo6.png'; // Import your logo
+
 const Navbar = ({ 
   location, 
   navItems, 
@@ -14,11 +17,28 @@ const Navbar = ({
                     transition-all duration-500 ease-out
                     ${hasAnimated ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
       
-      {/* Logo */}
-      <h1 className="text-white font-bold text-xl sm:text-2xl font-robot tracking-tight z-50 whitespace-nowrap relative group">
-        <span className="relative z-10">WeekeyOsint</span>
-        <div className="absolute inset-0 blur-xl bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
-      </h1>
+      {/* Logo and Brand - Clickable to home */}
+      <button
+        onClick={() => onNavClick(navItems[0])}
+        className="flex items-center gap-3 group"
+      >
+        {/* Logo Image */}
+        <div className="relative w-8 h-8 md:w-10 md:h-10 overflow-hidden">
+          <img 
+            src={logoImage} 
+            alt="WeekeyOsint" 
+            className="w-full h-full object-contain"
+          />
+          {/* Optional glow effect on hover */}
+          <div className="absolute inset-0 blur-xl bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+        </div>
+        
+        {/* Brand Name */}
+        <h1 className="text-white font-bold text-xl sm:text-2xl font-robot tracking-tight relative">
+          <span className="relative z-10">WeekeyOsint</span>
+          <div className="absolute inset-0 blur-xl bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+        </h1>
+      </button>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6 lg:gap-10">
