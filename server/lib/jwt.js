@@ -24,6 +24,7 @@ export const generateTokens = (user) => {
   );
 
   return { token, refreshToken };
+
 };
 
 export const verifyToken = (token) => {
