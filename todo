@@ -1,5 +1,4 @@
 TASKS [*=done / -=not yet]
-
     __________________________________________________________________________________________
 
     [*] install all project packages React NextJs, with testing for the API connection between
@@ -18,7 +17,7 @@ TASKS [*=done / -=not yet]
         manager, and JWT token validation, not fully secured, but it works :)
     __________________________________________________________________________________________
 
-    [-] configure database by install MariaDB in a docker container using docker composer
+    [*] configure database by install MariaDB in a docker container using docker composer
         then fill databse with random and check the connection between An API, and fetch data        
         in the web page interface(react)
     __________________________________________________________________________________________
