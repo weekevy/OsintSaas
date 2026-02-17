@@ -1,6 +1,7 @@
 # do what ever you want in here
 # PLEASE DON'T UPLOAD ANY MARKDOWN
 --
+new notes from 12 to 15
 # you can note ideas over here 
 .....
 1.correct password validation cuz now the system validates only length 
@@ -16,7 +17,9 @@
 11. https://osintframework.com/: a groupment  of tool we can inspire from it
 12.in the version i will present we can run tools like dns look up,whois in seperate container then collect result from them using n8n i think the the framwork guy arson is doing it  
 13.we can use telegram to store previous company results to deliver it to next person searching for same company 
-14.
+14.we should switch the scroll bar color to be more clear cuz it a problem for pepole with weak sights like me
+15.we can use 5sim api to see if the number from them or no cuz 5sim one of the most famous temprary mobile numbers provider or we can use true caller or twillo 
+
 # 
 
 
