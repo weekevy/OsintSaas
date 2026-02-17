@@ -1,9 +1,9 @@
 import RiskCircle from './RiskCircle';
-import ThreatCurve from './ThreatCurve';
 import AlertsSection from './AlertsSection';
 import RecentScans from './RecentScans';
 import ThreatFeed from './ThreatFeed';
 import QuickTools from './QuickTools';
+import CurrentProjects from './CurrentProjects';
 
 const DashboardHome = ({ 
   riskScore, 
@@ -13,7 +13,9 @@ const DashboardHome = ({
   alerts, 
   timeRange, 
   onTimeRangeChange,
-  onAnalyzeClick 
+  onAnalyzeClick,
+  onProjectSelect,
+  selectedProjectId // Add this prop
 }) => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
@@ -44,14 +46,17 @@ const DashboardHome = ({
               </button>
             </div>
           </div>
-          <ThreatCurve 
-            timeRange={timeRange}
-            onTimeRangeChange={onTimeRangeChange}
+          
+          {/* Current Projects with selection */}
+          <CurrentProjects 
+            onSelectProject={onProjectSelect}
+            selectedProjectId={selectedProjectId}
+            limit={4}
           />
         </div>
       </div>
 
-      {/* Alerts Section */}
+      {/* Alerts Section - Shows project-specific alerts */}
       <AlertsSection alerts={alerts} />
 
       {/* Recent Scans & Threat Feed */}
