@@ -9,7 +9,6 @@ export { default as AnalyticsDashboard } from './AnalyticsDashboard';
 
 // Risk components
 export { default as RiskCircle } from './RiskCircle';
-export { default as ThreatCurve } from './ThreatCurve';
 export { default as AlertsSection } from './AlertsSection';
 export { default as RecentScans } from './RecentScans';
 export { default as ThreatFeed } from './ThreatFeed';

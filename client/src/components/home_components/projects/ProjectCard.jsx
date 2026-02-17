@@ -1,7 +1,6 @@
 import React from 'react';
 
 const ProjectCard = ({ project, onEdit, onDelete, onView }) => {
-  // Debug: Log when component renders
   console.log('🎴 ProjectCard rendering for:', project?.name);
   console.log('   Handlers - onEdit:', !!onEdit, 'onDelete:', !!onDelete, 'onView:', !!onView);
 
@@ -26,15 +25,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }) => {
     }
   };
 
-  // Direct click handlers
   const handleEdit = (e) => {
     e.preventDefault();
     e.stopPropagation();
     console.log('✏️ Edit button clicked for:', project?.name);
     if (onEdit && typeof onEdit === 'function') {
       onEdit(project);
-    } else {
-      console.error('❌ onEdit is not a function!', onEdit);
     }
   };
 
@@ -44,8 +40,6 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }) => {
     console.log('🗑️ Delete button clicked for:', project?.name);
     if (onDelete && typeof onDelete === 'function') {
       onDelete(project);
-    } else {
-      console.error('❌ onDelete is not a function!', onDelete);
     }
   };
 
@@ -55,8 +49,6 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }) => {
     console.log('👁️ View button clicked for:', project?.name);
     if (onView && typeof onView === 'function') {
       onView(project);
-    } else {
-      console.log('ℹ️ onView handler not provided');
     }
   };
 
@@ -115,10 +107,17 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }) => {
             </svg>
             <span className="text-white/60 text-sm">{project.dueDate || 'No date'}</span>
           </div>
+          {/* Asset count indicator */}
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span className="text-white/60 text-sm">{project.asset_count || 0} assets</span>
+          </div>
         </div>
       </div>
 
-      {/* Action Buttons - Direct handlers */}
+      {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-4 border-t border-white/10">
         {/* View Button */}
         <button

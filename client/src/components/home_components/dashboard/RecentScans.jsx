@@ -1,4 +1,4 @@
-const RecentScans = ({ scans }) => {
+const RecentScans = ({ scans = [] }) => {
   const getRiskColor = (score) => {
     if (score >= 75) return "text-red-500";
     if (score >= 50) return "text-orange-500";
@@ -30,7 +30,11 @@ const RecentScans = ({ scans }) => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       );
-      default: return null;
+      default: return (
+        <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      );
     }
   };
 
@@ -43,7 +47,7 @@ const RecentScans = ({ scans }) => {
         Recent Investigations
       </h4>
       
-      <div className="space-y-2 lg:space-y-3">
+      <div className="space-y-2 lg:space-y-3 min-h-[200px]">
         {scans && scans.length > 0 ? (
           scans.map((scan) => (
             <div key={scan.id} className="flex items-center justify-between p-2 lg:p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer">
@@ -67,8 +71,15 @@ const RecentScans = ({ scans }) => {
             </div>
           ))
         ) : (
-          <div className="p-4 text-center">
-            <p className="text-white/60">No recent scans</p>
+          <div className="flex flex-col items-center justify-center h-[200px] text-center">
+            {/* Empty state illustration */}
+            <div className="w-16 h-16 mb-3 rounded-full bg-white/5 flex items-center justify-center">
+              <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-white/40 text-sm">No investigations yet</p>
+            <p className="text-white/20 text-xs mt-1">Your recent scans will appear here</p>
           </div>
         )}
       </div>

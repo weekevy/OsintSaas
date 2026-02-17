@@ -54,7 +54,7 @@ const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick 
       <div className="relative w-full max-w-7xl mx-auto">
         <div className="flex flex-col items-center text-center">
           {/* Badge */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 mb-8
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 mb-8 mt-5
                           transition-all duration-700 delay-100
                           ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
             <span className="relative flex h-2 w-2">

@@ -5,7 +5,7 @@ import {
   MobileSidebar,
   TopBar,
   DashboardHome,
-  AnalysisDashboard,
+  ScanDashboard,
   ProjectsDashboard,
   ReportsDashboard,
   TeamDashboard,
@@ -29,7 +29,7 @@ const Home = () => {
   const [timeRange, setTimeRange] = useState("week");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // New state for project selection
+  // State for project selection
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectRiskScore, setProjectRiskScore] = useState(0);
   const [projectAlerts, setProjectAlerts] = useState([]);
@@ -37,20 +37,20 @@ const Home = () => {
   // Mock data
   useEffect(() => {
     setRecentScans([
-      { id: 1, target: "suspicious-company.com", type: "url", date: "2 min ago", risk: 85 },
-      { id: 2, target: "hr@scam-recruitment.org", type: "email", date: "15 min ago", risk: 92 },
-      { id: 3, target: "fake-resume.pdf", type: "file", date: "1 hour ago", risk: 67 },
-      { id: 4, target: "secure-bank-login.com", type: "url", date: "3 hours ago", risk: 95 },
+      // { id: 1, target: "suspicious-company.com", type: "url", date: "2 min ago", risk: 85 },
+      // { id: 2, target: "hr@scam-recruitment.org", type: "email", date: "15 min ago", risk: 92 },
+      // { id: 3, target: "fake-resume.pdf", type: "file", date: "1 hour ago", risk: 67 },
+      // { id: 4, target: "secure-bank-login.com", type: "url", date: "3 hours ago", risk: 95 },
     ]);
 
     setAlerts([
-      { id: 1, severity: "critical", message: "This domain is associated with known phishing campaigns", source: "Threat Intelligence", time: "2 min ago", projectId: 1 },
-      { id: 2, severity: "high", message: "Email address found in 3 data breaches", source: "Breach Database", time: "15 min ago", projectId: 2 },
-      { id: 3, severity: "warning", message: "SSL certificate expired 45 days ago", source: "Certificate Transparency", time: "1 hour ago", projectId: 1 },
-      { id: 4, severity: "medium", message: "Unusual login patterns detected", source: "Activity Monitor", time: "30 min ago", projectId: 3 },
+      // { id: 1, severity: "critical", message: "This domain is associated with known phishing campaigns", source: "Threat Intelligence", time: "2 min ago", projectId: 1 },
+      // { id: 2, severity: "high", message: "Email address found in 3 data breaches", source: "Breach Database", time: "15 min ago", projectId: 2 },
+      // { id: 3, severity: "warning", message: "SSL certificate expired 45 days ago", source: "Certificate Transparency", time: "1 hour ago", projectId: 1 },
+      // { id: 4, severity: "medium", message: "Unusual login patterns detected", source: "Activity Monitor", time: "30 min ago", projectId: 3 },
     ]);
 
-    setRiskScore(78);
+    setRiskScore(1);
     setProjectRiskScore(78);
     setProjectAlerts(alerts);
   }, []);
@@ -98,8 +98,8 @@ const Home = () => {
       setIsAnalyzing(false);
       setSearchInput("");
       
-      // Switch to analysis tab to show results
-      setActiveTab("analysis");
+      // Switch to scan tab to show results
+      setActiveTab("scan");
     }, 2000);
   };
 
@@ -165,8 +165,8 @@ const Home = () => {
       )
     },
     { 
-      id: "analysis", 
-      label: "Analysis", 
+      id: "scan", 
+      label: "Scan", 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -191,42 +191,42 @@ const Home = () => {
         </svg>
       )
     },
-    { 
-      id: "team", 
-      label: "Team", 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      )
-    },
-    { 
-      id: "integrations", 
-      label: "Integrations", 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-        </svg>
-      )
-    },
-    { 
-      id: "apis", 
-      label: "APIs", 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: "analytics", 
-      label: "Analytics", 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      )
-    }
+    // { 
+    //   id: "team", 
+    //   label: "Team", 
+    //   icon: (
+    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    //     </svg>
+    //   )
+    // },
+    // { 
+    //   id: "integrations", 
+    //   label: "Integrations", 
+    //   icon: (
+    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+    //     </svg>
+    //   )
+    // },
+    // { 
+    //   id: "apis", 
+    //   label: "APIs", 
+    //   icon: (
+    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    //     </svg>
+    //   )
+    // },
+    // { 
+    //   id: "analytics", 
+    //   label: "Analytics", 
+    //   icon: (
+    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    //     </svg>
+    //   )
+    // }
   ];
 
   // Render the active dashboard
@@ -242,14 +242,14 @@ const Home = () => {
             alerts={projectAlerts}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
-            onAnalyzeClick={() => setActiveTab("analysis")}
+            onAnalyzeClick={() => setActiveTab("scan")}
             onProjectSelect={handleProjectSelect}
             selectedProjectId={selectedProject?.id}
           />
         );
-      case "analysis":
+      case "scan":
         return (
-          <AnalysisDashboard 
+          <ScanDashboard 
             searchInput={searchInput}
             onSearchChange={setSearchInput}
             searchType={searchType}
@@ -258,6 +258,7 @@ const Home = () => {
             isAnalyzing={isAnalyzing}
             recentScans={recentScans}
             alerts={projectAlerts}
+            selectedProject={selectedProject}
           />
         );
       case "projects":
@@ -281,7 +282,7 @@ const Home = () => {
           alerts={projectAlerts}
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange}
-          onAnalyzeClick={() => setActiveTab("analysis")}
+          onAnalyzeClick={() => setActiveTab("scan")}
           onProjectSelect={handleProjectSelect}
           selectedProjectId={selectedProject?.id}
         />;
