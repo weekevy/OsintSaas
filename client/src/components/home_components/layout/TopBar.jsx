@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import UserMenu from './UserMenu';
 
 const TopBar = ({ 
@@ -12,11 +12,40 @@ const TopBar = ({
   onLogout,
   alertsCount,
   activeTab,
-  onTabChange
+  onTabChange,
+  isMobileMenuOpen
 }) => {
   const [searchTypeDropdownOpen, setSearchTypeDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  
+  // Refs for click outside detection
+  const searchTypeRef = useRef(null);
+  const notificationsRef = useRef(null);
+  const quickActionsRef = useRef(null);
+
+  // Handle click outside for all dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Search type dropdown
+      if (searchTypeRef.current && !searchTypeRef.current.contains(event.target)) {
+        setSearchTypeDropdownOpen(false);
+      }
+      // Notifications dropdown
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+      // Quick actions dropdown
+      if (quickActionsRef.current && !quickActionsRef.current.contains(event.target)) {
+        setQuickActionsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const getSearchTypeIcon = (type) => {
     switch(type) {
@@ -39,8 +68,76 @@ const TopBar = ({
     }
   };
 
+  // Professional SVG Icons for Quick Actions
+  const getQuickActionIcon = (action) => {
+    switch(action) {
+      case 'Generate Report':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" 
+              stroke="url(#gradient-report)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="gradient-report" x1="3.75" y1="12" x2="20.25" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#A855F7"/>
+                <stop offset="1" stopColor="#3B82F6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        );
+      case 'New Investigation':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-3m0 0h-3m3 0v3m0-3v-3" 
+              stroke="url(#gradient-investigation)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="gradient-investigation" x1="3" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#3B82F6"/>
+                <stop offset="1" stopColor="#06B6D4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        );
+      case 'Export Data':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" 
+              stroke="url(#gradient-export)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="gradient-export" x1="3" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#EC4899"/>
+                <stop offset="1" stopColor="#A855F7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        );
+      case 'Invite Team Member':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" 
+              stroke="url(#gradient-team)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="gradient-team" x1="4" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#06B6D4"/>
+                <stop offset="1" stopColor="#3B82F6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const quickActions = [
+    { label: 'Generate Report', action: 'Generate Report' },
+    { label: 'New Investigation', action: 'New Investigation' },
+    { label: 'Export Data', action: 'Export Data' },
+    { label: 'Invite Team Member', action: 'Invite Team Member' },
+  ];
+
   return (
-    <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-4 sm:px-6 lg:px-8 py-4 bg-black/40 backdrop-blur-xl border-b border-white/10 gap-4 relative z-[9998]">
+    <header className={`flex flex-col lg:flex-row justify-between items-start lg:items-center px-4 sm:px-6 lg:px-8 py-4 bg-black/40 backdrop-blur-xl border-b border-white/10 gap-4 
+      ${isMobileMenuOpen ? 'relative z-[1]' : 'relative z-[9998]'}`}>
       
       {/* Mobile Menu Button */}
       <div className="flex items-center justify-between w-full lg:hidden">
@@ -62,8 +159,8 @@ const TopBar = ({
       <div className="flex-1 w-full lg:max-w-2xl relative z-[9999]">
         <div className="flex items-center bg-white/5 rounded-2xl border border-white/10 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
           
-          {/* Search Type Dropdown */}
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
+          {/* Search Type Dropdown - With ref */}
+          <div className="relative" ref={searchTypeRef}>
             <button 
               onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
               className="px-3 sm:px-4 py-2.5 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
@@ -76,24 +173,21 @@ const TopBar = ({
             </button>
             
             {searchTypeDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-[9997]" onClick={() => setSearchTypeDropdownOpen(false)} />
-                <div className="absolute top-full left-0 mt-2 w-40 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-                  {['url', 'email', 'file'].map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        onSearchTypeChange(type);
-                        setSearchTypeDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-3 first:rounded-t-xl last:rounded-b-xl transition-colors"
-                    >
-                      {getSearchTypeIcon(type)}
-                      <span>{type}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="absolute top-full left-0 mt-2 w-40 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+                {['url', 'email', 'file'].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      onSearchTypeChange(type);
+                      setSearchTypeDropdownOpen(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-3 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                  >
+                    {getSearchTypeIcon(type)}
+                    <span>{type}</span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -135,10 +229,11 @@ const TopBar = ({
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 ml-auto">
+      <div className={`flex items-center gap-1 sm:gap-2 lg:gap-3 ml-auto 
+        ${isMobileMenuOpen ? 'relative z-[1]' : 'relative z-[9999]'}`}>
         
-        {/* Notifications */}
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
+        {/* Notifications - With ref */}
+        <div className="relative" ref={notificationsRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all relative"
@@ -152,40 +247,37 @@ const TopBar = ({
           </button>
 
           {notificationsOpen && (
-            <>
-              <div className="fixed inset-0 z-[9997]" onClick={() => setNotificationsOpen(false)} />
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-                <div className="p-4 border-b border-white/10">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-white font-semibold">Notifications</h3>
-                    <button className="text-white/40 hover:text-white text-sm">Mark all as read</button>
-                  </div>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {[1,2,3].map((i) => (
-                    <div key={i} className="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 mt-2 bg-purple-500 rounded-full" />
-                        <div className="flex-1">
-                          <p className="text-white text-sm">New threat detected in your recent scan</p>
-                          <p className="text-white/40 text-xs mt-1">5 min ago</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-3 border-t border-white/10">
-                  <button className="w-full text-center text-white/60 hover:text-white text-sm py-2">
-                    View all notifications
-                  </button>
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white font-semibold">Notifications</h3>
+                  <button className="text-white/40 hover:text-white text-sm">Mark all as read</button>
                 </div>
               </div>
-            </>
+              <div className="max-h-96 overflow-y-auto">
+                {[1,2,3].map((i) => (
+                  <div key={i} className="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 mt-2 bg-purple-500 rounded-full" />
+                      <div className="flex-1">
+                        <p className="text-white text-sm">New threat detected in your recent scan</p>
+                        <p className="text-white/40 text-xs mt-1">5 min ago</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 border-t border-white/10">
+                <button className="w-full text-center text-white/60 hover:text-white text-sm py-2">
+                  View all notifications
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
+        {/* Quick Actions - With ref */}
+        <div className="relative" ref={quickActionsRef}>
           <button
             onClick={() => setQuickActionsOpen(!quickActionsOpen)}
             className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all"
@@ -196,30 +288,24 @@ const TopBar = ({
           </button>
 
           {quickActionsOpen && (
-            <>
-              <div className="fixed inset-0 z-[9997]" onClick={() => setQuickActionsOpen(false)} />
-              <div className="absolute right-0 mt-2 w-64 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-                <div className="p-3 border-b border-white/10">
-                  <h3 className="text-white font-semibold">Quick Actions</h3>
-                </div>
-                <div className="p-2">
-                  {[
-                    { icon: '📊', label: 'Generate Report' },
-                    { icon: '🔍', label: 'New Investigation' },
-                    { icon: '📤', label: 'Export Data' },
-                    { icon: '👥', label: 'Invite Team Member' },
-                  ].map((action, i) => (
-                    <button
-                      key={i}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-xl transition-all"
-                    >
-                      <span>{action.icon}</span>
-                      <span>{action.label}</span>
-                    </button>
-                  ))}
-                </div>
+            <div className="absolute right-0 mt-2 w-64 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+              <div className="p-3 border-b border-white/10">
+                <h3 className="text-white font-semibold">Quick Actions</h3>
               </div>
-            </>
+              <div className="p-2">
+                {quickActions.map((action, i) => (
+                  <button
+                    key={i}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-xl transition-all group"
+                  >
+                    <span className="text-purple-400 group-hover:scale-110 transition-transform">
+                      {getQuickActionIcon(action.action)}
+                    </span>
+                    <span>{action.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
