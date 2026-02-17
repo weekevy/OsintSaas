@@ -1,19 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 
 const ProfileTab = ({ isLoading, setIsLoading }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
+    firstName: '',
+    lastName: '',
+    email: '',
     bio: '',
-    company: '',
-    jobTitle: '',
+    title: '',
     phone: '',
     location: '',
     website: '',
+    linkedin: '',
+    twitter: '',
+    github: '',
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Load user data when component mounts
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const userData = data.user;
+          setFormData({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            bio: userData.bio || '',
+            title: userData.title || '',
+            phone: userData.phone || '',
+            location: userData.location || '',
+            website: userData.website || '',
+            linkedin: userData.social?.linkedin || '',
+            twitter: userData.social?.twitter || '',
+            github: userData.social?.github || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,21 +64,30 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
+    setSuccess('');
     
     try {
-      // API call to update profile
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        // Show success message
-        console.log('Profile updated');
+        setSuccess('Profile updated successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -46,6 +96,18 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <button type="submit" id="save-settings" className="hidden" />
+
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <p className="text-green-400 text-sm">{success}</p>
+        </div>
+      )}
 
       {/* Avatar Section */}
       <div className="flex items-center gap-6">
@@ -101,39 +163,18 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
             onChange={handleChange}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
             placeholder="john@example.com"
+            disabled
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white/60 cursor-not-allowed"
           />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-white/80 text-sm font-medium mb-2">Bio</label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            rows="3"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300 resize-none"
-            placeholder="Tell us about yourself..."
-          />
+          <p className="text-white/40 text-xs mt-1">Email cannot be changed</p>
         </div>
 
         <div>
-          <label className="block text-white/80 text-sm font-medium mb-2">Company</label>
+          <label className="block text-white/80 text-sm font-medium mb-2">Title</label>
           <input
             type="text"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
-            placeholder="Acme Inc."
-          />
-        </div>
-
-        <div>
-          <label className="block text-white/80 text-sm font-medium mb-2">Job Title</label>
-          <input
-            type="text"
-            name="jobTitle"
-            value={formData.jobTitle}
+            name="title"
+            value={formData.title}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
             placeholder="Security Analyst"
@@ -164,7 +205,7 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
           />
         </div>
 
-        <div className="md:col-span-2">
+        <div>
           <label className="block text-white/80 text-sm font-medium mb-2">Website</label>
           <input
             type="url"
@@ -173,6 +214,58 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
             onChange={handleChange}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
             placeholder="https://yourwebsite.com"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-white/80 text-sm font-medium mb-2">Bio</label>
+          <textarea
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            rows="3"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300 resize-none"
+            placeholder="Tell us about yourself..."
+          />
+        </div>
+
+        <h3 className="text-white font-semibold pt-4 border-t border-white/10 md:col-span-2">
+          Social Links
+        </h3>
+
+        <div>
+          <label className="block text-white/80 text-sm font-medium mb-2">LinkedIn</label>
+          <input
+            type="url"
+            name="linkedin"
+            value={formData.linkedin}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
+            placeholder="https://linkedin.com/in/username"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white/80 text-sm font-medium mb-2">Twitter</label>
+          <input
+            type="url"
+            name="twitter"
+            value={formData.twitter}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
+            placeholder="https://twitter.com/username"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white/80 text-sm font-medium mb-2">GitHub</label>
+          <input
+            type="url"
+            name="github"
+            value={formData.github}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors duration-300"
+            placeholder="https://github.com/username"
           />
         </div>
       </div>
