@@ -5,18 +5,15 @@ import LoadingScreen from './components/LoadingScreen';
 import Welcom from './components/Welcom';
 import Home from './components/Home';
 
-// Simple routes - NO COMPLEX WRAPPERS
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
   
-  // Single loading check at the top level
   if (loading) {
     return <LoadingScreen />;
   }
   
   return (
     <Routes>
-      {/* Root - redirect if authenticated */}
       <Route 
         path="/" 
         element={

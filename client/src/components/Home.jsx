@@ -13,7 +13,7 @@ import {
   APIsDashboard,
   AnalyticsDashboard
 } from "./home_components";
-import { AccountSettings } from "./home_components/settings"; // Import settings modal
+import { AccountSettings } from "./home_components/settings";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -27,7 +27,12 @@ const Home = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [timeRange, setTimeRange] = useState("week");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // State for settings modal
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  // New state for project selection
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectRiskScore, setProjectRiskScore] = useState(0);
+  const [projectAlerts, setProjectAlerts] = useState([]);
 
   // Mock data
   useEffect(() => {
@@ -39,12 +44,15 @@ const Home = () => {
     ]);
 
     setAlerts([
-      { id: 1, severity: "critical", message: "This domain is associated with known phishing campaigns", source: "Threat Intelligence", time: "2 min ago" },
-      { id: 2, severity: "high", message: "Email address found in 3 data breaches", source: "Breach Database", time: "15 min ago" },
-      { id: 3, severity: "warning", message: "SSL certificate expired 45 days ago", source: "Certificate Transparency", time: "1 hour ago" },
+      { id: 1, severity: "critical", message: "This domain is associated with known phishing campaigns", source: "Threat Intelligence", time: "2 min ago", projectId: 1 },
+      { id: 2, severity: "high", message: "Email address found in 3 data breaches", source: "Breach Database", time: "15 min ago", projectId: 2 },
+      { id: 3, severity: "warning", message: "SSL certificate expired 45 days ago", source: "Certificate Transparency", time: "1 hour ago", projectId: 1 },
+      { id: 4, severity: "medium", message: "Unusual login patterns detected", source: "Activity Monitor", time: "30 min ago", projectId: 3 },
     ]);
 
     setRiskScore(78);
+    setProjectRiskScore(78);
+    setProjectAlerts(alerts);
   }, []);
 
   // Listen for openSettings event from UserMenu
@@ -52,7 +60,6 @@ const Home = () => {
     const handleOpenSettings = () => {
       setIsSettingsOpen(true);
     };
-
 
     window.addEventListener('openSettings', handleOpenSettings);
     
@@ -75,6 +82,7 @@ const Home = () => {
     setTimeout(() => {
       const randomRisk = Math.floor(Math.random() * 100);
       setRiskScore(randomRisk);
+      setProjectRiskScore(randomRisk);
       
       setRecentScans(prev => [
         { 
@@ -93,6 +101,43 @@ const Home = () => {
       // Switch to analysis tab to show results
       setActiveTab("analysis");
     }, 2000);
+  };
+
+  // Project selection handler
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+    
+    // Calculate risk score based on project priority
+    const calculatedRisk = calculateProjectRisk(project);
+    setProjectRiskScore(calculatedRisk);
+    
+    // Filter alerts for this project
+    const filteredAlerts = filterAlertsByProject(project.id);
+    setProjectAlerts(filteredAlerts);
+    
+    console.log('Selected project:', project);
+    console.log('Project risk:', calculatedRisk);
+    console.log('Project alerts:', filteredAlerts);
+  };
+
+  // Helper function to calculate project risk
+  const calculateProjectRisk = (project) => {
+    const priorityWeights = { 
+      critical: 90, 
+      high: 70, 
+      medium: 50, 
+      low: 30 
+    };
+    
+    const baseRisk = priorityWeights[project.priority] || 50;
+    const progressFactor = (100 - (project.progress || 0)) * 0.2;
+    
+    return Math.min(100, Math.round(baseRisk + progressFactor));
+  };
+
+  // Helper function to filter alerts by project
+  const filterAlertsByProject = (projectId) => {
+    return alerts.filter(alert => alert.projectId === projectId);
   };
 
   const getRiskColor = (score) => {
@@ -190,14 +235,16 @@ const Home = () => {
       case "dashboard":
         return (
           <DashboardHome 
-            riskScore={riskScore}
+            riskScore={projectRiskScore}
             getRiskColor={getRiskColor}
             getRiskBgColor={getRiskBgColor}
             recentScans={recentScans}
-            alerts={alerts}
+            alerts={projectAlerts}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             onAnalyzeClick={() => setActiveTab("analysis")}
+            onProjectSelect={handleProjectSelect}
+            selectedProjectId={selectedProject?.id}
           />
         );
       case "analysis":
@@ -210,7 +257,7 @@ const Home = () => {
             onAnalyze={handleAnalyze}
             isAnalyzing={isAnalyzing}
             recentScans={recentScans}
-            alerts={alerts}
+            alerts={projectAlerts}
           />
         );
       case "projects":
@@ -226,7 +273,18 @@ const Home = () => {
       case "analytics":
         return <AnalyticsDashboard />;
       default:
-        return <DashboardHome />;
+        return <DashboardHome 
+          riskScore={projectRiskScore}
+          getRiskColor={getRiskColor}
+          getRiskBgColor={getRiskBgColor}
+          recentScans={recentScans}
+          alerts={projectAlerts}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          onAnalyzeClick={() => setActiveTab("analysis")}
+          onProjectSelect={handleProjectSelect}
+          selectedProjectId={selectedProject?.id}
+        />;
     }
   };
 
@@ -263,9 +321,10 @@ const Home = () => {
           onAnalyze={handleAnalyze}
           isAnalyzing={isAnalyzing}
           onLogout={handleLogout}
-          alertsCount={alerts.length}
+          alertsCount={projectAlerts.length}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          isMobileMenuOpen={isSidebarOpen}
         />
 
         {/* Dynamic Dashboard Content */}

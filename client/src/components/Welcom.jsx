@@ -68,10 +68,10 @@ const Welcome = () => {
   };
 
   const navItems = [
-    { name: "Home", path: "/", ref: homeRef },
-    { name: "About", path: "/about", ref: aboutRef },
-    { name: "Services", path: "/services", ref: servicesRef },
-    { name: "FAQ", path: "/faq", ref: faqRef }
+    { name: "Start", path: "/", ref: homeRef },
+    { name: "Vision", path: "/about", ref: aboutRef },
+    { name: "Solutions", path: "/services", ref: servicesRef },
+    { name: "Answers", path: "/faq", ref: faqRef }
   ];
 
   // Modal handlers
