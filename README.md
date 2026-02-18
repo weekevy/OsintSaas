@@ -41,38 +41,3 @@ Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracke
 * '/api/check-auth'     GET    Verify current version
 * '/api/logout'         POST   Sign out user
 
-## Used Dependencies
-### /client - React
-```json
-"dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "cookie": "^1.1.1",
-    "framer-motion": "^12.34.0",
-    "jsonwebtoken": "^9.0.3",
-    "maath": "^0.10.8",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.0",
-    "tailwindcss": "^4.1.18",
-    "three": "^0.182.0"
-  }
-```
-### /server - NextJS
-```json
-"dependencies": {
-    "next": "14.0.4",
-    "react": "^18",
-    "react-dom": "^18",
-    "mysql2": "^3.6.5",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "cookie": "^0.6.0"
-  }
-```
-
-
-
-
-
