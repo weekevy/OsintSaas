@@ -1,6 +1,6 @@
 # Professional OSINT Investigation Framework v1.5 
 ## General
-__OSINT minimal Version ***v1.5***. In This Version Focuse on Project Manimuplation by using 
+__OSINT minimal Version ***v1.5***. In This Version Focuse on Project Manipulation by using 
 Dashboard, Scan, Projects, Reports add assets remove other and do sample Threat Detection, using differenti
 Modules like ***Job Recruitment, Linkin Investigation, Social Media OSINT, Scan Website Analysis
 Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracker___
@@ -10,7 +10,7 @@ Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracke
   > go scan and choose the workspace project project Selecte target option
   > choose Invetigation mode if you want to use full module or specific custome scan
   > the invetigation has auto detection for the assets type with and analyse 
-
+## Notes
 - [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
 - [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
 - [todo](https://github.com/weekevy/osintSaas/blob/main/todo): This file contains the to-do list (tasks).
