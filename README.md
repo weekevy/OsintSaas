@@ -3,7 +3,7 @@
 __OSINT minimal Version ***v1.5***. In This Version Focuse on Project Manimuplation by using 
 Dashboard, Scan, Projects, Reports add assets remove other and do sample Threat Detection, using differenti
 Modules like ***Job Recruitment, Linkin Investigation, Social Media OSINT, Scan Website Analysis
-Email Leak Check, Scan Email Analysis, PhoneNumber Osint Crypto Wallet Tracker___
+Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracker___
 - workflow
   > after register/login
   > create project with assets can be added in  initial creation or later after creation
