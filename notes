@@ -19,8 +19,13 @@ new notes from 12 to 15
 13.we can use telegram to store previous company results to deliver it to next person searching for same company 
 14.we should switch the scroll bar color to be more clear cuz it a problem for pepole with weak sights like me
 15.we can use 5sim api to see if the number from them or no cuz 5sim one of the most famous temprary mobile numbers provider or we can use true caller or twillo 
-
+16.use cron jobs
+ (sync) to refresh user's credits
+ to check server performance and alert us if performance is dropping
+ lanching backup pods(koubernets)to rotate usage of server 
+ we use to rotate usage of container for each websit or tool running on the server 
 # 
 
 
 
+	
