@@ -1,8 +1,9 @@
 # Professional OSINT Investigation Framework v1.5 
 ## General
 <p align="center">
-  <img src="./client/src/assets/images/logo6.png" alt="Logo" width="400"/>
+  <img src="./client/src/assets/images/second.png" alt="Logo" width="400"/>
 </p>
+
 __OSINT minimal Version ***v1.5***. In This Version Focusd on Project Manipulation by using 
 Dashboard, Scan, Projects, Reports add remove assets and Threat Detection, using Various
 Module types***Job Recruitment, Linkin Investigation, Social Media OSINT, Scan Website Analysis
