@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ProjectCard from './ProjectCard'; // Make sure this path is correct!
+import ProjectCard from './ProjectCard';
 import CreateProjectModal from './CreateProjectModal';
 import ProjectStats from './ProjectStats';
 
@@ -116,7 +116,8 @@ const ProjectsDashboard = () => {
           priority: projectData.priority,
           dueDate: projectData.dueDate,
           icon: projectData.icon,
-          color: projectData.color
+          color: projectData.color,
+          assets: projectData.assets // Include assets in update
         })
       });
 
@@ -193,12 +194,21 @@ const ProjectsDashboard = () => {
     setIsModalOpen(true);
   };
 
+  // NEW: Add Asset handler
+  const handleAddAssetClick = (project) => {
+    console.log('➕ Add asset for project:', project.name);
+    setEditingProject(project);
+    setIsModalOpen(true);
+    // You could add a state here to focus on assets tab in the modal
+  };
+
   // DEBUG: Log handlers before rendering
   console.log('📢 Handlers status:', {
     handleEditClick: !!handleEditClick,
     handleDeleteProject: !!handleDeleteProject,
     handleCreateProject: !!handleCreateProject,
-    handleEditProject: !!handleEditProject
+    handleEditProject: !!handleEditProject,
+    handleAddAssetClick: !!handleAddAssetClick
   });
 
   return (
@@ -261,7 +271,8 @@ const ProjectsDashboard = () => {
           {projects.map((project) => {
             console.log('🔵 Rendering ProjectCard for:', project.name, 'with handlers:', {
               onEdit: !!handleEditClick,
-              onDelete: !!handleDeleteProject
+              onDelete: !!handleDeleteProject,
+              onAddAsset: !!handleAddAssetClick
             });
             return (
               <ProjectCard
@@ -270,6 +281,7 @@ const ProjectsDashboard = () => {
                 onEdit={handleEditClick}
                 onDelete={handleDeleteProject}
                 onView={(proj) => console.log('View:', proj)}
+                onAddAsset={handleAddAssetClick} // Add the new prop here
               />
             );
           })}

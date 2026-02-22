@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
@@ -9,19 +9,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     dueDate: '',
     icon: 'folder',
     color: 'purple'
-  });
-
-  // New state for initial asset
-  const [addInitialAsset, setAddInitialAsset] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef(null);
-  const [initialAsset, setInitialAsset] = useState({
-    type: 'url',
-    title: '',
-    url: '',
-    description: '',
-    file: null
   });
 
   // SVG Icons
@@ -68,47 +55,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     }
   };
 
-  const getAssetIcon = (type, className = "w-5 h-5") => {
-    switch(type) {
-      case 'url':
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        );
-      case 'linkedin':
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        );
-      case 'suspicious_url':
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        );
-      case 'image':
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-          </svg>
-        );
-      case 'document':
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
-        );
-      default:
-        return (
-          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-        );
-    }
-  };
-
   const getActionIcon = (action) => {
     switch(action) {
       case 'close':
@@ -121,18 +67,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
         return (
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        );
-      case 'upload':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-        );
-      case 'link':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
           </svg>
         );
       default:
@@ -164,30 +98,10 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     }
   }, [initialData, isOpen]);
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setInitialAsset({
-        ...initialAsset,
-        file,
-        title: file.name,
-        type: file.type.startsWith('image/') ? 'image' : 'document'
-      });
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     
     const submitData = initialData ? { ...formData, id: initialData.id } : formData;
-    
-    // If adding initial asset, include it in the submission
-    if (addInitialAsset) {
-      if (initialAsset.file || (initialAsset.title && initialAsset.url)) {
-        submitData.initialAsset = initialAsset;
-      }
-    }
-    
     onSubmit(submitData);
   };
 
@@ -207,14 +121,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     { value: 'red', gradient: 'from-red-500 to-orange-500' },
     { value: 'orange', gradient: 'from-orange-500 to-red-500' },
     { value: 'pink', gradient: 'from-pink-500 to-purple-500' },
-  ];
-
-  const assetTypes = [
-    { value: 'url', label: 'URL', icon: getAssetIcon('url'), color: 'from-blue-500 to-cyan-500' },
-    { value: 'linkedin', label: 'LinkedIn', icon: getAssetIcon('linkedin'), color: 'from-sky-500 to-blue-500' },
-    { value: 'suspicious_url', label: 'Suspicious', icon: getAssetIcon('suspicious_url'), color: 'from-red-500 to-orange-500' },
-    { value: 'image', label: 'Image', icon: getAssetIcon('image'), color: 'from-purple-500 to-pink-500' },
-    { value: 'document', label: 'Document', icon: getAssetIcon('document'), color: 'from-green-500 to-emerald-500' },
   ];
 
   if (!isOpen) return null;
@@ -313,7 +219,7 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
             />
           </div>
 
-          {/* Icon and Color - Responsive grid */}
+          {/* Icon and Color */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Icon Selection */}
             <div>
@@ -337,7 +243,7 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
               </div>
             </div>
 
-            {/* Color Selection - Compact */}
+            {/* Color Selection */}
             <div>
               <label className="block text-white/80 text-sm font-medium mb-3">Theme Color</label>
               <div className="grid grid-cols-3 gap-2">
@@ -357,137 +263,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Initial Asset Section - Fancy checkbox and matching ProjectAssets design */}
-          <div className="border-t border-white/10 pt-4 mt-2">
-            <label className="flex items-center gap-3 text-white/80 text-sm mb-4 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={addInitialAsset}
-                  onChange={(e) => setAddInitialAsset(e.target.checked)}
-                  className="sr-only"
-                />
-                <div className={`w-5 h-5 rounded border transition-all flex items-center justify-center ${
-                  addInitialAsset 
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 border-transparent' 
-                    : 'bg-white/5 border-white/20 group-hover:border-white/40'
-                }`}>
-                  {addInitialAsset && (
-                    <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-              <span className="group-hover:text-white transition-colors font-medium">Add initial asset to project</span>
-            </label>
-
-            {addInitialAsset && (
-              <div className="space-y-4 pl-6 border-l-2 border-purple-500/30 animate-fadeIn">
-                {/* Asset Type Selector - Matching ProjectAssets */}
-                <div>
-                  <label className="block text-white/60 text-xs mb-2">Asset Type</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                    {assetTypes.map(type => (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => setInitialAsset({ ...initialAsset, type: type.value, file: null })}
-                        className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-                          initialAsset.type === type.value
-                            ? `bg-gradient-to-r ${type.color} text-white border-transparent shadow-lg`
-                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
-                        <span className="text-purple-400">{type.icon}</span>
-                        <span className="text-xs hidden sm:block">{type.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Title Input */}
-                <div>
-                  <label className="block text-white/60 text-xs mb-1">Title</label>
-                  <input
-                    type="text"
-                    placeholder="Asset title"
-                    value={initialAsset.title}
-                    onChange={(e) => setInitialAsset({ ...initialAsset, title: e.target.value })}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
-                  />
-                </div>
-
-                {/* Conditional Input based on type - Matching ProjectAssets */}
-                {['url', 'linkedin', 'suspicious_url'].includes(initialAsset.type) && (
-                  <div>
-                    <label className="block text-white/60 text-xs mb-1">URL</label>
-                    <div className="relative">
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={initialAsset.url}
-                        onChange={(e) => setInitialAsset({ ...initialAsset, url: e.target.value })}
-                        className="w-full px-3 py-2 pl-8 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
-                      />
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40">
-                        {getActionIcon('link')}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* File Upload for images/documents - Matching ProjectAssets */}
-                {['image', 'document'].includes(initialAsset.type) && (
-                  <div>
-                    <label className="block text-white/60 text-xs mb-1">File</label>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileSelect}
-                      accept={initialAsset.type === 'image' ? 'image/*' : '.pdf,.doc,.docx,.txt'}
-                      className="hidden"
-                    />
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-white/10 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500/50 transition-colors group"
-                    >
-                      {initialAsset.file ? (
-                        <div className="text-white/80 text-sm">
-                          {initialAsset.file.name}
-                          <span className="text-white/40 text-xs block mt-1">
-                            {(initialAsset.file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                      ) : (
-                        <>
-                          <span className="text-white/40 group-hover:text-purple-400 transition-colors inline-block">
-                            {getActionIcon('upload')}
-                          </span>
-                          <p className="text-white/40 text-sm mt-1">
-                            Click to upload {initialAsset.type}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Description */}
-                <div>
-                  <label className="block text-white/60 text-xs mb-1">Description (optional)</label>
-                  <textarea
-                    placeholder="Add notes about this asset..."
-                    value={initialAsset.description}
-                    onChange={(e) => setInitialAsset({ ...initialAsset, description: e.target.value })}
-                    rows="2"
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-purple-500 transition-colors"
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Form Buttons */}
@@ -520,18 +295,11 @@ const CreateProjectModal = ({ isOpen, onClose, onSubmit, initialData }) => {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }
         .animate-slideUp {
           animation: slideUp 0.4s ease-out;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
         }
       `}</style>
     </div>

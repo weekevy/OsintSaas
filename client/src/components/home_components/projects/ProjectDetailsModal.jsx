@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import ProjectAssets from './ProjectAssets';
 
 const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
   const modalRef = useRef(null);
@@ -27,24 +26,6 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
       console.error('Error fetching assets:', error);
     } finally {
       setLoadingAssets(false);
-    }
-  };
-
-  const handleDeleteAsset = async (assetId) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
-    
-    try {
-      const response = await fetch(`/api/projects/${project.id}/assets/${assetId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        // Refresh assets
-        fetchAssets();
-      }
-    } catch (error) {
-      console.error('Error deleting asset:', error);
     }
   };
 
@@ -108,6 +89,88 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
     }
   };
 
+  // Get asset icon based on type
+  const getAssetIcon = (type) => {
+    switch(type) {
+      case 'url':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        );
+      case 'linkedin':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        );
+      case 'suspicious_url':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'image':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+        );
+      case 'document':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+        );
+      case 'email':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.57 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+          </svg>
+        );
+      case 'phone':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+          </svg>
+        );
+      case 'crypto':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+        );
+    }
+  };
+
+  // Get asset color based on type
+  const getAssetColor = (type) => {
+    switch(type) {
+      case 'url': return 'from-blue-500/20 to-cyan-500/20 border-blue-500/30';
+      case 'linkedin': return 'from-sky-500/20 to-blue-500/20 border-sky-500/30';
+      case 'suspicious_url': return 'from-red-500/20 to-orange-500/20 border-red-500/30';
+      case 'image': return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
+      case 'document': return 'from-green-500/20 to-emerald-500/20 border-green-500/30';
+      case 'email': return 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30';
+      case 'phone': return 'from-teal-500/20 to-cyan-500/20 border-teal-500/30';
+      case 'crypto': return 'from-indigo-500/20 to-purple-500/20 border-indigo-500/30';
+      default: return 'from-white/5 to-white/10 border-white/10';
+    }
+  };
+
+  // Folder icon SVG component
+  const FolderIcon = () => (
+    <svg className="w-8 h-8 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+    </svg>
+  );
+
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
       <div
@@ -120,10 +183,10 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
           <div className="relative p-6 border-b border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                {/* Icon with glow */}
+                {/* Icon with glow - Fixed folder icon */}
                 <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center text-3xl">
-                    {project.icon || '📁'}
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                    <FolderIcon />
                   </div>
                   <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur opacity-30" />
                 </div>
@@ -171,7 +234,7 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
             </div>
           </div>
 
-          {/* Stats Grid - Redesigned */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-4 rounded-xl border border-purple-500/30">
               <div className="text-purple-400 text-sm mb-1">Progress</div>
@@ -201,22 +264,67 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
             </div>
           </div>
 
-          {/* Assets Section - NEW */}
+          {/* Assets Section - Display Only (No Add/Delete) */}
           <div className="mb-6">
-            <ProjectAssets
-              projectId={project.id}
-              assets={assets}
-              onAddAsset={fetchAssets}
-              onDeleteAsset={handleDeleteAsset}
-            />
-            {loadingAssets && (
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-white/20 border-t-purple-500 rounded-full animate-spin" />
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              Project Assets ({assets.length})
+            </h3>
+
+            {loadingAssets ? (
+              <div className="flex justify-center py-8">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-purple-500 rounded-full animate-spin" />
+              </div>
+            ) : assets.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {assets.map((asset) => (
+                  <a
+                    key={asset.id}
+                    href={asset.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group relative bg-gradient-to-br ${getAssetColor(asset.asset_type)} rounded-xl p-4 border hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer`}
+                  >
+                    <div className="flex flex-col items-start gap-2">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAssetColor(asset.asset_type).split(' ')[0]} bg-opacity-30 flex items-center justify-center`}>
+                        <span className="text-purple-400">{getAssetIcon(asset.asset_type)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 w-full">
+                        <h5 className="text-white font-medium text-sm truncate group-hover:text-purple-400 transition-colors">
+                          {asset.title}
+                        </h5>
+                        {asset.url && (
+                          <p className="text-white/40 text-xs truncate mt-1">{asset.url}</p>
+                        )}
+                        {asset.description && (
+                          <p className="text-white/40 text-xs mt-1 line-clamp-2">{asset.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40 capitalize">
+                            {asset.asset_type}
+                          </span>
+                          <span className="text-white/30 text-[10px]">
+                            {formatDate(asset.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
+                <svg className="w-12 h-12 mx-auto text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p className="text-white/40 text-sm">No assets for this project</p>
               </div>
             )}
           </div>
 
-          {/* Additional Info - Redesigned */}
+          {/* Additional Info */}
           <div className="bg-gradient-to-br from-white/5 to-white/[0.02] rounded-xl border border-white/10 p-5">
             <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +341,9 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/40">Icon</span>
-                  <span className="text-white/80">{project.icon}</span>
+                  <span className="text-white/80">
+                    <FolderIcon />
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/40">Color Theme</span>
