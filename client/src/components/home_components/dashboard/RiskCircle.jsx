@@ -51,7 +51,7 @@ const RiskCircle = ({ riskScore, getRiskColor, getRiskBgColor }) => {
   const offset = circumference - (displayScore / 100) * circumference;
 
   return (
-    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[320px] mx-auto">
+    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[450px] mx-auto">
       
       {/* No background glow animation - removed completely */}
       
