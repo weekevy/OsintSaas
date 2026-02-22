@@ -1,7 +1,7 @@
 # Professional OSINT Investigation Framework v1.5 
 ## General
 <p align="center">
-  <img src="./client/src/assets/images/second.png" alt="Logo" width="400"/>
+  <img src="./client/src/assets/images/second.png" alt="Logo" width="300"/>
 </p>
 
 __OSINT minimal Version ***v1.5***. In This Version Focusd on Project Manipulation by using 
