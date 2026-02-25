@@ -12,6 +12,7 @@ make this version more better easy and efficient and avoid false positive.
 Dashboard, Scan, Reports add remove assets and Threat Detection, using Various
 Module types***Job Recruitment, Linkin Investigation, Social Media OSINT, Scan Website Analysis
 Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracker___
+
 - workflow Basic (initial)
   >  - after register/login
   >  - you can directly access to a specific module and add ur assets that you will scan
@@ -19,13 +20,10 @@ Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracke
   >  - Fill up any assets you need then click scan
   >  - all the result will be showed up in the same page in fancy design 
 
-
-> [!IMPORTANT]
-> - [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
-> - [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
-> - [todo](https://github.com/weekevy/osintSaas/blob/main/todo): This file contains the to-do list (tasks).
-
 ## Notes
+- [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
+- [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
+- [todo](https://github.com/weekevy/osintSaas/blob/main/todo): This file contains the to-do list (tasks).
 ## Run the web app locally
 - by following those command you can make a fork to commit in same repo
 ```bash
