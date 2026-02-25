@@ -1,4 +1,4 @@
-import logoImage from '/src/assets/images/logo6.png'; // Absolute path from root
+import logoImage from '/src/assets/images/logo6.png';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse, activeTab, onTabChange, navItems }) => {
   return (
