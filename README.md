@@ -1,23 +1,31 @@
-# Professional OSINT Investigation Framework v1.5 
+# Professional OSINT Investigation Framework v1 
 <p align="center">
   <img src="./client/src/assets/images/second.png" alt="Logo" width="300"/>
 </p>
 
 ## General
-__OSINT minimal Version ***v1.5***. In This Version Focusd on Project Manipulation by using 
-Dashboard, Scan, Projects, Reports add remove assets and Threat Detection, using Various
+__OSINT Version ***v1***. In This we Version Focusd on Integrated Modules management if you are 
+familiar with the previouse version it contain the project item as the main working env, by create
+new project and add different type of assets randomly, instead in this release you can directly
+add items of a specific module such as Job req, you can easly add the needed assets and this will
+make this version more better easy and efficient and avoid false positive.
+Dashboard, Scan, Reports add remove assets and Threat Detection, using Various
 Module types***Job Recruitment, Linkin Investigation, Social Media OSINT, Scan Website Analysis
 Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracker___
-- workflow
+- workflow Basic (initial)
   >  - after register/login
-  >  - create project with assets can be added in  initial creation or later after creation 
-  >  - go scan and choose the workspace project project Selecte target option
-  >  - choose Invetigation mode if you want to use full module or specific custome scan
-  >  - the invetigation has auto detection for the assets type with and analyse 
+  >  - you can directly access to a specific module and add ur assets that you will scan
+  >  - click on traget Module
+  >  - Fill up any assets you need then click scan
+  >  - all the result will be showed up in the same page in fancy design 
+
+
+> [!IMPORTANT]
+> - [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
+> - [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
+> - [todo](https://github.com/weekevy/osintSaas/blob/main/todo): This file contains the to-do list (tasks).
+
 ## Notes
-- [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
-- [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
-- [todo](https://github.com/weekevy/osintSaas/blob/main/todo): This file contains the to-do list (tasks).
 ## Run the web app locally
 - by following those command you can make a fork to commit in same repo
 ```bash
@@ -39,9 +47,3 @@ Email Leak Check, Scan Email Analysis***, PhoneNumber Osint Crypto Wallet Tracke
   docker-compose up -d  # start database
   docker logs           # view databse logs
 ```
-## Authentication System
-* '/api/register'       POST   Greate new account
-* '/api/login'          POST   Sign in Existing user
-* '/api/check-auth'     GET    Verify current version
-* '/api/logout'         POST   Sign out user
-
