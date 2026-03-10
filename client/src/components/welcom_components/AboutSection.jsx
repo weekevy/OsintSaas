@@ -5,7 +5,7 @@ const AnimatedNumber = ({ value, duration = 2000 }) => {
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef(null);
-
+  const elemtnkey = useRef(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
