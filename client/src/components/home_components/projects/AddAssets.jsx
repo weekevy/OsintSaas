@@ -533,12 +533,12 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
       <div
         ref={modalRef}
-        className="relative w-full max-w-6xl scale-[1.05] bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl shadow-purple-500/20 overflow-hidden animate-slideUp"
+        className="relative w-full max-w-7xl bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl shadow-purple-500/20 overflow-hidden animate-slideUp"
       >
         {/* Header */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
-          <div className="relative px-5 py-4 border-b border-white/10">
+          <div className="relative px-6 py-5 border-b border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {showAddPanel ? (
@@ -552,15 +552,15 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                     {icons.chevronLeft("w-5 h-5")}
                   </button>
                 ) : (
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                    {icons.folder("w-5 h-5 text-purple-400")}
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                    {icons.folder("w-6 h-6 text-purple-400")}
                   </div>
                 )}
                 <div>
-                  <h2 className="text-lg font-bold text-white">
+                  <h2 className="text-xl font-bold text-white">
                     {showAddPanel ? 'Add New Asset' : 'Asset Manager'}
                   </h2>
-                  <p className="text-white/40 text-xs">
+                  <p className="text-white/40 text-sm">
                     {showAddPanel 
                       ? 'Fill in the details to add a new asset' 
                       : 'Manage and organize project assets'}
@@ -571,7 +571,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                 onClick={onClose}
                 className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
               >
-                {icons.close("w-4 h-4")}
+                {icons.close("w-5 h-5")}
               </button>
             </div>
           </div>
@@ -580,11 +580,11 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
         {/* Main Content - Conditionally show either assets view or add panel */}
         {showAddPanel ? (
           /* Add Asset Panel - Integrated inside the main popup */
-          <div ref={addPanelRef} className="p-6 max-h-[550px] overflow-y-auto">
+          <div ref={addPanelRef} className="p-6 max-h-[600px] overflow-y-auto">
             {/* Category Selection */}
             <div className="mb-6">
-              <label className="block text-white/60 text-xs font-medium mb-2">Select Category</label>
-              <div className="grid grid-cols-4 gap-2">
+              <label className="block text-white/60 text-sm font-medium mb-3">Select Category</label>
+              <div className="grid grid-cols-4 gap-3">
                 {categories.filter(c => c.id !== 'all').map(category => (
                   <button
                     key={category.id}
@@ -596,14 +596,14 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                         type: assetTypes.find(t => t.subcategory === category.subcategories[0]?.id)?.value || 'url'
                       });
                     }}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
                       newAsset.category === category.id
                         ? `bg-gradient-to-r ${category.color} text-white border-transparent`
                         : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
                     }`}
                   >
-                    {category.icon("w-5 h-5")}
-                    <span className="text-[10px] font-medium text-center">{category.name}</span>
+                    {category.icon("w-6 h-6")}
+                    <span className="text-xs font-medium text-center">{category.name}</span>
                   </button>
                 ))}
               </div>
@@ -612,8 +612,8 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
             {/* Subcategory Selection */}
             {newAsset.category !== 'all' && (
               <div className="mb-6">
-                <label className="block text-white/60 text-xs font-medium mb-2">Select Type</label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <label className="block text-white/60 text-sm font-medium mb-3">Select Type</label>
+                <div className="grid grid-cols-4 gap-2">
                   {categories
                     .find(c => c.id === newAsset.category)
                     ?.subcategories.map(sub => (
@@ -631,14 +631,14 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                             });
                           }
                         }}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
                           newAsset.subcategory === sub.id
                             ? `bg-gradient-to-r ${categories.find(c => c.id === newAsset.category)?.color} text-white border-transparent`
                             : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
                         }`}
                       >
-                        {sub.icon("w-4 h-4")}
-                        <span className="text-[8px] font-medium text-center">{sub.name}</span>
+                        {sub.icon("w-5 h-5")}
+                        <span className="text-[10px] font-medium text-center">{sub.name}</span>
                       </button>
                     ))}
                 </div>
@@ -646,17 +646,17 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
             )}
 
             {/* Asset Form Fields */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Title */}
               <div>
-                <label className="block text-white/60 text-xs font-medium mb-1.5">
+                <label className="block text-white/60 text-sm font-medium mb-2">
                   Title <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={newAsset.title}
                   onChange={(e) => setNewAsset({ ...newAsset, title: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
                   placeholder="Enter a descriptive title"
                   autoFocus
                 />
@@ -665,7 +665,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
               {/* URL/Identifier Field (for non-file types) */}
               {!['image', 'pdf', 'document', 'text'].includes(newAsset.type) && (
                 <div>
-                  <label className="block text-white/60 text-xs font-medium mb-1.5">
+                  <label className="block text-white/60 text-sm font-medium mb-2">
                     {newAsset.type === 'email' ? 'Email Address' :
                      newAsset.type === 'phone' ? 'Phone Number' :
                      newAsset.type === 'crypto' ? 'Wallet Address' :
@@ -675,7 +675,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                     type="text"
                     value={newAsset.url}
                     onChange={(e) => setNewAsset({ ...newAsset, url: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
                     placeholder={assetTypes.find(t => t.value === newAsset.type)?.placeholder || 'Enter value'}
                   />
                 </div>
@@ -684,7 +684,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
               {/* File Upload (for document types) */}
               {['image', 'pdf', 'document', 'text'].includes(newAsset.type) && (
                 <div>
-                  <label className="block text-white/60 text-xs font-medium mb-1.5">File</label>
+                  <label className="block text-white/60 text-sm font-medium mb-2">File</label>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -698,27 +698,27 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                   />
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-white/10 rounded-lg p-6 text-center cursor-pointer hover:border-purple-500/50 transition-colors group"
+                    className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center cursor-pointer hover:border-purple-500/50 transition-colors group"
                   >
                     {newAsset.file ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                          {getAssetIcon(newAsset.type, "w-6 h-6 text-purple-400")}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                          {getAssetIcon(newAsset.type, "w-8 h-8 text-purple-400")}
                         </div>
                         <div>
-                          <p className="text-white text-sm font-medium">{newAsset.file.name}</p>
-                          <p className="text-white/40 text-xs">{formatFileSize(newAsset.file.size)}</p>
+                          <p className="text-white text-base font-medium">{newAsset.file.name}</p>
+                          <p className="text-white/40 text-sm">{formatFileSize(newAsset.file.size)}</p>
                         </div>
-                        <p className="text-purple-400 text-xs mt-1">Click to change file</p>
+                        <p className="text-purple-400 text-sm mt-2">Click to change file</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          {icons.upload("w-6 h-6 text-white/40")}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          {icons.upload("w-8 h-8 text-white/40")}
                         </div>
                         <div>
-                          <p className="text-white text-sm font-medium">Click to upload</p>
-                          <p className="text-white/40 text-xs">{assetTypes.find(t => t.value === newAsset.type)?.placeholder || 'Select a file'}</p>
+                          <p className="text-white text-base font-medium">Click to upload</p>
+                          <p className="text-white/40 text-sm">{assetTypes.find(t => t.value === newAsset.type)?.placeholder || 'Select a file'}</p>
                         </div>
                       </div>
                     )}
@@ -728,12 +728,12 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
 
               {/* Description */}
               <div>
-                <label className="block text-white/60 text-xs font-medium mb-1.5">Description (optional)</label>
+                <label className="block text-white/60 text-sm font-medium mb-2">Description (optional)</label>
                 <textarea
                   value={newAsset.description}
                   onChange={(e) => setNewAsset({ ...newAsset, description: e.target.value })}
-                  rows="3"
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                  rows="4"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"
                   placeholder="Add any additional notes or context about this asset..."
                 />
               </div>
@@ -741,7 +741,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
               {/* Upload Progress */}
               {uploading && (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-sm">
                     <span className="text-white/60">Uploading...</span>
                     <span className="text-purple-400">{uploadProgress}%</span>
                   </div>
@@ -756,20 +756,20 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+            <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/10">
               <button
                 onClick={() => {
                   setShowAddPanel(false);
                   resetNewAsset();
                 }}
-                className="px-4 py-2 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm"
+                className="px-5 py-2.5 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddAsset}
                 disabled={uploading || !newAsset.title || (!newAsset.file && !newAsset.url && !['image', 'pdf', 'document', 'text'].includes(newAsset.type))}
-                className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:hover:shadow-none transition-all text-sm font-medium flex items-center gap-2"
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:hover:shadow-none transition-all text-sm font-medium flex items-center gap-2"
               >
                 {uploading ? (
                   <>
@@ -789,8 +789,8 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
           /* Assets View */
           <>
             {/* Left Sidebar - Categories */}
-            <div className="flex h-[550px]">
-              <div className="w-60 border-r border-white/10 p-3 overflow-y-auto">
+            <div className="flex h-[600px]">
+              <div className="w-64 border-r border-white/10 p-4 overflow-y-auto">
                 {/* Search */}
                 <div className="mb-4">
                   <div className="relative">
@@ -799,9 +799,9 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search assets..."
-                      className="w-full pl-8 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                      className="w-full pl-9 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
                     />
-                    <div className="absolute left-2.5 top-2.5 text-white/40">
+                    <div className="absolute left-3 top-3 text-white/40">
                       {icons.search("w-4 h-4")}
                     </div>
                   </div>
@@ -816,7 +816,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                           setActiveCategory(category.id);
                           setActiveSubCategory(null);
                         }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-sm ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
                           activeCategory === category.id && !activeSubCategory
                             ? `bg-gradient-to-r ${category.color} text-white`
                             : 'text-white/60 hover:bg-white/5 hover:text-white'
@@ -835,7 +835,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
 
                       {/* Subcategories */}
                       {category.subcategories && activeCategory === category.id && (
-                        <div className="ml-6 mt-1 space-y-1">
+                        <div className="ml-7 mt-1 space-y-1">
                           {category.subcategories.map(sub => (
                             <button
                               key={sub.id}
@@ -843,7 +843,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                                 setActiveSubCategory(sub.id);
                                 setActiveCategory(category.id);
                               }}
-                              className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs ${
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-xs ${
                                 activeSubCategory === sub.id
                                   ? `bg-gradient-to-r ${category.color} text-white`
                                   : 'text-white/40 hover:text-white hover:bg-white/5'
@@ -915,7 +915,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                       </button>
                     </div>
 
-                    {/* Add Asset Button */}
+                    {/* Add Asset Button - Only in toolbar */}
                     <button
                       onClick={() => setShowAddPanel(true)}
                       className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm flex items-center gap-1.5"
@@ -935,12 +935,12 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                   ) : currentCategoryAssets.length > 0 ? (
                     view === 'grid' ? (
                       // Grid view
-                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {currentCategoryAssets.map(asset => (
                           <div
                             key={asset.id}
                             onClick={() => toggleAssetSelection(asset.id)}
-                            className={`group relative bg-gradient-to-br from-white/5 to-white/[0.02] rounded-xl p-3 border-2 cursor-pointer transition-all ${
+                            className={`group relative bg-gradient-to-br from-white/5 to-white/[0.02] rounded-xl p-4 border-2 cursor-pointer transition-all ${
                               selectedAssets.includes(asset.id)
                                 ? 'border-purple-500 bg-purple-500/10'
                                 : 'border-white/10 hover:border-purple-500/50 hover:scale-105'
@@ -956,11 +956,11 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                             </div>
                             
                             <div className="flex flex-col items-center text-center">
-                              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAssetColor(asset.asset_type)} bg-opacity-20 flex items-center justify-center mb-2`}>
-                                {getAssetIcon(asset.asset_type, "w-5 h-5")}
+                              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getAssetColor(asset.asset_type)} bg-opacity-20 flex items-center justify-center mb-3`}>
+                                {getAssetIcon(asset.asset_type, "w-6 h-6")}
                               </div>
-                              <h4 className="text-white font-medium text-xs truncate w-full">{asset.title}</h4>
-                              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40 mt-2">
+                              <h4 className="text-white font-medium text-sm truncate w-full">{asset.title}</h4>
+                              <span className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/40 mt-2">
                                 {asset.asset_type}
                               </span>
                             </div>
@@ -973,7 +973,7 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                         {currentCategoryAssets.map(asset => (
                           <div
                             key={asset.id}
-                            className={`group flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                            className={`group flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                               selectedAssets.includes(asset.id)
                                 ? 'border-purple-500 bg-purple-500/10'
                                 : 'border-transparent hover:border-white/10 hover:bg-white/5'
@@ -989,14 +989,14 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                               />
                             </div>
                             
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAssetColor(asset.asset_type)} bg-opacity-20 flex items-center justify-center`}>
-                              {getAssetIcon(asset.asset_type, "w-4 h-4")}
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAssetColor(asset.asset_type)} bg-opacity-20 flex items-center justify-center`}>
+                              {getAssetIcon(asset.asset_type, "w-5 h-5")}
                             </div>
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h4 className="text-white font-medium text-sm truncate">{asset.title}</h4>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40">
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/40">
                                   {asset.asset_type}
                                 </span>
                               </div>
@@ -1019,29 +1019,22 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
                       </div>
                     )
                   ) : (
-                    // Empty state for current category
+                    // Empty state for current category - NO ADD BUTTON HERE
                     <div className="flex flex-col items-center justify-center h-full text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-white/5 to-white/[0.02] rounded-2xl border border-white/10 flex items-center justify-center mb-4">
-                        {activeCategory === 'all' ? icons.folder("w-8 h-8 text-white/30") :
-                         activeCategory === 'links' ? icons.links("w-8 h-8 text-white/30") :
-                         activeCategory === 'contacts' ? icons.contacts("w-8 h-8 text-white/30") :
-                         activeCategory === 'finance' ? icons.finance("w-8 h-8 text-white/30") :
-                         activeCategory === 'documents' ? icons.documents("w-8 h-8 text-white/30") :
-                         icons.folder("w-8 h-8 text-white/30")}
+                      <div className="w-24 h-24 bg-gradient-to-br from-white/5 to-white/[0.02] rounded-2xl border border-white/10 flex items-center justify-center mb-4">
+                        {activeCategory === 'all' ? icons.folder("w-10 h-10 text-white/30") :
+                         activeCategory === 'links' ? icons.links("w-10 h-10 text-white/30") :
+                         activeCategory === 'contacts' ? icons.contacts("w-10 h-10 text-white/30") :
+                         activeCategory === 'finance' ? icons.finance("w-10 h-10 text-white/30") :
+                         activeCategory === 'documents' ? icons.documents("w-10 h-10 text-white/30") :
+                         icons.folder("w-10 h-10 text-white/30")}
                       </div>
-                      <h3 className="text-white font-semibold text-base mb-2">No assets in {getCategoryDisplayName()}</h3>
-                      <p className="text-white/40 text-sm mb-4 max-w-xs">
+                      <h3 className="text-white font-semibold text-lg mb-2">No assets in {getCategoryDisplayName()}</h3>
+                      <p className="text-white/40 text-sm max-w-xs">
                         {activeCategory === 'all' 
-                          ? "Get started by adding your first asset to this project" 
-                          : `This category doesn't have any assets yet. Add your first ${activeCategory} asset to get started.`}
+                          ? "This project doesn't have any assets yet." 
+                          : `This category doesn't have any assets yet.`}
                       </p>
-                      <button
-                        onClick={() => setShowAddPanel(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all text-sm flex items-center gap-2"
-                      >
-                        {icons.add("w-4 h-4")}
-                        Add {activeCategory !== 'all' ? categories.find(c => c.id === activeCategory)?.name : 'Asset'}
-                      </button>
                     </div>
                   )}
                 </div>
@@ -1067,8 +1060,8 @@ const AddAssets = ({ isOpen, onClose, projectId, onAssetsAdded }) => {
           to { opacity: 1; }
         }
         @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px) scale(1.05); }
-          to { opacity: 1; transform: translateY(0) scale(1.05); }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
