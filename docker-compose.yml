@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   mariadb:
     image: mariadb:10.11
     container_name: osint_mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword123
-      MYSQL_DATABASE: osint_db
-      MYSQL_USER: osint_user
-      MYSQL_PASSWORD: osint_password123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -25,14 +23,51 @@ services:
     environment:
       PMA_HOST: mariadb
       PMA_PORT: 3306
-      # PMA_USER: root
-      # PMA_PASSWORD: rootpassword123
     ports:
       - "8080:80"
     depends_on:
       - mariadb
     networks:
       - osint_network
+
+  # Job Recruitment OSINT Tool
+  job-recruitment:
+    build: ./docker/job-recruitment
+    container_name: job-recruitment-tool
+    restart: unless-stopped
+    volumes:
+      - ./docker/job-recruitment/data:/app/data
+      - ./docker/job-recruitment/output:/app/output
+      - ./docker/job-recruitment/logs:/app/logs
+      - ./docker/job-recruitment/config:/app/config
+      - ./docker/job-recruitment/tools:/app/tools
+    environment:
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+      - CENSYS_API_ID=${CENSYS_API_ID}
+      - CENSYS_API_SECRET=${CENSYS_API_SECRET}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+      - HUNTER_API_KEY=${HUNTER_API_KEY}
+      - CLEARBIT_API_KEY=${CLEARBIT_API_KEY}
+      - MARIADB_HOST=mariadb
+      - MARIADB_DATABASE=${MYSQL_DATABASE}
+      - MARIADB_USER=${MYSQL_USER}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "8000:8000"  # FastAPI
+    depends_on:
+      - mariadb
+    networks:
+      - osint_network
+    stdin_open: true
+    tty: true
+    command: >
+      sh -c "
+      if [ -f /app/tools/api_server.py ]; then
+        pip install fastapi uvicorn pydantic python-multipart &&
+        uvicorn tools.api_server:app --host 0.0.0.0 --port 8000 --reload &
+      fi &&
+      tail -f /dev/null
+      "
 
 volumes:
   mariadb_data:
