@@ -33,7 +33,7 @@ investigations across multiple data sources.
 ### Investigation Modules
 - job-recuitment
 - linkend-investivation
-```
+
 ## Notes
 - [notes](https://github.com/weekevy/osintSaas/blob/main/notes): This file is for discussing what we are going to do in this project.
 - [structure](https://github.com/weekevy/osintSaas/blob/main/structure): This file contains the structure of the entire project.
