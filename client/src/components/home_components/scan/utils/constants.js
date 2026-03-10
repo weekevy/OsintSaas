@@ -1,23 +1,107 @@
 // Investigation Modules data
 export const investigationModules = [
-  { id: 'job-recruitment', name: 'Job Recruitment', description: 'Analyze job postings for scams and fraudulent companies', icon: 'job', color: 'from-purple-500 to-pink-500' },
-  { id: 'linkedin', name: 'LinkedIn Investigation', description: 'Profile analysis, connection mapping, and suspicious activity detection', icon: 'linkedin', color: 'from-blue-500 to-cyan-500' },
-  { id: 'social-media', name: 'Social Media OSINT', description: 'Cross-platform identity verification and threat detection', icon: 'social', color: 'from-green-500 to-emerald-500' },
-  { id: 'scam-website', name: 'Scam Website Analysis', description: 'Detect phishing sites, fake stores, and malicious domains', icon: 'website', color: 'from-orange-500 to-red-500' },
-  { id: 'email-leak', name: 'Email Leak Check', description: 'Check if email addresses appear in known data breaches', icon: 'email', color: 'from-yellow-500 to-amber-500' },
-  { id: 'scam-email', name: 'Scam Email Analysis', description: 'Analyze email headers and content for phishing indicators', icon: 'email-scam', color: 'from-red-500 to-pink-500' },
-  { id: 'phone-number', name: 'Phone Number OSINT', description: 'Carrier lookup, location data, and spam detection', icon: 'phone', color: 'from-teal-500 to-cyan-500' },
-  { id: 'crypto-wallet', name: 'Crypto Wallet Tracker', description: 'Analyze blockchain transactions and wallet activity', icon: 'crypto', color: 'from-indigo-500 to-purple-500' },
+  { 
+    id: 'job-recruitment', 
+    name: 'Job Recruitment', 
+    description: 'Analyze job postings for scams and fraudulent companies', 
+    icon: 'job', 
+    color: 'from-purple-500 to-pink-500' 
+  },
+  { 
+    id: 'linkedin', 
+    name: 'LinkedIn Investigation', 
+    description: 'Profile analysis, connection mapping, and suspicious activity detection', 
+    icon: 'linkedin', 
+    color: 'from-blue-500 to-cyan-500' 
+  },
+  { 
+    id: 'social-media', 
+    name: 'Social Media OSINT', 
+    description: 'Cross-platform identity verification and threat detection', 
+    icon: 'social', 
+    color: 'from-green-500 to-emerald-500' 
+  },
+  { 
+    id: 'scam-website', 
+    name: 'Scam Website Analysis', 
+    description: 'Detect phishing sites, fake stores, and malicious domains', 
+    icon: 'website', 
+    color: 'from-orange-500 to-red-500' 
+  },
+  { 
+    id: 'email-leak', 
+    name: 'Email Leak Check', 
+    description: 'Check if email addresses appear in known data breaches', 
+    icon: 'email', 
+    color: 'from-yellow-500 to-amber-500' 
+  },
+  { 
+    id: 'scam-email', 
+    name: 'Scam Email Analysis', 
+    description: 'Analyze email headers and content for phishing indicators', 
+    icon: 'email-scam', 
+    color: 'from-red-500 to-pink-500' 
+  },
+  { 
+    id: 'phone-number', 
+    name: 'Phone Number OSINT', 
+    description: 'Carrier lookup, location data, and spam detection', 
+    icon: 'phone', 
+    color: 'from-teal-500 to-cyan-500' 
+  },
+  { 
+    id: 'crypto-wallet', 
+    name: 'Crypto Wallet Tracker', 
+    description: 'Analyze blockchain transactions and wallet activity', 
+    icon: 'crypto', 
+    color: 'from-indigo-500 to-purple-500' 
+  },
 ];
 
 // Open Source Platforms data
 export const openSourcePlatforms = [
-  { id: 'shodan', name: 'Shodan', description: 'Internet device database', icon: 'shodan', color: 'from-red-500 to-orange-500' },
-  { id: 'censys', name: 'Censys', description: 'Certificate & asset discovery', icon: 'censys', color: 'from-blue-500 to-purple-500' },
-  { id: 'virustotal', name: 'VirusTotal', description: 'Malware & hash lookup', icon: 'virustotal', color: 'from-green-500 to-teal-500' },
-  { id: 'greynoise', name: 'GreyNoise', description: 'Internet noise analysis', icon: 'greynoise', color: 'from-gray-500 to-slate-500' },
-  { id: 'haveibeenpwned', name: 'Have I Been Pwned', description: 'Breach data lookup', icon: 'hibp', color: 'from-red-500 to-pink-500' },
-  { id: 'dehashed', name: 'DeHashed', description: 'Credential breach search', icon: 'dehashed', color: 'from-purple-500 to-indigo-500' },
+  { 
+    id: 'shodan', 
+    name: 'Shodan', 
+    description: 'Internet device database', 
+    icon: 'shodan', 
+    color: 'from-red-500 to-orange-500' 
+  },
+  { 
+    id: 'censys', 
+    name: 'Censys', 
+    description: 'Certificate & asset discovery', 
+    icon: 'censys', 
+    color: 'from-blue-500 to-purple-500' 
+  },
+  { 
+    id: 'virustotal', 
+    name: 'VirusTotal', 
+    description: 'Malware & hash lookup', 
+    icon: 'virustotal', 
+    color: 'from-green-500 to-teal-500' 
+  },
+  { 
+    id: 'greynoise', 
+    name: 'GreyNoise', 
+    description: 'Internet noise analysis', 
+    icon: 'greynoise', 
+    color: 'from-gray-500 to-slate-500' 
+  },
+  { 
+    id: 'haveibeenpwned', 
+    name: 'Have I Been Pwned', 
+    description: 'Breach data lookup', 
+    icon: 'hibp', 
+    color: 'from-red-500 to-pink-500' 
+  },
+  { 
+    id: 'dehashed', 
+    name: 'DeHashed', 
+    description: 'Credential breach search', 
+    icon: 'dehashed', 
+    color: 'from-purple-500 to-indigo-500' 
+  },
 ];
 
 // Asset configuration for modules
