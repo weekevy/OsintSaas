@@ -37,7 +37,7 @@ const Home = () => {
   // Mock data
   useEffect(() => {
     setRecentScans([
-      // { id: 1, target: "suspicious-company.com", type: "url", date: "2 min ago", risk: 85 },
+      // { id: 1, target: "suspicious.com", type: "url", date: "2 min ago", risk: 85 },
       // { id: 2, target: "hr@scam-recruitment.org", type: "email", date: "15 min ago", risk: 92 },
       // { id: 3, target: "fake-resume.pdf", type: "file", date: "1 hour ago", risk: 67 },
       // { id: 4, target: "secure-bank-login.com", type: "url", date: "3 hours ago", risk: 95 },
