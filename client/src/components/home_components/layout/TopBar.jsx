@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import UserMenu from './UserMenu';
 
 const TopBar = ({ 
-  onMenuClick, 
   searchInput, 
   onSearchChange, 
   searchType, 
@@ -13,8 +12,7 @@ const TopBar = ({
   alertsCount,
   activeTab,
   onTabChange,
-  isMobileMenuOpen,
-  navItems  // Add navItems prop
+  navItems
 }) => {
   const [searchTypeDropdownOpen, setSearchTypeDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -30,19 +28,15 @@ const TopBar = ({
   // Handle click outside for all dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Search type dropdown
       if (searchTypeRef.current && !searchTypeRef.current.contains(event.target)) {
         setSearchTypeDropdownOpen(false);
       }
-      // Notifications dropdown
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setNotificationsOpen(false);
       }
-      // Quick actions dropdown
       if (quickActionsRef.current && !quickActionsRef.current.contains(event.target)) {
         setQuickActionsOpen(false);
       }
-      // Mobile nav dropdown
       if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
         setMobileNavOpen(false);
       }
@@ -75,7 +69,6 @@ const TopBar = ({
     }
   };
 
-  // Professional SVG Icons for Quick Actions
   const getQuickActionIcon = (action) => {
     switch(action) {
       case 'Generate Report':
@@ -143,61 +136,44 @@ const TopBar = ({
   ];
 
   return (
-    <header className={`flex flex-col bg-black/40 backdrop-blur-xl border-b border-white/10 
-      ${isMobileMenuOpen ? 'relative z-[1]' : 'relative z-[9998]'}`}>
+    <header className="flex flex-col bg-black/40 backdrop-blur-xl border-b border-white/10 relative z-[9998]">
       
       {/* Top Row - Logo, Search, Actions */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-4 sm:px-6 lg:px-8 py-4 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 lg:px-8 py-3 gap-3">
         
-        {/* Mobile Menu Button and Logo */}
-        <div className="flex items-center justify-between w-full lg:hidden">
-          <button
-            onClick={onMenuClick}
-            className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-            OSINT<span className="text-white">Weekeyv</span>
-          </h1>
-          <div className="w-10" />
-        </div>
-
-        {/* Desktop Logo */}
-        <div className="hidden lg:flex items-center gap-3">
-          <div className="relative w-10 h-10 overflow-hidden">
+        {/* Logo - Always visible */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="relative w-9 h-9 overflow-hidden">
             <img 
               src="/src/assets/images/logo6.png" 
               alt="OsintSaas" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
             OSINT<span className="text-white">Weekeyv</span>
           </h1>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex-1 w-full lg:max-w-2xl relative z-[9999]">
-          <div className="flex items-center bg-white/5 rounded-2xl border border-white/10 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+        {/* Search Bar - Responsive */}
+        <div className="flex-1 w-full sm:max-w-2xl relative z-[9999]">
+          <div className="flex items-center bg-white/5 rounded-xl border border-white/10 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
             
             {/* Search Type Dropdown */}
             <div className="relative" ref={searchTypeRef}>
               <button 
                 onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
-                className="px-3 sm:px-4 py-2.5 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
+                className="px-3 py-2 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
               >
                 <span className="hidden sm:block">{getSearchTypeIcon(searchType)}</span>
-                <span className="text-sm sm:text-base capitalize">{searchType}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-sm capitalize">{searchType}</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               
               {searchTypeDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-40 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+                <div className="absolute top-full left-0 mt-2 w-36 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
                   {['url', 'email', 'file'].map((type) => (
                     <button
                       key={type}
@@ -205,7 +181,7 @@ const TopBar = ({
                         onSearchTypeChange(type);
                         setSearchTypeDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-3 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                      className="w-full px-3 py-2 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-2 text-sm"
                     >
                       {getSearchTypeIcon(type)}
                       <span>{type}</span>
@@ -221,7 +197,7 @@ const TopBar = ({
               value={searchInput}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={`Enter ${searchType} to analyze...`}
-              className="flex-1 px-3 sm:px-4 py-2.5 bg-transparent text-white placeholder-white/40 focus:outline-none text-sm sm:text-base w-full min-w-0"
+              className="flex-1 px-3 py-2 bg-transparent text-white placeholder-white/40 focus:outline-none text-sm w-full min-w-0"
               onKeyPress={(e) => e.key === 'Enter' && onAnalyze()}
             />
 
@@ -229,23 +205,22 @@ const TopBar = ({
             <button
               onClick={onAnalyze}
               disabled={isAnalyzing}
-              className="px-4 sm:px-6 py-2.5 m-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
+              className="px-4 py-2 m-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 flex items-center gap-2 text-sm whitespace-nowrap"
             >
               {isAnalyzing ? (
                 <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <span className="hidden sm:inline">Analyzing</span>
-                  <span className="sm:hidden">...</span>
+                  <span className="hidden sm:inline">Analyze</span>
                 </>
               ) : (
                 <>
-                  <span className="hidden sm:inline">Analyze</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
+                  <span className="hidden sm:inline">Analyze</span>
                 </>
               )}
             </button>
@@ -253,14 +228,13 @@ const TopBar = ({
         </div>
 
         {/* Right Actions */}
-        <div className={`flex items-center gap-1 sm:gap-2 lg:gap-3 
-          ${isMobileMenuOpen ? 'relative z-[1]' : 'relative z-[9999]'}`}>
+        <div className="flex items-center gap-2 ml-auto sm:ml-0">
           
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all relative"
+              className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all relative"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -304,7 +278,7 @@ const TopBar = ({
           <div className="relative" ref={quickActionsRef}>
             <button
               onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-              className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+              className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -338,70 +312,37 @@ const TopBar = ({
         </div>
       </div>
 
-      {/* Navigation Bar - Desktop */}
-      <div className="hidden lg:block px-4 sm:px-6 lg:px-8 py-2 border-t border-white/10">
-        <nav className="flex items-center gap-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-200 group
-                ${activeTab === item.id 
-                  ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-white border border-purple-500/30' 
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
-                }`}
-            >
-              <span className="text-current">{item.icon}</span>
-              <span className="font-medium text-sm">{item.label}</span>
-              {activeTab === item.id && (
-                <span className="w-1 h-1 bg-purple-500 rounded-full animate-pulse" />
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Mobile Navigation - Dropdown */}
-      <div className="lg:hidden px-4 pb-3 relative" ref={mobileNavRef}>
-        <button
-          onClick={() => setMobileNavOpen(!mobileNavOpen)}
-          className="w-full flex items-center justify-between py-2.5 px-4 bg-white/5 rounded-xl border border-white/10 text-white"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-white">
-              {navItems.find(item => item.id === activeTab)?.icon}
-            </span>
-            <span>{navItems.find(item => item.id === activeTab)?.label || 'Menu'}</span>
-          </div>
-          <svg className={`w-4 h-4 transition-transform ${mobileNavOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        
-        {mobileNavOpen && (
-          <div className="absolute top-full left-4 right-4 mt-2 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-            {navItems.map((item) => (
+      {/* Navigation Bar - Responsive */}
+      <div className="px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        <nav className="flex flex-wrap items-center gap-1 py-2">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
               <button
                 key={item.id}
-                onClick={() => {
-                  onTabChange(item.id);
-                  setMobileNavOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
-                  ${activeTab === item.id 
-                    ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-white' 
-                    : 'text-white/60 hover:bg-white/5 hover:text-white'
-                  }`}
+                onClick={() => onTabChange(item.id)}
+                className="relative group py-2"
               >
-                <span>{item.icon}</span>
-                <span className="flex-1">{item.label}</span>
-                {activeTab === item.id && (
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-                )}
+                <div className={`flex items-center gap-2 px-3 sm:px-4 transition-all duration-300
+                  ${isActive 
+                    ? 'text-white' 
+                    : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <span className="text-current transition-transform duration-300 group-hover:scale-110">
+                    {item.icon}
+                  </span>
+                  <span className="font-medium text-sm hidden sm:inline">{item.label}</span>
+                </div>
+                
+                {/* Active Indicator - Bottom Border Only */}
+                <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300
+                  ${isActive ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100'}`}
+                />
               </button>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
