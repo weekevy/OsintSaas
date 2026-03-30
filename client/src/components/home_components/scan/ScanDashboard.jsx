@@ -7,22 +7,6 @@ import { getIconName } from './utils/icons';
 
 const API_BASE = '/api/modules/job-recruitment';
 
-// Helper function to get token from cookies
-const getToken = () => {
-  const cookies = document.cookie.split('; ');
-  const tokenCookie = cookies.find(row => row.startsWith('token='));
-  return tokenCookie ? tokenCookie.split('=')[1] : null;
-};
-
-// Helper function to create headers with auth
-const getAuthHeaders = () => {
-  const token = getToken();
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
-  };
-};
-
 const ScanDashboard = ({ 
   searchInput, 
   onSearchChange, 
@@ -49,7 +33,6 @@ const ScanDashboard = ({
   const [showEditAssets, setShowEditAssets] = useState(false);
   const [editingScan, setEditingScan] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [authError, setAuthError] = useState(false);
 
   // Fetch scans on mount
   useEffect(() => {
@@ -58,17 +41,7 @@ const ScanDashboard = ({
 
   const fetchScans = async () => {
     try {
-      setAuthError(false);
-      const response = await fetch(API_BASE, {
-        headers: getAuthHeaders()
-      });
-      
-      if (response.status === 401) {
-        setAuthError(true);
-        console.error('Authentication failed');
-        return;
-      }
-      
+      const response = await fetch(API_BASE);
       const data = await response.json();
       
       if (data.success) {
@@ -121,15 +94,9 @@ const ScanDashboard = ({
     try {
       const response = await fetch(API_BASE, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(assetData.assets)
       });
-      
-      if (response.status === 401) {
-        setAuthError(true);
-        setLoading(false);
-        return;
-      }
       
       const data = await response.json();
       
@@ -152,15 +119,8 @@ const ScanDashboard = ({
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}?id=${scanId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
+        method: 'DELETE'
       });
-      
-      if (response.status === 401) {
-        setAuthError(true);
-        setLoading(false);
-        return;
-      }
       
       const data = await response.json();
       
@@ -230,15 +190,9 @@ const ScanDashboard = ({
     try {
       const response = await fetch(`${API_BASE}?id=${scanId}`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedAssets)
       });
-      
-      if (response.status === 401) {
-        setAuthError(true);
-        setLoading(false);
-        return;
-      }
       
       const data = await response.json();
       
@@ -254,27 +208,6 @@ const ScanDashboard = ({
   };
 
   const totalScans = scanHistory.length + runningScans.length;
-
-  // Show auth error message if needed
-  if (authError) {
-    return (
-      <div className="p-6 space-y-8">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <h3 className="text-xl font-bold text-white mb-2">Authentication Required</h3>
-          <p className="text-white/60 mb-4">Please log in to view your scans.</p>
-          <button 
-            onClick={() => window.location.href = '/login'}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-8">
