@@ -24,7 +24,7 @@ async function verifyToken(request) {
       );
       
       if (cookies.token) {
-        const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this');
         return decoded;
       }
     }

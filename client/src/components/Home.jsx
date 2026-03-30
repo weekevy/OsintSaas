@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Sidebar,
   MobileSidebar,
   TopBar,
   DashboardHome,
@@ -18,7 +17,6 @@ import { AccountSettings } from "./home_components/settings";
 const Home = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchType, setSearchType] = useState("url");
@@ -36,20 +34,8 @@ const Home = () => {
 
   // Mock data
   useEffect(() => {
-    setRecentScans([
-      // { id: 1, target: "suspicious.com", type: "url", date: "2 min ago", risk: 85 },
-      // { id: 2, target: "hr@scam-recruitment.org", type: "email", date: "15 min ago", risk: 92 },
-      // { id: 3, target: "fake-resume.pdf", type: "file", date: "1 hour ago", risk: 67 },
-      // { id: 4, target: "secure-bank-login.com", type: "url", date: "3 hours ago", risk: 95 },
-    ]);
-
-    setAlerts([
-      // { id: 1, severity: "critical", message: "This domain is associated with known phishing campaigns", source: "Threat Intelligence", time: "2 min ago", projectId: 1 },
-      // { id: 2, severity: "high", message: "Email address found in 3 data breaches", source: "Breach Database", time: "15 min ago", projectId: 2 },
-      // { id: 3, severity: "warning", message: "SSL certificate expired 45 days ago", source: "Certificate Transparency", time: "1 hour ago", projectId: 1 },
-      // { id: 4, severity: "medium", message: "Unusual login patterns detected", source: "Activity Monitor", time: "30 min ago", projectId: 3 },
-    ]);
-
+    setRecentScans([]);
+    setAlerts([]);
     setRiskScore(1);
     setProjectRiskScore(78);
     setProjectAlerts(alerts);
@@ -173,19 +159,6 @@ const Home = () => {
         </svg>
       )
     },
-
-
-//     { 
-//       id: "projects", 
-//       label: "Projects", 
-//       icon: (
-//         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-//         </svg>
-//       )
-//     },
-
-
     { 
       id: "reports", 
       label: "Reports", 
@@ -204,15 +177,6 @@ const Home = () => {
         </svg>
       )
     },
-    // { 
-    //   id: "integrations", 
-    //   label: "Integrations", 
-    //   icon: (
-    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-    //     </svg>
-    //   )
-    // },
     { 
       id: "apis", 
       label: "APIs", 
@@ -278,33 +242,26 @@ const Home = () => {
       case "analytics":
         return <AnalyticsDashboard />;
       default:
-        return <DashboardHome 
-          riskScore={projectRiskScore}
-          getRiskColor={getRiskColor}
-          getRiskBgColor={getRiskBgColor}
-          recentScans={recentScans}
-          alerts={projectAlerts}
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          onAnalyzeClick={() => setActiveTab("scan")}
-          onProjectSelect={handleProjectSelect}
-          selectedProjectId={selectedProject?.id}
-        />;
+        return (
+          <DashboardHome 
+            riskScore={projectRiskScore}
+            getRiskColor={getRiskColor}
+            getRiskBgColor={getRiskBgColor}
+            recentScans={recentScans}
+            alerts={projectAlerts}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+            onAnalyzeClick={() => setActiveTab("scan")}
+            onProjectSelect={handleProjectSelect}
+            selectedProjectId={selectedProject?.id}
+          />
+        );
     }
   };
 
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Desktop Sidebar */}
-      <Sidebar 
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        navItems={navItems}
-      />
-
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - Only for mobile */}
       <MobileSidebar 
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -316,7 +273,7 @@ const Home = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-black via-purple-950/5 to-black w-full">
         
-        {/* Top Bar */}
+        {/* Top Bar with Navigation */}
         <TopBar 
           onMenuClick={() => setIsSidebarOpen(true)}
           searchInput={searchInput}
@@ -330,6 +287,7 @@ const Home = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           isMobileMenuOpen={isSidebarOpen}
+          navItems={navItems}  // Pass navItems to TopBar
         />
 
         {/* Dynamic Dashboard Content */}

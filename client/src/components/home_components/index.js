@@ -14,7 +14,7 @@ export { default as APIsDashboard } from './dashboard/APIsDashboard';
 export { default as AnalyticsDashboard } from './dashboard/AnalyticsDashboard';
 
 // Scan - NEW folder
-export { default as ScanDashboard } from './scan/ScanDashboard';  // ✅ Correct path
+export { default as ScanDashboard } from './scan/ScanDashboard'; 
 
 // Risk components (if needed directly)
 export { default as RiskCircle } from './dashboard/RiskCircle';
