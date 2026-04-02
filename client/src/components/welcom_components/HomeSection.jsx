@@ -1,43 +1,32 @@
 import { forwardRef } from 'react';
 
 const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick }, ref) => {
-  // Professional SVG icons
+  // Simple professional SVG icons
   const getFeatureIcon = (type) => {
     switch(type) {
       case 'research':
         return (
           <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" stroke="url(#gradient-research)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <defs>
-              <linearGradient id="gradient-research" x1="3" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#A855F7"/>
-                <stop offset="1" stopColor="#EC4899"/>
-              </linearGradient>
-            </defs>
+            <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" 
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M11 7V13M14 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
         );
       case 'realtime':
         return (
           <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 6v6l4 2m-4-2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="url(#gradient-realtime)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" transform="rotate(90 12 12)"/>
-            <defs>
-              <linearGradient id="gradient-realtime" x1="3" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#3B82F6"/>
-                <stop offset="1" stopColor="#06B6D4"/>
-              </linearGradient>
-            </defs>
+            <path d="M3 12H5L7 8L9 16L11 10L13 14L15 12L17 12" 
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="19" cy="12" r="2" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M12 3V5M12 19V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
         );
       case 'secure':
         return (
           <svg className="w-10 h-10 mb-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.286z" stroke="url(#gradient-secure)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <defs>
-              <linearGradient id="gradient-secure" x1="3" y1="12" x2="21" y2="12" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#EC4899"/>
-                <stop offset="1" stopColor="#A855F7"/>
-              </linearGradient>
-            </defs>
+            <path d="M12 3L5 6C5 6 4 10 4 12C4 16 12 21 12 21C12 21 20 16 20 12C20 10 19 6 19 6L12 3Z" 
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
       default:
@@ -113,7 +102,7 @@ const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick 
             </button>
           </div>
 
-          {/* Feature Cards Grid */}
+          {/* Feature Cards Grid - Transparent Glass */}
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl
                           transition-all duration-700 delay-500
                           ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
@@ -123,13 +112,17 @@ const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick 
               { icon: 'secure', title: 'Secure & Private', desc: 'Your data stays protected' }
             ].map((feature, i) => (
               <div key={i} className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 
-                                    hover:bg-white/10 hover:border-purple-500/50 transition-all duration-500
-                                    hover:shadow-xl hover:shadow-purple-500/20 transform hover:scale-105">
-                <div className="text-purple-400 group-hover:scale-110 transition-transform duration-500">
+                                    hover:bg-white/10 hover:border-purple-500/30 transition-all duration-500
+                                    hover:shadow-xl hover:shadow-purple-500/10 transform hover:-translate-y-1">
+                <div className="text-purple-400 group-hover:text-purple-300 group-hover:scale-110 transition-all duration-500">
                   {getFeatureIcon(feature.icon)}
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">{feature.title}</h3>
-                <p className="text-white/60 text-sm">{feature.desc}</p>
+                <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-purple-300 transition-colors duration-300">
+                  {feature.title}
+                </h3>
+                <p className="text-white/60 text-sm group-hover:text-white/80 transition-colors duration-300">
+                  {feature.desc}
+                </p>
               </div>
             ))}
           </div>
