@@ -3,6 +3,21 @@ import { moduleAssetsConfig } from '../utils/constants';
 import { getIcon } from '../utils/icons';
 import { validateForm } from '../utils/helpers';
 
+// Helper function to get API base based on module type
+const getApiBase = (moduleType) => {
+  const apiMap = {
+    'job-recruitment': '/api/modules/job-recruitment',
+    'linkedin': '/api/modules/linkedin-investigation',
+    'social-media': '/api/modules/social-media',
+    'scam-website': '/api/modules/scam-website',
+    'email-leak': '/api/modules/email-leak',
+    'scam-email': '/api/modules/scam-email',
+    'phone-number': '/api/modules/phone-number',
+    'crypto-wallet': '/api/modules/crypto-wallet'
+  };
+  return apiMap[moduleType] || '/api/modules/job-recruitment';
+};
+
 // ==================== TargetInput Component ====================
 export const TargetInput = ({ 
   searchInput, 
@@ -193,7 +208,7 @@ export const TargetInput = ({
 };
 
 // ==================== AddAssetsModal Component ====================
-export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId, apiBase = '/api/modules/job-recruitment' }) => {
+export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }) => {
   const [formData, setFormData] = useState({});
   const [activeCategory, setActiveCategory] = useState(null);
   const [errors, setErrors] = useState({});
@@ -201,6 +216,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
   const modalRef = useRef(null);
   
   const config = moduleAssetsConfig[moduleType];
+  const apiBase = getApiBase(moduleType);
 
   useEffect(() => {
     if (config && config.categories.length > 0) {
@@ -260,21 +276,46 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
 
     setSaving(true);
     
-    // If API base is provided, we let the parent handle the API call
-    if (onSave) {
-      onSave({
-        moduleType,
-        moduleName,
-        assets: formData,
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Log what module type and data is being sent
+    console.log('=== SAVING ASSETS ===');
+    console.log('Module Type:', moduleType);
+    console.log('Module Name:', moduleName);
+    console.log('Form Data:', formData);
+    console.log('API Endpoint:', apiBase);
     
-    // Simulate loading for better UX
-    setTimeout(() => {
+    try {
+      const response = await fetch(apiBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          project_id: projectId
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Response:', data);
+      
+      if (data.success) {
+        if (onSave) {
+          onSave({
+            moduleType,
+            moduleName,
+            assets: formData,
+            timestamp: new Date().toISOString()
+          });
+        }
+        onClose();
+      } else {
+        console.error('API Error:', data.error);
+        setErrors({ submit: data.error || 'Failed to save assets' });
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      setErrors({ submit: 'Network error. Please try again.' });
+    } finally {
       setSaving(false);
-      onClose();
-    }, 500);
+    }
   };
 
   if (!isOpen || !config) return null;
@@ -429,7 +470,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
 };
 
 // ==================== EditAssetsModal Component ====================
-export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate, apiBase = '/api/modules/job-recruitment' }) => {
+export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate }) => {
   const [formData, setFormData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [activeCategory, setActiveCategory] = useState(null);
@@ -438,6 +479,7 @@ export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate, apiBase = '/a
   const modalRef = useRef(null);
   
   const config = moduleAssetsConfig[scan?.toolId];
+  const apiBase = getApiBase(scan?.toolId);
 
   useEffect(() => {
     if (scan?.assets) {
@@ -482,17 +524,40 @@ export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate, apiBase = '/a
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     
-    if (onUpdate) {
-      onUpdate(scan.id, formData);
-    }
+    console.log('=== UPDATING ASSETS ===');
+    console.log('Scan ID:', scan.id);
+    console.log('Tool ID:', scan.toolId);
+    console.log('API Endpoint:', `${apiBase}?id=${scan.id}`);
+    console.log('Form Data:', formData);
     
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${apiBase}?id=${scan.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await response.json();
+      console.log('Response:', data);
+      
+      if (data.success) {
+        if (onUpdate) {
+          onUpdate(scan.id, formData);
+        }
+        onClose();
+      } else {
+        console.error('API Error:', data.error);
+        setError(data.error || 'Failed to update assets');
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      setError('Network error. Please try again.');
+    } finally {
       setSaving(false);
-      onClose();
-    }, 500);
+    }
   };
 
   const handleRevert = () => {
