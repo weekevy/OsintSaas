@@ -337,6 +337,26 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+-- LinkedIn scans table
+CREATE TABLE IF NOT EXISTS linkedin_scans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    scan_id INT NOT NULL UNIQUE,
+    profile_url VARCHAR(500),
+    profile_name VARCHAR(255),
+    profile_headline TEXT,
+    profile_location VARCHAR(255),
+    connections_list TEXT,
+    mutual_connections TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE,
+    INDEX idx_scan_id (scan_id)
+);
+
+
+
+
 -- ============================================
 -- CREATE DEFAULT PROJECTS FOR EXISTING USERS
 -- ============================================

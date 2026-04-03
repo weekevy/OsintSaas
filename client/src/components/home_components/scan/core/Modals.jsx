@@ -214,9 +214,9 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const modalRef = useRef(null);
+  const saveTriggeredRef = useRef(false);
   
   const config = moduleAssetsConfig[moduleType];
-  const apiBase = getApiBase(moduleType);
 
   useEffect(() => {
     if (config && config.categories.length > 0) {
@@ -225,6 +225,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
     if (isOpen) {
       setFormData({});
       setErrors({});
+      saveTriggeredRef.current = false;
     }
   }, [config, isOpen]);
 
@@ -268,54 +269,36 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
   };
 
   const handleSave = async () => {
+    // Prevent double save
+    if (saveTriggeredRef.current || saving) {
+      console.log('Save already in progress, skipping...');
+      return;
+    }
+    
     const validationErrors = validateForm(config, formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
+    saveTriggeredRef.current = true;
     setSaving(true);
     
-    // Log what module type and data is being sent
-    console.log('=== SAVING ASSETS ===');
-    console.log('Module Type:', moduleType);
-    console.log('Module Name:', moduleName);
-    console.log('Form Data:', formData);
-    console.log('API Endpoint:', apiBase);
-    
-    try {
-      const response = await fetch(apiBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          project_id: projectId
-        })
+    // Pass the data to parent - let parent handle the API call
+    if (onSave) {
+      onSave({
+        moduleType,
+        moduleName,
+        assets: formData,
+        timestamp: new Date().toISOString()
       });
-      
-      const data = await response.json();
-      console.log('Response:', data);
-      
-      if (data.success) {
-        if (onSave) {
-          onSave({
-            moduleType,
-            moduleName,
-            assets: formData,
-            timestamp: new Date().toISOString()
-          });
-        }
-        onClose();
-      } else {
-        console.error('API Error:', data.error);
-        setErrors({ submit: data.error || 'Failed to save assets' });
-      }
-    } catch (error) {
-      console.error('Network Error:', error);
-      setErrors({ submit: 'Network error. Please try again.' });
-    } finally {
-      setSaving(false);
     }
+    
+    // Close modal after a short delay for better UX
+    setTimeout(() => {
+      setSaving(false);
+      onClose();
+    }, 500);
   };
 
   if (!isOpen || !config) return null;
@@ -445,6 +428,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
             Cancel
           </button>
           <button 
+            type="button"
             onClick={handleSave} 
             disabled={saving}
             className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm font-medium flex items-center gap-2 disabled:opacity-50"
@@ -527,12 +511,6 @@ export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate }) => {
   const handleSave = async () => {
     setSaving(true);
     
-    console.log('=== UPDATING ASSETS ===');
-    console.log('Scan ID:', scan.id);
-    console.log('Tool ID:', scan.toolId);
-    console.log('API Endpoint:', `${apiBase}?id=${scan.id}`);
-    console.log('Form Data:', formData);
-    
     try {
       const response = await fetch(`${apiBase}?id=${scan.id}`, {
         method: 'PUT',
@@ -541,7 +519,6 @@ export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate }) => {
       });
       
       const data = await response.json();
-      console.log('Response:', data);
       
       if (data.success) {
         if (onUpdate) {
@@ -549,7 +526,6 @@ export const EditAssetsModal = ({ isOpen, onClose, scan, onUpdate }) => {
         }
         onClose();
       } else {
-        console.error('API Error:', data.error);
         setError(data.error || 'Failed to update assets');
       }
     } catch (error) {
