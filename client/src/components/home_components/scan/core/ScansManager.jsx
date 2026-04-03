@@ -1,323 +1,311 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getIcon } from '../utils/icons';
 
-// ==================== RunningScans Component with Remove ====================
-export const RunningScans = ({ 
-  runningScans, 
-  onRefresh,
-  onStartScanExecution, 
-  onPauseScan, 
-  onStopScan, 
-  onResumeScan, 
-  onEditScan,
-  onRemoveScan
-}) => {
-  if (!runningScans || runningScans.length === 0) return null;
+// ConfirmModal Component
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = false }) => {
+  if (!isOpen) return null;
 
-  const handleRemove = (scanId, e) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to remove this scan?')) {
-      onRemoveScan(scanId);
-    }
-  };
+  React.useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl shadow-purple-500/20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
+          <div className="relative px-6 py-5 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl ${danger ? 'bg-red-500/20' : 'bg-yellow-500/20'} flex items-center justify-center`}>
+                {danger ? (
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{title}</h2>
+                <p className="text-white/40 text-sm">{message}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex justify-end gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm">Cancel</button>
+            <button onClick={onConfirm} className={`px-6 py-2.5 rounded-lg transition-all text-sm font-medium flex items-center gap-2 ${danger ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:shadow-lg hover:shadow-red-500/30' : 'bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-lg hover:shadow-purple-500/30'}`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+              Confirm Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ReviewAssetsModal Component
+const ReviewAssetsModal = ({ isOpen, onClose, scan }) => {
+  if (!isOpen || !scan) return null;
+
+  React.useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
+  const assets = scan.assets || {};
+  const assetEntries = Object.entries(assets).filter(([key, value]) => value && value !== '');
+
+  return (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative w-full max-w-3xl max-h-[80vh] bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl shadow-purple-500/20 overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
+          <div className="relative px-6 py-5 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Review Assets - {scan.tool}</h2>
+                  <p className="text-white/40 text-sm">Target: {scan.target}</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+          {assetEntries.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">No Assets</h3>
+              <p className="text-white/40 text-sm">This scan has no assets attached</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assetEntries.map(([key, value]) => (
+                <div key={key} className="bg-white/5 rounded-xl border border-white/10 p-4 hover:border-purple-500/30 transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-medium text-sm capitalize mb-1">{key.replace(/_/g, ' ')}</h4>
+                      <p className="text-white/60 text-sm break-all">{value}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-white/10 bg-black/20 flex justify-end">
+          <button onClick={onClose} className="px-5 py-2.5 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// RunningScans Component
+export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onReviewScan }) => {
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
+  const [reviewModal, setReviewModal] = useState({ isOpen: false, scan: null });
+
+  if (!runningScans || runningScans.length === 0) return null;
+
+  const handleRemoveClick = (scan, e) => {
+    e.stopPropagation();
+    setConfirmModal({ isOpen: true, scan });
+  };
+
+  const handleReviewClick = (scan, e) => {
+    e.stopPropagation();
+    setReviewModal({ isOpen: true, scan });
+  };
+
+  const handleConfirmRemove = () => {
+    console.log('Confirming delete - Scan object:', confirmModal.scan);
+    if (confirmModal.scan && onRemoveScan) {
+      console.log('Calling onRemoveScan with:', confirmModal.scan.originalId, confirmModal.scan.moduleId);
+      onRemoveScan(confirmModal.scan.originalId, confirmModal.scan.moduleId);
+    }
+    setConfirmModal({ isOpen: false, scan: null });
+  };
+
+  const handleCloseModal = () => setConfirmModal({ isOpen: false, scan: null });
+  const handleCloseReview = () => setReviewModal({ isOpen: false, scan: null });
+
+  return (
+    <>
+      <div className="space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full animate-pulse" />
           <h3 className="text-white font-semibold">Active Scans ({runningScans.length})</h3>
         </div>
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="text-xs px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors flex items-center gap-1"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Refresh</span>
-          </button>
-        )}
-      </div>
-      
-      <div className="grid gap-4">
-        {runningScans.map(scan => (
-          <div key={scan.id} className="group bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-5 hover:border-purple-500/50 transition-all relative">
-            {/* Remove button - Always visible */}
-            <button
-              onClick={(e) => handleRemove(scan.id, e)}
-              className="absolute top-3 right-3 p-1.5 bg-red-500/20 hover:bg-red-500/40 rounded-lg transition-all z-10"
-              title="Remove scan"
-            >
-              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-
-            <div className="flex items-center justify-between mb-3 pr-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                  {getIcon(scan.toolIcon)}
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold">{scan.tool}</h4>
-                  <p className="text-white/40 text-sm">Target: {scan.target}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {/* Show buttons for queued scans */}
-                {(scan.status === 'queued' || scan.status === 'pending') && (
-                  <>
-                    <button
-                      onClick={() => onStartScanExecution(scan.id)}
-                      className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-all"
-                      title="Start Scan"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="grid gap-4">
+          {runningScans.map(scan => {
+            const module = { color: scan.moduleColor, icon: scan.moduleIcon, textColor: scan.moduleTextColor };
+            return (
+              <div key={scan.id} className="group bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-5 hover:border-purple-500/50 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${module.color} bg-opacity-20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      {getIcon(module.icon, "w-5 h-5")}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-white font-semibold">{scan.moduleName}</h4>
+                        <span className={`text-xs px-2 py-0.5 rounded-full bg-white/10 ${module.textColor}`}>{scan.moduleName}</span>
+                      </div>
+                      <p className={`${module.textColor} text-sm font-medium mt-1`}>Target: {scan.target}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons - In one line */}
+                  <div className="flex items-center gap-2">
+                    {/* Review Button */}
+                    <button onClick={(e) => handleReviewClick(scan, e)} className="p-2 rounded-lg text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300 group/btn" title="Review Assets">
+                      <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </button>
-                    <button
-                      onClick={() => onEditScan(scan)}
-                      className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
-                      title="Edit Assets"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                    
+                    {/* Edit Button */}
+                    <button onClick={() => onEditScan(scan)} className="p-2 rounded-lg text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300 group/btn" title="Edit Assets">
+                      <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                       </svg>
                     </button>
-                  </>
-                )}
+                    
+                    {/* Delete Button */}
+                    <button onClick={(e) => handleRemoveClick(scan, e)} className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 group/btn" title="Delete Scan">
+                      <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                    
+                    {/* Status indicator */}
+                    <span className={`flex items-center gap-1 text-sm ml-2 ${scan.status === 'running' ? 'text-green-400' : scan.status === 'paused' ? 'text-yellow-400' : 'text-white/40'}`}>
+                      {scan.status === 'running' && <><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />Running</>}
+                      {scan.status === 'paused' && <><span className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />Paused</>}
+                      {scan.status === 'pending' && 'Pending'}
+                    </span>
+                  </div>
+                </div>
                 
                 {scan.status === 'running' && (
-                  <>
-                    <button
-                      onClick={() => onPauseScan(scan.id)}
-                      className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-all"
-                      title="Pause Scan"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => onStopScan(scan.id)}
-                      className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                      title="Stop Scan"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </>
+                  <div className="space-y-2 mt-3">
+                    <div className="flex justify-between text-xs"><span className="text-white/40">Progress</span><span className="text-white font-medium">{Math.round(scan.progress)}%</span></div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500 relative" style={{ width: `${scan.progress}%` }}><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" /></div></div>
+                  </div>
                 )}
                 
-                {scan.status === 'paused' && (
-                  <>
-                    <button
-                      onClick={() => onResumeScan(scan.id)}
-                      className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-all"
-                      title="Resume Scan"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => onStopScan(scan.id)}
-                      className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                      title="Stop Scan"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </>
+                {scan.assets && Object.keys(scan.assets).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/10"><div className="flex items-center gap-2 text-xs text-white/40"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg><span>Assets: {Object.keys(scan.assets).length} items</span></div></div>
                 )}
-                
-                {scan.status === 'stopped' && (
-                  <span className="text-red-400 text-sm bg-red-500/20 px-2 py-1 rounded-full">
-                    Stopped
-                  </span>
-                )}
-                
-                <span className={`flex items-center gap-1 text-sm ${
-                  scan.status === 'running' ? 'text-green-400' :
-                  scan.status === 'paused' ? 'text-yellow-400' :
-                  scan.status === 'stopped' ? 'text-red-400' :
-                  scan.status === 'queued' ? 'text-blue-400' :
-                  'text-white/40'
-                }`}>
-                  {scan.status === 'running' && (
-                    <>
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      Running
-                    </>
-                  )}
-                  {scan.status === 'queued' && (
-                    <>
-                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                      Queued
-                    </>
-                  )}
-                  {scan.status === 'paused' && (
-                    <>
-                      <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
-                      Paused
-                    </>
-                  )}
-                  {scan.status === 'pending' && 'Pending'}
-                </span>
               </div>
-            </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      <ConfirmModal isOpen={confirmModal.isOpen} onClose={handleCloseModal} onConfirm={handleConfirmRemove} title="Delete Scan" message="Are you sure you want to permanently delete this scan? This action cannot be undone." danger={true} />
+      <ReviewAssetsModal isOpen={reviewModal.isOpen} onClose={handleCloseReview} scan={reviewModal.scan} />
+    </>
+  );
+};
 
-            {scan.status === 'running' && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/40">Progress</span>
-                  <span className="text-white font-medium">{Math.round(scan.progress)}%</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500 relative"
-                    style={{ width: `${scan.progress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+// ScanHistory Component
+export const ScanHistory = ({ scanHistory, onRemoveScan, onReviewScan }) => {
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
+  const [reviewModal, setReviewModal] = useState({ isOpen: false, scan: null });
+
+  if (!scanHistory || scanHistory.length === 0) return null;
+
+  const handleRemoveClick = (scan, e) => {
+    e.stopPropagation();
+    setConfirmModal({ isOpen: true, scan });
+  };
+
+  const handleReviewClick = (scan, e) => {
+    e.stopPropagation();
+    setReviewModal({ isOpen: true, scan });
+  };
+
+  const handleConfirmRemove = () => {
+    if (confirmModal.scan && onRemoveScan) {
+      onRemoveScan(confirmModal.scan.originalId, confirmModal.scan.moduleId);
+    }
+    setConfirmModal({ isOpen: false, scan: null });
+  };
+
+  const handleCloseModal = () => setConfirmModal({ isOpen: false, scan: null });
+  const handleCloseReview = () => setReviewModal({ isOpen: false, scan: null });
+
+  return (
+    <>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3"><div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" /><h3 className="text-white font-semibold">Recent Scans</h3></div>
+        <div className="grid gap-3">
+          {scanHistory.slice(0, 3).map(scan => (
+            <div key={scan.id} className="group bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:border-blue-500/50 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">{getIcon(scan.toolIcon)}</div><div><h4 className="text-white font-medium">{scan.tool}</h4><p className="text-white/40 text-xs">{scan.target}</p></div></div>
+                <div className="flex items-center gap-2">
+                  <button onClick={(e) => handleReviewClick(scan, e)} className="p-2 rounded-lg text-green-400 hover:bg-green-500/10 transition-all" title="Review Assets">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </button>
+                  <button onClick={(e) => handleRemoveClick(scan, e)} className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100" title="Delete scan">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                  <div className="flex items-center gap-3 ml-2">
+                    {scan.findings && <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full">{scan.findings} findings</span>}
+                    <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">Completed</span>
                   </div>
                 </div>
               </div>
-            )}
-            
-            {scan.assets && Object.keys(scan.assets).length > 0 && (
-              <div className="mt-3 pt-3 border-t border-white/10">
-                <div className="flex items-center gap-2 text-xs text-white/40">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                  </svg>
-                  <span>Assets: {Object.keys(scan.assets).length} items</span>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ==================== ScanHistory Component with Remove ====================
-export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
-  if (!scanHistory || scanHistory.length === 0) return null;
-
-  const handleRemove = (scanId, e) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this scan from history?')) {
-      onRemoveScan(scanId);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" />
-        <h3 className="text-white font-semibold">Recent Scans</h3>
-      </div>
-
-      <div className="grid gap-3">
-        {scanHistory.slice(0, 3).map(scan => (
-          <div key={scan.id} className="group bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:border-blue-500/50 transition-all relative">
-            {/* Remove button */}
-            <button
-              onClick={(e) => handleRemove(scan.id, e)}
-              className="absolute top-3 right-3 p-1.5 bg-red-500/20 hover:bg-red-500/40 rounded-lg transition-all opacity-0 group-hover:opacity-100 z-10"
-              title="Delete scan"
-            >
-              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-
-            <div className="flex items-center justify-between pr-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-                  {getIcon(scan.toolIcon)}
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">{scan.tool}</h4>
-                  <p className="text-white/40 text-xs">{scan.target}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {scan.findings && (
-                  <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full">
-                    {scan.findings} findings
-                  </span>
-                )}
-                <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
-                  Completed
-                </span>
-                <button className="text-purple-400 hover:text-purple-300 p-1 hover:bg-white/5 rounded-lg transition-all">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+      <ConfirmModal isOpen={confirmModal.isOpen} onClose={handleCloseModal} onConfirm={handleConfirmRemove} title="Delete Scan" message="Are you sure you want to permanently delete this scan from history? This action cannot be undone." danger={true} />
+      <ReviewAssetsModal isOpen={reviewModal.isOpen} onClose={handleCloseReview} scan={reviewModal.scan} />
+    </>
   );
 };
 
-// ==================== ScheduledScans Component ====================
+// ScheduledScans Component
 export const ScheduledScans = ({ scanHistory, runningScans }) => {
   const totalFindings = scanHistory?.reduce((acc, scan) => acc + (scan.findings || 0), 0) || 0;
-
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2">
-        <div className="bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-8 text-center">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-            <svg className="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-2">No Scheduled Scans</h3>
-          <p className="text-white/40 mb-6 max-w-md mx-auto">
-            Set up automated recurring scans to continuously monitor your targets
-          </p>
-          <button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all inline-flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Create Schedule
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-        <h3 className="text-white font-semibold mb-4">Quick Stats</h3>
-        <div className="space-y-4">
-          <div>
-            <div className="text-2xl font-bold text-white">{scanHistory?.length || 0}</div>
-            <div className="text-white/40 text-sm">Completed Scans</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">{runningScans?.length || 0}</div>
-            <div className="text-white/40 text-sm">Active Scans</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">{totalFindings}</div>
-            <div className="text-white/40 text-sm">Findings Detected</div>
-          </div>
-        </div>
-      </div>
+      <div className="lg:col-span-2"><div className="bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-8 text-center"><div className="w-24 h-24 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center"><svg className="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><h3 className="text-2xl font-bold text-white mb-2">No Scheduled Scans</h3><p className="text-white/40 mb-6 max-w-md mx-auto">Set up automated recurring scans to continuously monitor your targets</p><button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all inline-flex items-center gap-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>Create Schedule</button></div></div>
+      <div className="bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6"><h3 className="text-white font-semibold mb-4">Quick Stats</h3><div className="space-y-4"><div><div className="text-2xl font-bold text-white">{scanHistory?.length || 0}</div><div className="text-white/40 text-sm">Completed Scans</div></div><div><div className="text-2xl font-bold text-white">{runningScans?.length || 0}</div><div className="text-white/40 text-sm">Active Scans</div></div><div><div className="text-2xl font-bold text-white">{totalFindings}</div><div className="text-white/40 text-sm">Findings Detected</div></div></div></div>
     </div>
   );
-};
+};  
