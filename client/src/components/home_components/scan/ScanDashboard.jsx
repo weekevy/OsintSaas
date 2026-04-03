@@ -56,10 +56,11 @@ const ScanDashboard = ({
   
   // Track if initial fetch has been done
   const initialFetchDone = useRef(false);
+  // Track if save is in progress to prevent double submission
+  const isSavingRef = useRef(false);
 
-  // Fetch scans from ALL modules - with duplicate prevention
+  // Fetch scans from ALL modules
   const fetchAllScans = useCallback(async () => {
-    // Prevent multiple simultaneous fetch requests
     if (isFetching) {
       console.log('Fetch already in progress, skipping...');
       return;
@@ -106,7 +107,7 @@ const ScanDashboard = ({
       const allScansArrays = await Promise.all(allScansPromises);
       const allScans = allScansArrays.flat();
       
-      // Remove duplicates using Map with unique key
+      // Remove duplicates
       const uniqueScansMap = new Map();
       allScans.forEach(scan => {
         const key = `${scan.moduleId}_${scan.originalId}`;
@@ -116,8 +117,6 @@ const ScanDashboard = ({
       });
       
       const uniqueScans = Array.from(uniqueScansMap.values());
-      
-      // Sort by creation date (newest first)
       uniqueScans.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
       const running = uniqueScans.filter(s => 
@@ -164,7 +163,6 @@ const ScanDashboard = ({
     }
   };
 
-  // Initial fetch only once
   useEffect(() => {
     if (!initialFetchDone.current) {
       initialFetchDone.current = true;
@@ -172,7 +170,6 @@ const ScanDashboard = ({
     }
   }, [fetchAllScans]);
 
-  // Fetch when filter changes - but only if not initial
   useEffect(() => {
     if (initialFetchDone.current) {
       fetchAllScans();
@@ -203,7 +200,14 @@ const ScanDashboard = ({
   };
 
   const handleSaveAssets = async (assetData) => {
+    if (isSavingRef.current) {
+      console.log('Save already in progress, skipping duplicate...');
+      return;
+    }
+    
+    isSavingRef.current = true;
     setLoading(true);
+    
     const module = getModuleById(assetData.moduleType);
     const apiBase = module?.api || '/api/modules/job-recruitment';
     
@@ -220,28 +224,32 @@ const ScanDashboard = ({
       const data = await response.json();
       
       if (data.success) {
-        // Wait a moment for database to commit
         await new Promise(resolve => setTimeout(resolve, 500));
-        // Fetch fresh data
         await fetchAllScans();
         setShowAddAssets(false);
         setSelectedModule(null);
+      } else {
+        console.error('Save failed:', data.error);
+        alert(data.error || 'Failed to save scan');
       }
     } catch (error) {
       console.error('Error saving scan:', error);
+      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
+      isSavingRef.current = false;
     }
   };
 
   const handleRemoveScan = async (scanId, moduleId) => {
-    if (!window.confirm('Are you sure you want to remove this scan?')) return;
+    if (!window.confirm('Are you sure you want to permanently delete this scan?')) return;
     
     setLoading(true);
     const module = getModuleById(moduleId);
     const apiBase = module?.api || '/api/modules/job-recruitment';
     
     try {
+      // Delete the scan - this should cascade to child tables if ON DELETE CASCADE is set
       const response = await fetch(`${apiBase}?id=${scanId}`, {
         method: 'DELETE'
       });
@@ -250,9 +258,14 @@ const ScanDashboard = ({
       
       if (data.success) {
         await fetchAllScans();
+        alert('Scan deleted successfully');
+      } else {
+        console.error('Delete failed:', data.error);
+        alert(data.error || 'Failed to delete scan');
       }
     } catch (error) {
       console.error('Error removing scan:', error);
+      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -291,9 +304,13 @@ const ScanDashboard = ({
         await fetchAllScans();
         setShowEditAssets(false);
         setEditingScan(null);
+        alert('Assets updated successfully');
+      } else {
+        alert(data.error || 'Failed to update assets');
       }
     } catch (error) {
       console.error('Error updating assets:', error);
+      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -320,7 +337,6 @@ const ScanDashboard = ({
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Filter Dropdown */}
           <div className="relative" ref={filterDropdownRef}>
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
@@ -399,7 +415,7 @@ const ScanDashboard = ({
 
       <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
 
-      {/* Running Scans - Only shows if there are scans in database */}
+      {/* Running Scans */}
       {runningScans.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -430,7 +446,6 @@ const ScanDashboard = ({
                       </div>
                     </div>
                     
-                    {/* Action Buttons - Edit and Delete */}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEditScan(scan)}
@@ -504,6 +519,18 @@ const ScanDashboard = ({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {!loading && runningScans.length === 0 && (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+            <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2">No Active Scans</h3>
+          <p className="text-white/40 text-sm">Click on any module above to start an investigation</p>
         </div>
       )}
 
