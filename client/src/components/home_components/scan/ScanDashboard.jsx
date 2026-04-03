@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ScanTabs from './ScanTabs';
 import { InvestigationModules, CustomScanConfig } from './core/Modules';
 import { RunningScans, ScanHistory, ScheduledScans } from './core/ScansManager';
@@ -21,6 +21,9 @@ const ALL_MODULES = [
 const getModuleById = (moduleId) => {
   return ALL_MODULES.find(m => m.id === moduleId) || ALL_MODULES[0];
 };
+
+// Flag to prevent multiple simultaneous fetch requests
+let isFetching = false;
 
 const ScanDashboard = ({ 
   searchInput, 
@@ -49,11 +52,22 @@ const ScanDashboard = ({
   const [loading, setLoading] = useState(false);
   const [filterModule, setFilterModule] = useState('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filterDropdownRef = React.useRef(null);
+  const filterDropdownRef = useRef(null);
+  
+  // Track if initial fetch has been done
+  const initialFetchDone = useRef(false);
 
-  // Fetch scans from ALL modules
-  const fetchAllScans = async () => {
+  // Fetch scans from ALL modules - with duplicate prevention
+  const fetchAllScans = useCallback(async () => {
+    // Prevent multiple simultaneous fetch requests
+    if (isFetching) {
+      console.log('Fetch already in progress, skipping...');
+      return;
+    }
+    
+    isFetching = true;
     setLoading(true);
+    
     try {
       const modulesToFetch = filterModule === 'all' 
         ? ALL_MODULES 
@@ -64,7 +78,7 @@ const ScanDashboard = ({
           const response = await fetch(module.api);
           const data = await response.json();
           
-          if (data.success) {
+          if (data.success && data.scans && data.scans.length > 0) {
             return data.scans.map(scan => ({
               id: `${module.id}_${scan.id}`,
               originalId: scan.id,
@@ -92,12 +106,24 @@ const ScanDashboard = ({
       const allScansArrays = await Promise.all(allScansPromises);
       const allScans = allScansArrays.flat();
       
-      allScans.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // Remove duplicates using Map with unique key
+      const uniqueScansMap = new Map();
+      allScans.forEach(scan => {
+        const key = `${scan.moduleId}_${scan.originalId}`;
+        if (!uniqueScansMap.has(key)) {
+          uniqueScansMap.set(key, scan);
+        }
+      });
       
-      const running = allScans.filter(s => 
+      const uniqueScans = Array.from(uniqueScansMap.values());
+      
+      // Sort by creation date (newest first)
+      uniqueScans.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      const running = uniqueScans.filter(s => 
         ['queued', 'running', 'paused'].includes(s.status)
       );
-      const history = allScans.filter(s => 
+      const history = uniqueScans.filter(s => 
         ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)
       );
       
@@ -107,10 +133,13 @@ const ScanDashboard = ({
       console.error('Error fetching all scans:', error);
     } finally {
       setLoading(false);
+      isFetching = false;
     }
-  };
+  }, [filterModule]);
 
   const getTargetDisplay = (scan, moduleId) => {
+    if (!scan.assets) return 'Scan';
+    
     switch(moduleId) {
       case 'job-recruitment':
         return scan.assets?.job_title ? 
@@ -135,9 +164,20 @@ const ScanDashboard = ({
     }
   };
 
+  // Initial fetch only once
   useEffect(() => {
-    fetchAllScans();
-  }, [filterModule]);
+    if (!initialFetchDone.current) {
+      initialFetchDone.current = true;
+      fetchAllScans();
+    }
+  }, [fetchAllScans]);
+
+  // Fetch when filter changes - but only if not initial
+  useEffect(() => {
+    if (initialFetchDone.current) {
+      fetchAllScans();
+    }
+  }, [filterModule, fetchAllScans]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -180,6 +220,9 @@ const ScanDashboard = ({
       const data = await response.json();
       
       if (data.success) {
+        // Wait a moment for database to commit
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Fetch fresh data
         await fetchAllScans();
         setShowAddAssets(false);
         setSelectedModule(null);
@@ -215,53 +258,16 @@ const ScanDashboard = ({
     }
   };
 
-  const handleStartScanExecution = (scanId, moduleId) => {
-    setRunningScans(prev => prev.map(scan => 
-      scan.id === `${moduleId}_${scanId}` ? { ...scan, status: 'running' } : scan
-    ));
-
-    const interval = setInterval(() => {
-      setRunningScans(prev => prev.map(scan => {
-        if (scan.id === `${moduleId}_${scanId}` && scan.status === 'running') {
-          const newProgress = scan.progress + Math.random() * 10;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            setScanHistory(prev => [...prev, { 
-              ...scan, 
-              progress: 100, 
-              status: 'completed', 
-              endTime: new Date().toLocaleTimeString()
-            }]);
-            return null;
-          }
-          return { ...scan, progress: newProgress };
-        }
-        return scan;
-      }).filter(Boolean));
-    }, 1000);
-  };
-
-  const handlePauseScan = (scanId, moduleId) => {
-    setRunningScans(prev => prev.map(scan => 
-      scan.id === `${moduleId}_${scanId}` ? { ...scan, status: 'paused' } : scan
-    ));
-  };
-
-  const handleStopScan = (scanId, moduleId) => {
-    setRunningScans(prev => prev.map(scan => 
-      scan.id === `${moduleId}_${scanId}` ? { ...scan, status: 'stopped' } : scan
-    ));
-  };
-
-  const handleResumeScan = (scanId, moduleId) => {
-    setRunningScans(prev => prev.map(scan => 
-      scan.id === `${moduleId}_${scanId}` ? { ...scan, status: 'running' } : scan
-    ));
-    handleStartScanExecution(scanId, moduleId);
-  };
-
   const handleEditScan = (scan) => {
-    setEditingScan(scan);
+    // Create a properly formatted scan object for editing
+    const editScanData = {
+      id: scan.originalId,
+      toolId: scan.moduleId,
+      tool: scan.moduleName,
+      assets: scan.assets,
+      status: scan.status
+    };
+    setEditingScan(editScanData);
     setShowEditAssets(true);
   };
 
@@ -269,11 +275,11 @@ const ScanDashboard = ({
     if (!editingScan) return;
     
     setLoading(true);
-    const module = getModuleById(editingScan.moduleId);
+    const module = getModuleById(editingScan.toolId);
     const apiBase = module?.api || '/api/modules/job-recruitment';
     
     try {
-      const response = await fetch(`${apiBase}?id=${editingScan.originalId}`, {
+      const response = await fetch(`${apiBase}?id=${scanId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedAssets)
@@ -393,7 +399,7 @@ const ScanDashboard = ({
 
       <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
 
-      {/* Running Scans */}
+      {/* Running Scans - Only shows if there are scans in database */}
       {runningScans.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -424,98 +430,30 @@ const ScanDashboard = ({
                       </div>
                     </div>
                     
-                    {/* Action Buttons - Right Side */}
+                    {/* Action Buttons - Edit and Delete */}
                     <div className="flex items-center gap-2">
-                      {scan.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleStartScanExecution(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300 group/btn"
-                            title="Start Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleEditScan(scan)}
-                            className="p-2 rounded-lg text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300 group/btn"
-                            title="Edit Assets"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleRemoveScan(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 group/btn"
-                            title="Delete Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                            </svg>
-                          </button>
-                        </>
-                      )}
-                      
-                      {scan.status === 'running' && (
-                        <>
-                          <button
-                            onClick={() => handlePauseScan(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 transition-all duration-300 group/btn"
-                            title="Pause Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleStopScan(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 group/btn"
-                            title="Stop Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </>
-                      )}
-                      
-                      {scan.status === 'paused' && (
-                        <>
-                          <button
-                            onClick={() => handleResumeScan(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300 group/btn"
-                            title="Resume Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleStopScan(scan.originalId, scan.moduleId)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 group/btn"
-                            title="Stop Scan"
-                          >
-                            <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </>
-                      )}
-                      
-                      {scan.status === 'stopped' && (
-                        <span className="text-red-400 text-xs bg-red-500/20 px-2 py-1 rounded-full">
-                          Stopped
-                        </span>
-                      )}
+                      <button
+                        onClick={() => handleEditScan(scan)}
+                        className="p-2 rounded-lg text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300 group/btn"
+                        title="Edit Assets"
+                      >
+                        <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleRemoveScan(scan.originalId, scan.moduleId)}
+                        className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300 group/btn"
+                        title="Delete Scan"
+                      >
+                        <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
                       
                       <span className={`flex items-center gap-1 text-sm ml-2 ${
                         scan.status === 'running' ? 'text-green-400' :
                         scan.status === 'paused' ? 'text-yellow-400' :
-                        scan.status === 'stopped' ? 'text-red-400' :
                         'text-white/40'
                       }`}>
                         {scan.status === 'running' && (
