@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const RiskCircle = ({ riskScore, getRiskColor, getRiskBgColor }) => {
+const RiskCircle = ({ riskScore = 0, projectName, projectTarget, getRiskColor, getRiskBgColor }) => {
   const [animate, setAnimate] = useState(false);
   const [displayScore, setDisplayScore] = useState(riskScore);
   
@@ -37,12 +37,6 @@ const RiskCircle = ({ riskScore, getRiskColor, getRiskBgColor }) => {
     };
   }, [riskScore]);
 
-  const stats = [
-    { label: 'Total Scans', value: '1,234' },
-    { label: 'Threats', value: '89' },
-    { label: 'Clean', value: '1,145' }
-  ];
-
   // Calculate circle properties
   const size = 200;
   const radius = 85;
@@ -50,10 +44,16 @@ const RiskCircle = ({ riskScore, getRiskColor, getRiskBgColor }) => {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (displayScore / 100) * circumference;
 
+  // Helper function to get risk level text
+  const getRiskLevel = (score) => {
+    if (score >= 75) return 'Critical Risk';
+    if (score >= 50) return 'High Risk';
+    if (score >= 25) return 'Medium Risk';
+    return 'Low Risk';
+  };
+
   return (
     <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[450px] mx-auto">
-      
-      {/* No background glow animation - removed completely */}
       
       <h3 className="text-lg lg:text-xl font-semibold text-white mb-3 lg:mb-4 relative z-10 flex items-center gap-2">
         Risk Assessment
@@ -119,22 +119,21 @@ const RiskCircle = ({ riskScore, getRiskColor, getRiskBgColor }) => {
       <div className={`flex items-center gap-2 transition-all duration-500 mb-3 lg:mb-4 ${animate ? 'scale-105' : 'scale-100'}`}>
         <div className={`w-2 h-2 rounded-full ${getRiskBgColor(displayScore)} ${animate ? 'animate-pulse' : ''}`} />
         <span className="text-sm text-white font-medium">
-          {displayScore >= 75 ? 'Critical Risk' : 
-           displayScore >= 50 ? 'High Risk' : 
-           displayScore >= 25 ? 'Medium Risk' : 'Low Risk'}
+          {getRiskLevel(displayScore)}
         </span>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-3 gap-3 w-full mt-2 pt-3 border-t border-white/10">
-        {stats.map((stat, i) => (
-          <div key={i} className="text-center group hover:scale-105 transition-transform duration-300">
-            <div className="text-white font-semibold text-sm sm:text-base group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-blue-400">
-              {stat.value}
-            </div>
-            <div className="text-white/40 text-xs">{stat.label}</div>
+      {/* Current Project Info */}
+      <div className="text-center pt-3 border-t border-white/10 w-full">
+        <div className="text-white/60 text-xs mb-1">Current Project</div>
+        <div className="text-white font-medium text-sm truncate px-2">
+          {projectName || 'No Project Selected'}
+        </div>
+        {projectTarget && (
+          <div className="text-white/40 text-xs truncate px-2 mt-1">
+            {projectTarget}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

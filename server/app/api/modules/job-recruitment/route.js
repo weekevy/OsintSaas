@@ -263,47 +263,52 @@ export async function POST(request) {
   }
 }
 
-// DELETE /api/modules/job-recruitment?id=1 - Delete scan
-export async function DELETE(request) {
-  try {
-    // Verify user from token
-    const user = await verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // DELETE /api/modules/job-recruitment?id=1 - Delete scan
+  export async function DELETE(request) {
+    try {
+      const user = await verifyToken(request);
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const { searchParams } = new URL(request.url);
+      const id = parseInt(searchParams.get('id'));
+
+      // Verify the scan belongs to this user
+      const [scans] = await query(`
+        SELECT s.id, s.target_id
+        FROM scans s
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        WHERE s.id = ? AND p.user_id = ?
+      `, [id, user.id]);
+
+      if (scans.length === 0) {
+        return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+      }
+
+      const targetId = scans[0].target_id;
+
+      // Delete in correct order (child tables first)
+      await pool.execute('DELETE FROM job_recruitment_scans WHERE scan_id = ?', [id]);
+      await pool.execute('DELETE FROM scans WHERE id = ?', [id]);
+      if (targetId) {
+        await pool.execute('DELETE FROM targets WHERE id = ?', [targetId]);
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Scan deleted successfully' 
+      });
+    } catch (error) {
+      console.error('Error deleting scan:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to delete scan',
+        details: error.message 
+      }, { status: 500 });
     }
-
-    const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id'));
-
-    // Verify the scan belongs to this user before deleting
-    const [scans] = await query(`
-      SELECT s.id 
-      FROM scans s
-      JOIN targets t ON s.target_id = t.id
-      JOIN projects p ON t.project_id = p.id
-      WHERE s.id = ? AND p.user_id = ?
-    `, [id, user.id]);
-
-    if (scans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
-    }
-
-    await pool.execute('DELETE FROM scans WHERE id = ?', [id]);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Scan deleted successfully' 
-    });
-  } catch (error) {
-    console.error('Error deleting scan:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to delete scan',
-      details: error.message 
-    }, { status: 500 });
   }
-}
-
 // PUT /api/modules/job-recruitment?id=1 - Update scan assets
 export async function PUT(request) {
   try {
