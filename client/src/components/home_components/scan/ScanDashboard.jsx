@@ -55,9 +55,10 @@ const ScanDashboard = ({
   
   const initialFetchDone = useRef(false);
   const isSavingRef = useRef(false);
+  const isRefreshingRef = useRef(false);
 
-  const fetchAllScans = useCallback(async () => {
-    if (isFetching) return;
+  const fetchAllScans = useCallback(async (forceRefresh = false) => {
+    if (isFetching && !forceRefresh) return;
     
     isFetching = true;
     setLoading(true);
@@ -69,7 +70,9 @@ const ScanDashboard = ({
       
       const allScansPromises = modulesToFetch.map(async (module) => {
         try {
-          const response = await fetch(module.api);
+          // Add cache-busting parameter to force fresh data
+          const cacheBuster = forceRefresh ? `?_=${Date.now()}` : '';
+          const response = await fetch(`${module.api}${cacheBuster}`);
           const data = await response.json();
           
           if (data.success && data.scans && data.scans.length > 0) {
@@ -111,8 +114,18 @@ const ScanDashboard = ({
       const uniqueScans = Array.from(uniqueScansMap.values());
       uniqueScans.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
-      setRunningScans(uniqueScans.filter(s => ['queued', 'running', 'paused'].includes(s.status)));
-      setScanHistory(uniqueScans.filter(s => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
+      const running = uniqueScans.filter(s => ['queued', 'running', 'paused'].includes(s.status));
+      const history = uniqueScans.filter(s => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status));
+      
+      setRunningScans(running);
+      setScanHistory(history);
+      
+      // Clear any localStorage cache
+      try {
+        localStorage.removeItem('scans_cache');
+        sessionStorage.removeItem('scans_cache');
+      } catch(e) {}
+      
     } catch (error) {
       console.error('Error fetching all scans:', error);
     } finally {
@@ -120,6 +133,21 @@ const ScanDashboard = ({
       isFetching = false;
     }
   }, [filterModule]);
+
+  const forceRefreshScans = useCallback(async () => {
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
+    setLoading(true);
+    
+    // Clear current state
+    setRunningScans([]);
+    setScanHistory([]);
+    
+    // Fetch fresh data
+    await fetchAllScans(true);
+    
+    isRefreshingRef.current = false;
+  }, [fetchAllScans]);
 
   const getTargetDisplay = (scan, moduleId) => {
     if (!scan.assets) return 'Scan';
@@ -136,10 +164,17 @@ const ScanDashboard = ({
     }
   };
 
+  // Clear stale data on mount
   useEffect(() => {
+    // Clear any cached data in localStorage/sessionStorage
+    try {
+      localStorage.removeItem('scans_cache');
+      sessionStorage.removeItem('scans_cache');
+    } catch(e) {}
+    
     if (!initialFetchDone.current) {
       initialFetchDone.current = true;
-      fetchAllScans();
+      fetchAllScans(true);
     }
   }, [fetchAllScans]);
 
@@ -170,7 +205,9 @@ const ScanDashboard = ({
     console.log('Starting custom scan with options:', scanOptions);
   };
 
-  const handleSaveAssets = async (assetData) => {
+
+
+    const handleSaveAssets = async (assetData) => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     setLoading(true);
@@ -188,8 +225,16 @@ const ScanDashboard = ({
       const data = await response.json();
       
       if (data.success) {
+        // IMPORTANT: Wait a moment for database to commit
         await new Promise(resolve => setTimeout(resolve, 500));
-        await fetchAllScans();
+        
+        // Force clear local state before fetching fresh data
+        setRunningScans([]);
+        setScanHistory([]);
+        
+        // Fetch fresh data from server
+        await fetchAllScans(true);
+        
         setShowAddAssets(false);
         setSelectedModule(null);
       } else {
@@ -204,35 +249,39 @@ const ScanDashboard = ({
     }
   };
 
+
+
+
+
   const handleRemoveScan = async (scanId, moduleId) => {
-  console.log('=== DELETE SCAN ===');
-  console.log('Scan ID to delete:', scanId);
-  console.log('Module ID:', moduleId);
-  
-  setLoading(true);
-  const module = getModuleById(moduleId);
-  const apiBase = module?.api || '/api/modules/job-recruitment';
-  const url = `${apiBase}?id=${scanId}`;
-  console.log('DELETE URL:', url);
-  
-  try {
-    const response = await fetch(url, { method: 'DELETE' });
-    const data = await response.json();
-    console.log('DELETE Response:', data);
+    console.log('=== DELETE SCAN ===');
+    console.log('Scan ID to delete:', scanId);
+    console.log('Module ID:', moduleId);
     
-    if (data.success) {
-      await fetchAllScans();
-      alert('Scan deleted successfully');
-    } else {
-      alert(data.error || 'Failed to delete scan');
+    setLoading(true);
+    const module = getModuleById(moduleId);
+    const apiBase = module?.api || '/api/modules/job-recruitment';
+    const url = `${apiBase}?id=${scanId}`;
+    console.log('DELETE URL:', url);
+    
+    try {
+      const response = await fetch(url, { method: 'DELETE' });
+      const data = await response.json();
+      console.log('DELETE Response:', data);
+      
+      if (data.success) {
+        await forceRefreshScans();
+        alert('Scan deleted successfully');
+      } else {
+        alert(data.error || 'Failed to delete scan');
+      }
+    } catch (error) {
+      console.error('Error removing scan:', error);
+      alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error removing scan:', error);
-    alert('Network error. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleEditScan = (scan) => {
     setEditingScan({ id: scan.originalId, toolId: scan.moduleId, tool: scan.moduleName, assets: scan.assets, status: scan.status });
@@ -254,7 +303,7 @@ const ScanDashboard = ({
       const data = await response.json();
       
       if (data.success) {
-        await fetchAllScans();
+        await forceRefreshScans();
         setShowEditAssets(false);
         setEditingScan(null);
         alert('Assets updated successfully');
@@ -289,6 +338,20 @@ const ScanDashboard = ({
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Refresh Button */}
+          <button
+            onClick={forceRefreshScans}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50"
+            title="Refresh Scans"
+          >
+            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+          
+          {/* Filter Dropdown */}
           <div className="relative" ref={filterDropdownRef}>
             <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
@@ -316,6 +379,7 @@ const ScanDashboard = ({
               </div>
             )}
           </div>
+          
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 px-4 py-2">
             <div className="text-xs text-white/40">Total Scans</div>
             <div className="text-xl font-bold text-white">{totalScans}</div>

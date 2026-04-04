@@ -284,9 +284,9 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
     saveTriggeredRef.current = true;
     setSaving(true);
     
-    // Pass the data to parent - let parent handle the API call
+    // Only call onSave ONCE
     if (onSave) {
-      onSave({
+      await onSave({
         moduleType,
         moduleName,
         assets: formData,
@@ -294,7 +294,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
       });
     }
     
-    // Close modal after a short delay for better UX
+    // Close modal after a short delay
     setTimeout(() => {
       setSaving(false);
       onClose();
