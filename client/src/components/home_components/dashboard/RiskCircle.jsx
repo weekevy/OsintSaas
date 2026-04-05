@@ -53,7 +53,7 @@ const RiskCircle = ({ riskScore = 0, projectName, projectTarget, getRiskColor, g
   };
 
   return (
-    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[450px] mx-auto">
+    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[550px] mx-auto">
       
       <h3 className="text-lg lg:text-xl font-semibold text-white mb-3 lg:mb-4 relative z-10 flex items-center gap-2">
         Risk Assessment
