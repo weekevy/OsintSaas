@@ -17,12 +17,30 @@ const ALL_MODULES = [
   { id: 'crypto-wallet', name: 'Crypto Wallet Tracker', api: '/api/modules/crypto-wallet', icon: 'crypto', color: 'from-indigo-500 to-purple-500', textColor: 'text-indigo-400' }
 ];
 
-// Get module by ID
 const getModuleById = (moduleId) => {
   return ALL_MODULES.find(m => m.id === moduleId) || ALL_MODULES[0];
 };
 
-let isFetching = false;
+// --- GLOBAL CACHE (persists across component unmounts/remounts) ---
+let globalRunningScans = [];
+let globalScanHistory = [];
+let globalInitialLoadDone = false;
+let isFetchingGlobal = false;
+
+const getTargetDisplay = (scan, moduleId) => {
+  if (!scan.assets) return 'Scan';
+  switch(moduleId) {
+    case 'job-recruitment': return scan.assets?.job_title ? `${scan.assets.job_title} at ${scan.assets.company_name}` : 'Job Scan';
+    case 'linkedin': return scan.assets?.profile_name || 'LinkedIn Profile';
+    case 'social-media': return scan.assets?.display_name || 'Social Profile';
+    case 'scam-website': return scan.assets?.website_name || 'Suspicious Website';
+    case 'email-leak': return scan.assets?.email_address || 'Email Check';
+    case 'scam-email': return scan.assets?.subject || 'Scam Email';
+    case 'phone-number': return scan.assets?.phone_number || 'Phone Number';
+    case 'crypto-wallet': return scan.assets?.wallet_address || 'Crypto Wallet';
+    default: return 'Scan';
+  }
+};
 
 const ScanDashboard = ({ 
   searchInput, 
@@ -42,25 +60,27 @@ const ScanDashboard = ({
 
   const [selectedProjectForScan, setSelectedProjectForScan] = useState(selectedProject);
   
-  const [runningScans, setRunningScans] = useState([]);
-  const [scanHistory, setScanHistory] = useState([]);
+  // Initialize state from GLOBAL cache (immediate, no loading flash)
+  const [runningScans, setRunningScans] = useState(globalRunningScans);
+  const [scanHistory, setScanHistory] = useState(globalScanHistory);
   const [selectedModule, setSelectedModule] = useState(null);
   const [showAddAssets, setShowAddAssets] = useState(false);
   const [showEditAssets, setShowEditAssets] = useState(false);
   const [editingScan, setEditingScan] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!globalInitialLoadDone);
   const [filterModule, setFilterModule] = useState('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filterDropdownRef = useRef(null);
   
-  const initialFetchDone = useRef(false);
   const isSavingRef = useRef(false);
   const isRefreshingRef = useRef(false);
 
+  // Fetch scans - updates both local state AND global cache
   const fetchAllScans = useCallback(async (forceRefresh = false) => {
-    if (isFetching && !forceRefresh) return;
+    // Prevent multiple simultaneous fetches
+    if (isFetchingGlobal && !forceRefresh) return;
     
-    isFetching = true;
+    isFetchingGlobal = true;
     setLoading(true);
     
     try {
@@ -70,7 +90,6 @@ const ScanDashboard = ({
       
       const allScansPromises = modulesToFetch.map(async (module) => {
         try {
-          // Add cache-busting parameter to force fresh data
           const cacheBuster = forceRefresh ? `?_=${Date.now()}` : '';
           const response = await fetch(`${module.api}${cacheBuster}`);
           const data = await response.json();
@@ -117,70 +136,43 @@ const ScanDashboard = ({
       const running = uniqueScans.filter(s => ['queued', 'running', 'paused'].includes(s.status));
       const history = uniqueScans.filter(s => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status));
       
+      // Update GLOBAL cache
+      globalRunningScans = running;
+      globalScanHistory = history;
+      globalInitialLoadDone = true;
+      
+      // Update local state
       setRunningScans(running);
       setScanHistory(history);
-      
-      // Clear any localStorage cache
-      try {
-        localStorage.removeItem('scans_cache');
-        sessionStorage.removeItem('scans_cache');
-      } catch(e) {}
       
     } catch (error) {
       console.error('Error fetching all scans:', error);
     } finally {
       setLoading(false);
-      isFetching = false;
+      isFetchingGlobal = false;
     }
   }, [filterModule]);
 
   const forceRefreshScans = useCallback(async () => {
     if (isRefreshingRef.current) return;
     isRefreshingRef.current = true;
-    setLoading(true);
-    
-    // Clear current state
-    setRunningScans([]);
-    setScanHistory([]);
-    
-    // Fetch fresh data
     await fetchAllScans(true);
-    
     isRefreshingRef.current = false;
   }, [fetchAllScans]);
 
-  const getTargetDisplay = (scan, moduleId) => {
-    if (!scan.assets) return 'Scan';
-    switch(moduleId) {
-      case 'job-recruitment': return scan.assets?.job_title ? `${scan.assets.job_title} at ${scan.assets.company_name}` : 'Job Scan';
-      case 'linkedin': return scan.assets?.profile_name || 'LinkedIn Profile';
-      case 'social-media': return scan.assets?.display_name || 'Social Profile';
-      case 'scam-website': return scan.assets?.website_name || 'Suspicious Website';
-      case 'email-leak': return scan.assets?.email_address || 'Email Check';
-      case 'scam-email': return scan.assets?.subject || 'Scam Email';
-      case 'phone-number': return scan.assets?.phone_number || 'Phone Number';
-      case 'crypto-wallet': return scan.assets?.wallet_address || 'Crypto Wallet';
-      default: return 'Scan';
-    }
-  };
-
-  // Clear stale data on mount
+  // ONLY fetch on mount if global cache is empty
   useEffect(() => {
-    // Clear any cached data in localStorage/sessionStorage
-    try {
-      localStorage.removeItem('scans_cache');
-      sessionStorage.removeItem('scans_cache');
-    } catch(e) {}
-    
-    if (!initialFetchDone.current) {
-      initialFetchDone.current = true;
+    if (!globalInitialLoadDone) {
       fetchAllScans(true);
     }
-  }, [fetchAllScans]);
+  }, []); // Empty dependency = runs once on mount ONLY
 
+  // When filter changes, fetch fresh data
   useEffect(() => {
-    if (initialFetchDone.current) fetchAllScans();
-  }, [filterModule, fetchAllScans]);
+    if (globalInitialLoadDone) {
+      fetchAllScans(true);
+    }
+  }, [filterModule]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -205,9 +197,7 @@ const ScanDashboard = ({
     console.log('Starting custom scan with options:', scanOptions);
   };
 
-
-
-    const handleSaveAssets = async (assetData) => {
+  const handleSaveAssets = async (assetData) => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     setLoading(true);
@@ -225,59 +215,34 @@ const ScanDashboard = ({
       const data = await response.json();
       
       if (data.success) {
-        // IMPORTANT: Wait a moment for database to commit
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Force clear local state before fetching fresh data
-        setRunningScans([]);
-        setScanHistory([]);
-        
-        // Fetch fresh data from server
         await fetchAllScans(true);
-        
         setShowAddAssets(false);
         setSelectedModule(null);
-      } else {
-        alert(data.error || 'Failed to save scan');
-      }
+      } 
     } catch (error) {
       console.error('Error saving scan:', error);
-      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
       isSavingRef.current = false;
     }
   };
 
-
-
-
-
   const handleRemoveScan = async (scanId, moduleId) => {
-    console.log('=== DELETE SCAN ===');
-    console.log('Scan ID to delete:', scanId);
-    console.log('Module ID:', moduleId);
-    
     setLoading(true);
     const module = getModuleById(moduleId);
     const apiBase = module?.api || '/api/modules/job-recruitment';
     const url = `${apiBase}?id=${scanId}`;
-    console.log('DELETE URL:', url);
     
     try {
       const response = await fetch(url, { method: 'DELETE' });
       const data = await response.json();
-      console.log('DELETE Response:', data);
       
       if (data.success) {
         await forceRefreshScans();
-        alert('Scan deleted successfully');
-      } else {
-        alert(data.error || 'Failed to delete scan');
       }
     } catch (error) {
       console.error('Error removing scan:', error);
-      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -306,13 +271,10 @@ const ScanDashboard = ({
         await forceRefreshScans();
         setShowEditAssets(false);
         setEditingScan(null);
-        alert('Assets updated successfully');
       } else {
-        alert(data.error || 'Failed to update assets');
       }
     } catch (error) {
       console.error('Error updating assets:', error);
-      alert('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -321,6 +283,44 @@ const ScanDashboard = ({
   const totalScans = scanHistory.length + runningScans.length;
   const currentFilterModule = getModuleById(filterModule);
   const filterDisplayName = filterModule === 'all' ? 'All Modules' : currentFilterModule.name;
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="space-y-4 animate-pulse">
+      <div className="bg-white/5 rounded-2xl border border-white/10 p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10"></div>
+            <div>
+              <div className="h-5 w-32 bg-white/10 rounded mb-2"></div>
+              <div className="h-4 w-48 bg-white/10 rounded"></div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-white/5 rounded-2xl border border-white/10 p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10"></div>
+            <div>
+              <div className="h-5 w-40 bg-white/10 rounded mb-2"></div>
+              <div className="h-4 w-52 bg-white/10 rounded"></div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6 space-y-8">
@@ -389,20 +389,28 @@ const ScanDashboard = ({
 
       <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
 
-      <RunningScans
-        runningScans={runningScans}
-        onEditScan={handleEditScan}
-        onRemoveScan={handleRemoveScan}
-      />
+      {/* Show loading skeleton ONLY on first-ever load with no cached data */}
+      {loading && !globalInitialLoadDone ? (
+        <LoadingSkeleton />
+      ) : (
+        <>
+          <RunningScans
+            runningScans={runningScans}
+            onEditScan={handleEditScan}
+            onRemoveScan={handleRemoveScan}
+          />
 
-      {!loading && runningScans.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-            <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          </div>
-          <h3 className="text-white font-semibold text-lg mb-2">No Active Scans</h3>
-          <p className="text-white/40 text-sm">Click on any module above to start an investigation</p>
-        </div>
+          {/* Only show "No Active Scans" when not loading and no running scans */}
+          {!loading && runningScans.length === 0 && globalInitialLoadDone && (
+            <div className="text-center py-12 animate-fadeIn">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">No Active Scans</h3>
+              <p className="text-white/40 text-sm">Click on any module above to start an investigation</p>
+            </div>
+          )}
+        </>
       )}
 
       {activeScanTab === 'module' && <InvestigationModules onStartScan={handleStartScan} selectedTarget={selectedProjectForScan?.name || searchInput} />}
