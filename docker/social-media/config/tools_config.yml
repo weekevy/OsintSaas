@@ -1,0 +1,45 @@
+# Job Recruitment Investigation Tools Configuration
+
+linkedin:
+  max_profiles_per_minute: 50
+  timeout_seconds: 30
+  user_agent_rotation: true
+  proxy_rotation: false
+
+company_checker:
+  check_registration: true
+  check_reputation: true
+  check_social_presence: true
+  check_reviews: true
+
+email_validator:
+  check_mx_records: true
+  check_disposable: true
+  check_role_accounts: true
+  check_breaches: true
+
+phone_validator:
+  check_carrier: true
+  check_location: true
+  check_spam_databases: true
+
+website_analyzer:
+  check_ssl: true
+  check_whois: true
+  check_technologies: true
+  check_redirects: true
+  check_blacklists: true
+
+shodan:
+  timeout: 30
+  max_results: 100
+
+virustotal:
+  timeout: 30
+  max_requests_per_minute: 4
+
+output:
+  format: json
+  save_reports: true
+  report_path: /app/output
+  log_path: /app/logs

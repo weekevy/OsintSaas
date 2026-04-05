@@ -1,8 +1,7 @@
 #!/bin/bash
 
 echo ""
-echo "Email leak Container Starting !"
+echo "Social Media Container Starting !"
 echo "Container is ready!"
 echo ""
-
 

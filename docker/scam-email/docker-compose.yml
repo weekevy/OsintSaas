@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  job-recruitment:
+    build: .
+    container_name: job-recruitment-tool
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - ./tools:/app/tools
+    environment:
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+      - CENSYS_API_ID=${CENSYS_API_ID}
+      - CENSYS_API_SECRET=${CENSYS_API_SECRET}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+      - HUNTER_API_KEY=${HUNTER_API_KEY}
+      - CLEARBIT_API_KEY=${CLEARBIT_API_KEY}
+    ports:
+      - "8000:8000"  # FastAPI
+      - "5000:5000"  # Flask
+    networks:
+      - osint-network
+    stdin_open: true
+    tty: true
+
+networks:
+  osint-network:
+    driver: bridge
