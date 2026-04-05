@@ -52,7 +52,7 @@ export const setTokenCookies = (response, tokens) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 15 * 60, // 15 minutes in seconds
+    maxAge: 60 * 60, 
     path: '/',
   });
 

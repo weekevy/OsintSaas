@@ -223,6 +223,7 @@ export async function POST(request) {
 }
 
 // DELETE - Remove LinkedIn scan
+// DELETE - Remove LinkedIn scan
 export async function DELETE(request) {
   try {
     const user = await verifyToken(request);
@@ -231,25 +232,58 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id'));
+    const linkedinScanId = parseInt(searchParams.get('id'));
 
-    const [scans] = await query(`
-      SELECT s.id 
-      FROM scans s
+    if (!linkedinScanId) {
+      return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
+    }
+
+    // First, get the scan_id from linkedin_scans and verify ownership
+    const [linkedinScans] = await query(`
+      SELECT ls.scan_id, ls.id as linkedin_scan_id
+      FROM linkedin_scans ls
+      JOIN scans s ON ls.scan_id = s.id
       JOIN targets t ON s.target_id = t.id
       JOIN projects p ON t.project_id = p.id
-      WHERE s.id = ? AND p.user_id = ?
-    `, [id, user.id]);
+      WHERE ls.id = ? AND p.user_id = ?
+    `, [linkedinScanId, user.id]);
 
-    if (scans.length === 0) {
+    if (linkedinScans.length === 0) {
       return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
     }
 
-    await pool.execute('DELETE FROM scans WHERE id = ?', [id]);
+    const scanId = linkedinScans[0].scan_id;
+    const linkedinRecordId = linkedinScans[0].linkedin_scan_id;
 
-    return NextResponse.json({ success: true, message: 'Scan deleted successfully' });
+    // Get the target_id from scans table
+    const [scans] = await query(`SELECT target_id FROM scans WHERE id = ?`, [scanId]);
+    const targetId = scans[0]?.target_id;
+
+    // Delete in correct order
+    // 1. Delete from linkedin_scans
+    await pool.execute('DELETE FROM linkedin_scans WHERE id = ?', [linkedinRecordId]);
+    
+    // 2. Delete from scans table
+    await pool.execute('DELETE FROM scans WHERE id = ?', [scanId]);
+    
+    // 3. Delete target if no other scans reference it
+    if (targetId) {
+      const [remainingScans] = await pool.execute(
+        'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
+        [targetId]
+      );
+      
+      if (remainingScans[0].count === 0) {
+        await pool.execute('DELETE FROM targets WHERE id = ?', [targetId]);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'LinkedIn scan deleted successfully' 
+    });
   } catch (error) {
-    console.error('Error deleting scan:', error);
+    console.error('Error deleting LinkedIn scan:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to delete scan',
