@@ -286,36 +286,36 @@ const ScanDashboard = ({
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="space-y-4 animate-pulse">
-      <div className="bg-white/5 rounded-2xl border border-white/10 p-5">
+    <div className="space-y-3 sm:space-y-4 animate-pulse">
+      <div className="bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10"></div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10"></div>
             <div>
-              <div className="h-5 w-32 bg-white/10 rounded mb-2"></div>
-              <div className="h-4 w-48 bg-white/10 rounded"></div>
+              <div className="h-4 sm:h-5 w-24 sm:w-32 bg-white/10 rounded mb-1 sm:mb-2"></div>
+              <div className="h-3 sm:h-4 w-36 sm:w-48 bg-white/10 rounded"></div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+          <div className="flex gap-1 sm:gap-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
           </div>
         </div>
       </div>
-      <div className="bg-white/5 rounded-2xl border border-white/10 p-5">
+      <div className="bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10"></div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10"></div>
             <div>
-              <div className="h-5 w-40 bg-white/10 rounded mb-2"></div>
-              <div className="h-4 w-52 bg-white/10 rounded"></div>
+              <div className="h-4 sm:h-5 w-28 sm:w-40 bg-white/10 rounded mb-1 sm:mb-2"></div>
+              <div className="h-3 sm:h-4 w-40 sm:w-52 bg-white/10 rounded"></div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
-            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+          <div className="flex gap-1 sm:gap-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
           </div>
         </div>
       </div>
@@ -323,56 +323,57 @@ const ScanDashboard = ({
   );
 
   return (
-    <div className="p-6 space-y-8">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-3 rounded-2xl">
-            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
+      {/* Header Section - Fully Responsive */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
             </svg>
           </span>
           <div>
-            <h1 className="text-2xl font-bold text-white">Scan Dashboard</h1>
-            <p className="text-white/40 text-sm mt-1">Showing: <span className="text-purple-400">{filterDisplayName}</span></p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Scan Dashboard</h1>
+            <p className="text-white/40 text-xs sm:text-sm mt-0.5 sm:mt-1">Showing: <span className="text-purple-400">{filterDisplayName}</span></p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           {/* Refresh Button */}
           <button
             onClick={forceRefreshScans}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50"
+            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50 text-sm sm:text-base"
             title="Refresh Scans"
           >
-            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden xs:inline text-xs sm:text-sm">Refresh</span>
           </button>
           
           {/* Filter Dropdown */}
           <div className="relative" ref={filterDropdownRef}>
-            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              <span>Filter</span>
-              <svg className={`w-4 h-4 transition-transform duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white text-sm sm:text-base">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              <span className="hidden xs:inline">Filter</span>
+              <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             
             {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden animate-fadeIn">
-                <div className="p-2 border-b border-white/10"><h3 className="text-white font-semibold text-sm px-2">Filter by Module</h3></div>
-                <div className="p-2">
-                  <button onClick={() => { setFilterModule('all'); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${filterModule === 'all' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden animate-fadeIn">
+                <div className="p-2 border-b border-white/10"><h3 className="text-white font-semibold text-xs sm:text-sm px-2">Filter by Module</h3></div>
+                <div className="p-2 max-h-80 overflow-y-auto">
+                  <button onClick={() => { setFilterModule('all'); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === 'all' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                     <span className="flex-1 text-left">All Modules</span>
-                    {filterModule === 'all' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                    {filterModule === 'all' && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                   </button>
                   {ALL_MODULES.map((module) => (
-                    <button key={module.id} onClick={() => { setFilterModule(module.id); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${filterModule === module.id ? `bg-gradient-to-r ${module.color} text-white` : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
-                      {getIcon(module.icon, "w-4 h-4")}
+                    <button key={module.id} onClick={() => { setFilterModule(module.id); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === module.id ? `bg-gradient-to-r ${module.color} text-white` : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
+                      {getIcon(module.icon, "w-3.5 h-3.5 sm:w-4 sm:h-4")}
                       <span className="flex-1 text-left">{module.name}</span>
-                      {filterModule === module.id && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                      {filterModule === module.id && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                     </button>
                   ))}
                 </div>
@@ -380,9 +381,10 @@ const ScanDashboard = ({
             )}
           </div>
           
-          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 px-4 py-2">
-            <div className="text-xs text-white/40">Total Scans</div>
-            <div className="text-xl font-bold text-white">{totalScans}</div>
+          {/* Total Scans Box */}
+          <div className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/10 px-3 sm:px-4 py-1.5 sm:py-2">
+            <div className="text-[10px] sm:text-xs text-white/40 whitespace-nowrap">Total Scans</div>
+            <div className="text-lg sm:text-xl font-bold text-white">{totalScans}</div>
           </div>
         </div>
       </div>
@@ -402,12 +404,12 @@ const ScanDashboard = ({
 
           {/* Only show "No Active Scans" when not loading and no running scans */}
           {!loading && runningScans.length === 0 && globalInitialLoadDone && (
-            <div className="text-center py-12 animate-fadeIn">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <div className="text-center py-8 sm:py-12 animate-fadeIn">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                <svg className="w-8 h-8 sm:w-12 sm:h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">No Active Scans</h3>
-              <p className="text-white/40 text-sm">Click on any module above to start an investigation</p>
+              <h3 className="text-white font-semibold text-base sm:text-lg mb-1 sm:mb-2">No Active Scans</h3>
+              <p className="text-white/40 text-xs sm:text-sm">Click on any module above to start an investigation</p>
             </div>
           )}
         </>
@@ -427,6 +429,9 @@ const ScanDashboard = ({
         .animate-shimmer { animation: shimmer 2s infinite; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        @media (min-width: 480px) {
+          .xs\\:inline { display: inline; }
+        }
       `}</style>
     </div>
   );

@@ -33,7 +33,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
   return (
     <div className="space-y-8">
-      {/* Stats Overview */}
+      {/* Stats CategoriesOverview */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-xl p-4 border border-purple-500/30">
           <div className="text-white/40 text-xs">Total Scans (30d)</div>

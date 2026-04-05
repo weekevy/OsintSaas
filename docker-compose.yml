@@ -30,7 +30,6 @@ services:
     networks:
       - osint_network
 
-  # Job Recruitment OSINT Tool
   job-recruitment:
     build: ./docker/job-recruitment
     container_name: job-recruitment-tool
@@ -42,18 +41,18 @@ services:
       - ./docker/job-recruitment/config:/app/config
       - ./docker/job-recruitment/tools:/app/tools
     environment:
-      - SHODAN_API_KEY=${SHODAN_API_KEY}
-      - CENSYS_API_ID=${CENSYS_API_ID}
-      - CENSYS_API_SECRET=${CENSYS_API_SECRET}
-      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
-      - HUNTER_API_KEY=${HUNTER_API_KEY}
-      - CLEARBIT_API_KEY=${CLEARBIT_API_KEY}
+      # - SHODAN_API_KEY=${SHODAN_API_KEY}
+      # - CENSYS_API_ID=${CENSYS_API_ID}
+      # - CENSYS_API_SECRET=${CENSYS_API_SECRET}
+      # - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+      # - HUNTER_API_KEY=${HUNTER_API_KEY}
+      # - CLEARBIT_API_KEY=${CLEARBIT_API_KEY}
       - MARIADB_HOST=mariadb
       - MARIADB_DATABASE=${MYSQL_DATABASE}
       - MARIADB_USER=${MYSQL_USER}
       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
     ports:
-      - "8000:8000"  # FastAPI
+      - "8000:8000"
     depends_on:
       - mariadb
     networks:
@@ -68,6 +67,198 @@ services:
       fi &&
       tail -f /dev/null
       "
+
+  # LinkedIn Investigation Tool
+  linkedin-investigation:
+    build: ./docker/linkedin-investigation
+    container_name: linkedin-investigation-tool
+    restart: unless-stopped
+    volumes:
+      - ./docker/linkedin-investigation/data:/app/data
+      - ./docker/linkedin-investigation/output:/app/output
+      - ./docker/linkedin-investigation/logs:/app/logs
+      - ./docker/linkedin-investigation/config:/app/config
+      - ./docker/linkedin-investigation/tools:/app/tools
+    environment:
+      # - LINKEDIN_EMAIL=${LINKEDIN_EMAIL}
+      # - LINKEDIN_PASSWORD=${LINKEDIN_PASSWORD}
+      - MARIADB_HOST=mariadb
+      - MARIADB_DATABASE=${MYSQL_DATABASE}
+      - MARIADB_USER=${MYSQL_USER}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mariadb
+    networks:
+      - osint_network
+    stdin_open: true
+    tty: true
+
+#   # Social Media OSINT Tool
+#   social-media:
+#     build: ./docker/social-media
+#     container_name: social-media-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/social-media/data:/app/data
+#       - ./docker/social-media/output:/app/output
+#       - ./docker/social-media/logs:/app/logs
+#       - ./docker/social-media/config:/app/config
+#       - ./docker/social-media/tools:/app/tools
+#     environment:
+#       # - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+#       # - INSTAGRAM_USERNAME=${INSTAGRAM_USERNAME}
+#       # - INSTAGRAM_PASSWORD=${INSTAGRAM_PASSWORD}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8002:8002"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+#   # Scam Website Analysis Tool
+#   scam-website:
+#     build: ./docker/scam-website
+#     container_name: scam-website-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/scam-website/data:/app/data
+#       - ./docker/scam-website/output:/app/output
+#       - ./docker/scam-website/logs:/app/logs
+#       - ./docker/scam-website/config:/app/config
+#       - ./docker/scam-website/tools:/app/tools
+#     environment:
+#       # - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+#       # - URLSCAN_API_KEY=${URLSCAN_API_KEY}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8003:8003"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+#   # Email Leak Check Tool
+#   email-leak:
+#     build: ./docker/email-leak
+#     container_name: email-leak-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/email-leak/data:/app/data
+#       - ./docker/email-leak/output:/app/output
+#       - ./docker/email-leak/logs:/app/logs
+#       - ./docker/email-leak/config:/app/config
+#       - ./docker/email-leak/tools:/app/tools
+#     environment:
+#       # - HAVEIBEENPWNED_API_KEY=${HAVEIBEENPWNED_API_KEY}
+#       # - HUNTER_API_KEY=${HUNTER_API_KEY}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8004:8004"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+#   # Scam Email Analysis Tool
+#   scam-email:
+#     build: ./docker/scam-email
+#     container_name: scam-email-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/scam-email/data:/app/data
+#       - ./docker/scam-email/output:/app/output
+#       - ./docker/scam-email/logs:/app/logs
+#       - ./docker/scam-email/config:/app/config
+#       - ./docker/scam-email/tools:/app/tools
+#     environment:
+#       # - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8005:8005"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+#   # Phone Number OSINT Tool
+#   phone-number:
+#     build: ./docker/phone-number
+#     container_name: phone-number-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/phone-number/data:/app/data
+#       - ./docker/phone-number/output:/app/output
+#       - ./docker/phone-number/logs:/app/logs
+#       - ./docker/phone-number/config:/app/config
+#       - ./docker/phone-number/tools:/app/tools
+#     environment:
+#       # - NUMVERIFY_API_KEY=${NUMVERIFY_API_KEY}
+#       # - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+#       # - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8006:8006"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+#   # Crypto Wallet Tracker Tool
+#   crypto-wallet:
+#     build: ./docker/crypto-wallet
+#     container_name: crypto-wallet-tool
+#     restart: unless-stopped
+#     volumes:
+#       - ./docker/crypto-wallet/data:/app/data
+#       - ./docker/crypto-wallet/output:/app/output
+#       - ./docker/crypto-wallet/logs:/app/logs
+#       - ./docker/crypto-wallet/config:/app/config
+#       - ./docker/crypto-wallet/tools:/app/tools
+#     environment:
+#       # - ETHERSCAN_API_KEY=${ETHERSCAN_API_KEY}
+#       # - BLOCKCHAIN_API_KEY=${BLOCKCHAIN_API_KEY}
+#       - MARIADB_HOST=mariadb
+#       - MARIADB_DATABASE=${MYSQL_DATABASE}
+#       - MARIADB_USER=${MYSQL_USER}
+#       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+#     ports:
+#       - "8007:8007"
+#     depends_on:
+#       - mariadb
+#     networks:
+#       - osint_network
+#     stdin_open: true
+#     tty: true
+
+
 
 volumes:
   mariadb_data:
