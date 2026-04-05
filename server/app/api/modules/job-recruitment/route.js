@@ -262,53 +262,82 @@ export async function POST(request) {
     }, { status: 500 });
   }
 }
+//////////////////////////////////////////////////////////////////////////////
 
-    // DELETE /api/modules/job-recruitment?id=1 - Delete scan
-  export async function DELETE(request) {
-    try {
-      const user = await verifyToken(request);
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
 
-      const { searchParams } = new URL(request.url);
-      const id = parseInt(searchParams.get('id'));
 
-      // Verify the scan belongs to this user
-      const [scans] = await query(`
-        SELECT s.id, s.target_id
-        FROM scans s
-        JOIN targets t ON s.target_id = t.id
-        JOIN projects p ON t.project_id = p.id
-        WHERE s.id = ? AND p.user_id = ?
-      `, [id, user.id]);
+export async function DELETE(request) {
+  try {
+    const user = await verifyToken(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-      if (scans.length === 0) {
-        return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
-      }
+    const { searchParams } = new URL(request.url);
+    const jobRecruitmentId = parseInt(searchParams.get('id'));
 
-      const targetId = scans[0].target_id;
+    if (!jobRecruitmentId) {
+      return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
+    }
 
-      // Delete in correct order (child tables first)
-      await pool.execute('DELETE FROM job_recruitment_scans WHERE scan_id = ?', [id]);
-      await pool.execute('DELETE FROM scans WHERE id = ?', [id]);
-      if (targetId) {
+    // First, get the scan_id from job_recruitment_scans and verify ownership
+    const [jobRecruitmentScans] = await query(`
+      SELECT jrs.scan_id, jrs.id as job_recruitment_id
+      FROM job_recruitment_scans jrs
+      JOIN scans s ON jrs.scan_id = s.id
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE jrs.id = ? AND p.user_id = ?
+    `, [jobRecruitmentId, user.id]);
+
+    if (jobRecruitmentScans.length === 0) {
+      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    }
+
+    const scanId = jobRecruitmentScans[0].scan_id;
+    const jobRecruitmentRecordId = jobRecruitmentScans[0].job_recruitment_id;
+
+    // Get the target_id from scans table
+    const [scans] = await query(`SELECT target_id FROM scans WHERE id = ?`, [scanId]);
+    const targetId = scans[0]?.target_id;
+
+    // Delete in correct order
+    // 1. Delete from job_recruitment_scans
+    await pool.execute('DELETE FROM job_recruitment_scans WHERE id = ?', [jobRecruitmentRecordId]);
+    
+    // 2. Delete from scans table
+    await pool.execute('DELETE FROM scans WHERE id = ?', [scanId]);
+    
+    // 3. Delete target if no other scans reference it
+    if (targetId) {
+      const [remainingScans] = await pool.execute(
+        'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
+        [targetId]
+      );
+      
+      if (remainingScans[0].count === 0) {
         await pool.execute('DELETE FROM targets WHERE id = ?', [targetId]);
       }
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Scan deleted successfully' 
-      });
-    } catch (error) {
-      console.error('Error deleting scan:', error);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to delete scan',
-        details: error.message 
-      }, { status: 500 });
     }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Scan deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Error deleting scan:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Failed to delete scan',
+      details: error.message 
+    }, { status: 500 });
   }
+}
+
+
+
+
+  ////////////////////////////////////////////////////////////////////
 // PUT /api/modules/job-recruitment?id=1 - Update scan assets
 export async function PUT(request) {
   try {
