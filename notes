@@ -1,37 +1,6 @@
-# do what ever you want in here
-# PLEASE DON'T UPLOAD ANY MARKDOWN
---
-new notes from 12 to 15
-# you can note ideas over here 
-.....
-1.correct password validation cuz now the system validates only length 
-2.we can add capatcha im not a robot or cloudflare capatcha 
-3.in the storage section we can add a button to purchase more storage 
-4.created a new project the creation is smooth but the '>' in the buttom left dones't work
-5.iconscout:website for ready to use icons can help 
-6.threat intelligence trends in analytics  the buttons bar area weekly monthly are not clickable 
-7.system resources is the user renting from us infrastructure !?
-8.<https://github.com/chadi0x/TheBigBrother> can use a feature from it "digital footprint"
-9.ghunt tool use Gmail & Google ID Profiling feature to idntify age 
-10.https://intelligencesecurity.io/subscriptions/pricing/:just check it we can put it in the demo i will present cuz it provoces mit license 
-11. https://osintframework.com/: a groupment  of tool we can inspire from it
-12.in the version i will present we can run tools like dns look up,whois in seperate container then collect result from them using n8n i think the the framwork guy arson is doing it  
-13.we can use telegram to store previous company results to deliver it to next person searching for same company 
-14.we should switch the scroll bar color to be more clear cuz it a problem for pepole with weak sights like me
-15.we can use 5sim api to see if the number from them or no cuz 5sim one of the most famous temprary mobile numbers provider or we can use true caller or twillo 
-16.use cron jobs
- (sync) to refresh user's credits
- to check server performance and alert us if performance is dropping
- lanching backup pods(koubernets)to rotate usage of server 
- we use to rotate usage of container for each websit or tool running on the server 
- 17.we can use spydialer free phone rev search
- 18.infobel company info
- 19.hudwayglass adress directory or melissa search tool more options or phonebooks
- 20.melissa search tool,hudwaysglass:finding company adress
- 21.zlookup,truecaller,phonebooks:phone number reverse search
- ==> i have a list telegram bots still testing them
+
   
-# https://github.com/capcom6/android-sms-gateway
+# https://github.com/capcom6/android-sms-gateway: we can use old phone to send otp message to users
 
 
 
