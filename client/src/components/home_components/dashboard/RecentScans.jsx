@@ -1,4 +1,59 @@
-const RecentScans = ({ scans = [] }) => {
+import { useState, useEffect } from 'react';
+
+// Generate random recent scans
+const generateRandomScans = (projectId = null) => {
+  const possibleTargets = [
+    "example.com", "suspicious-site.net", "darkweb-market.onion", 
+    "phishing-login.com", "fake-bank.xyz", "scam-job-post.com",
+    "linkedin.com/in/fake-profile", "crypto-wallet-tracker", 
+    "breach-email@domain.com", "malware-file.exe", "ransomware-sample"
+  ];
+  
+  const possibleTypes = ["url", "email", "file"];
+  
+  // Generate 2-4 random scans
+  const numScans = Math.floor(Math.random() * 3) + 2;
+  const scans = [];
+  
+  for (let i = 0; i < numScans; i++) {
+    const randomRisk = Math.floor(Math.random() * 80) + 15;
+    const randomTarget = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+    const randomType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+    const randomTime = Math.floor(Math.random() * 60);
+    const timeText = randomTime < 1 ? "Just now" : `${randomTime} min ago`;
+    
+    scans.push({
+      id: `${Date.now()}_${projectId || 'default'}_${i}`,
+      target: randomTarget,
+      type: randomType,
+      date: timeText,
+      risk: randomRisk
+    });
+  }
+  
+  return scans;
+};
+
+const RecentScans = ({ scans = [], selectedProjectId }) => {
+  const [recentScans, setRecentScans] = useState([]);
+
+  // Generate new random scans when project changes
+  useEffect(() => {
+    console.log('Project changed, generating new recent scans for project:', selectedProjectId);
+    const newScans = generateRandomScans(selectedProjectId);
+    setRecentScans(newScans);
+  }, [selectedProjectId]);
+
+  // Initial load
+  useEffect(() => {
+    if (scans && scans.length > 0) {
+      setRecentScans(scans);
+    } else {
+      const newScans = generateRandomScans();
+      setRecentScans(newScans);
+    }
+  }, []);
+
   const getRiskColor = (score) => {
     if (score >= 75) return "text-red-500";
     if (score >= 50) return "text-orange-500";
@@ -38,21 +93,39 @@ const RecentScans = ({ scans = [] }) => {
     }
   };
 
+  // Manual refresh button
+  const handleRefresh = () => {
+    const newScans = generateRandomScans(selectedProjectId);
+    setRecentScans(newScans);
+  };
+
   return (
     <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-4 lg:p-6">
-      <h4 className="text-base lg:text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Recent Investigations
-      </h4>
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-base lg:text-lg font-semibold text-white flex items-center gap-2">
+          <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Recent Investigations
+        </h4>
+        <button 
+          onClick={handleRefresh}
+          className="text-white/60 hover:text-white text-xs flex items-center gap-1 transition-colors"
+          title="Refresh scans"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+      </div>
       
       <div className="space-y-2 lg:space-y-3 min-h-[200px]">
-        {scans && scans.length > 0 ? (
-          scans.map((scan) => (
+        {recentScans.length > 0 ? (
+          recentScans.map((scan) => (
             <div key={scan.id} className="flex items-center justify-between p-2 lg:p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer">
               <div className="flex items-center gap-2 lg:gap-3 min-w-0">
-                <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg ${getRiskBgColor(scan.risk)}/20 flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-${getRiskBgColor(scan.risk)}/20 flex items-center justify-center flex-shrink-0`}>
                   {getTypeIcon(scan.type)}
                 </div>
                 <div className="min-w-0">
@@ -61,7 +134,7 @@ const RecentScans = ({ scans = [] }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:gap-4 flex-shrink-0">
-                <div className={`px-2 lg:px-3 py-1 rounded-lg text-xs lg:text-sm font-medium ${getRiskColor(scan.risk)} bg-${getRiskBgColor(scan.risk)}/10`}>
+                <div className={`px-2 lg:px-3 py-1 rounded-lg text-xs lg:text-sm font-medium ${getRiskColor(scan.risk)}`}>
                   {scan.risk}%
                 </div>
                 <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +145,6 @@ const RecentScans = ({ scans = [] }) => {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center h-[200px] text-center">
-            {/* Empty state illustration */}
             <div className="w-16 h-16 mb-3 rounded-full bg-white/5 flex items-center justify-center">
               <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

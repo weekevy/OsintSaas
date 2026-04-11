@@ -1,0 +1,19 @@
+
+UI: changes
+
+    []1 - [fix the removing problem the init module]
+    []2 - [make the box of the active module in dashboard as hidden over flow fixed]
+         [design more bigger]
+    []3 - [add the focusing design to show the current project information]
+    []4 - [update the scan section: by make the active module, has popup showing the scan details]
+    []5 - [also make the information changes every time you switch to another module, in the dashboard]
+    []6 - [navbar: add the credits, tokens "just design until, we do all things in backend"]
+
+
+Server: changes
+
+    []1 - [try make python code that fetch some  data to check the connection between the databse, and api]
+    []2 - []
+    
+
+
