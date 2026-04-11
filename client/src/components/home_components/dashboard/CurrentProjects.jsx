@@ -10,7 +10,8 @@ const CurrentModules = ({
   limit = 100, 
   onSelectModule, 
   selectedModuleId: externalSelectedModuleId,
-  scanData = []
+  scanData = [],
+  onRiskDataChange
 }) => {
   const [modules, setModules] = useState(globalModules);
   const [loading, setLoading] = useState(!globalInitialLoadDone);
@@ -42,10 +43,118 @@ const CurrentModules = ({
     return Math.min(100, score);
   };
 
+  // Extract detailed risk data for RiskCircle component with RANDOM scores
+  const extractRiskData = useCallback((module) => {
+    if (!module) return null;
+    
+    // Generate random risk score between 15 and 95 for testing
+    const randomRiskScore = Math.floor(Math.random() * 80) + 15;
+    
+    const riskFactors = [];
+    const recommendations = [];
+    
+    if (module.status === 'failed') {
+      riskFactors.push('Scan failed to complete');
+      recommendations.push('Check scan configuration and try again');
+    }
+    
+    if (module.findings > 10) {
+      riskFactors.push(`High number of findings (${module.findings})`);
+      recommendations.push('Review findings for critical issues');
+    }
+    
+    if (module.progress < 50 && module.status === 'running') {
+      riskFactors.push('Slow scan progress');
+    }
+    
+    if (module.status === 'pending') {
+      riskFactors.push('Scan is queued and waiting');
+      recommendations.push('Monitor scan status');
+    }
+    
+    // Add module-specific risk factors from assets
+    if (module.assets) {
+      if (module.assets.recruiter_email && module.assets.recruiter_email.includes('gmail.com')) {
+        riskFactors.push('Recruiter using personal email domain');
+        recommendations.push('Verify recruiter identity through official channels');
+      }
+      
+      if (module.assets.company_website && !module.assets.company_website.startsWith('https')) {
+        riskFactors.push('Company website missing SSL certificate');
+      }
+      
+      if (module.assets.risk_score && module.assets.risk_score > 50) {
+        riskFactors.push(`High risk score (${module.assets.risk_score}) from validation`);
+      }
+    }
+    
+    // Add random risk factors for variety
+    const randomFactors = [
+      'Unusual domain age detected',
+      'Suspicious email pattern found',
+      'Multiple failed login attempts',
+      'Unusual location access',
+      'Outdated SSL certificate',
+      'Blacklisted IP detected',
+      'Known scam pattern identified',
+      'Suspicious URL shortener used',
+      'Unverified company registration',
+      'Recent domain registration'
+    ];
+    
+    // Add 1-3 random factors
+    const numRandomFactors = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < numRandomFactors; i++) {
+      const randomFactor = randomFactors[Math.floor(Math.random() * randomFactors.length)];
+      if (!riskFactors.includes(randomFactor)) {
+        riskFactors.push(randomFactor);
+      }
+    }
+    
+    // Add random recommendations
+    const randomRecommendations = [
+      'Run additional deep scan',
+      'Check historical records',
+      'Verify with official sources',
+      'Monitor for 24 hours',
+      'Flag for manual review',
+      'Compare with known patterns',
+      'Request additional verification',
+      'Cross-reference with blacklists',
+      'Check social media presence'
+    ];
+    
+    const numRandomRecs = Math.floor(Math.random() * 2) + 1;
+    for (let i = 0; i < numRandomRecs; i++) {
+      const randomRec = randomRecommendations[Math.floor(Math.random() * randomRecommendations.length)];
+      if (!recommendations.includes(randomRec)) {
+        recommendations.push(randomRec);
+      }
+    }
+    
+    // Determine risk level based on random score
+    let riskLevel = 'low';
+    if (randomRiskScore >= 75) riskLevel = 'critical';
+    else if (randomRiskScore >= 50) riskLevel = 'high';
+    else if (randomRiskScore >= 25) riskLevel = 'medium';
+    
+    return {
+      risk_score: randomRiskScore,
+      risk_level: riskLevel,
+      risk_factors: riskFactors.slice(0, 5),
+      recommendations: recommendations.slice(0, 3),
+      scan_id: module.id,
+      scan_name: module.name,
+      target: module.target,
+      status: module.status,
+      findings: module.findings
+    };
+  }, []);
+
   const getTargetDisplay = (scan, moduleId) => {
     if (!scan.assets) return 'Scan';
     switch(moduleId) {
-      case 'job-recruitment':
+      case 'company-jobscam':
         return scan.assets?.job_title ? `${scan.assets.job_title} at ${scan.assets.company_name}` : 'Job Scan';
       case 'linkedin':
         return scan.assets?.profile_name || 'LinkedIn Profile';
@@ -74,7 +183,7 @@ const CurrentModules = ({
     
     try {
       const moduleApis = [
-        { id: 'job-recruitment', name: 'Job Recruitment', api: '/api/modules/job-recruitment', type: 'job' },
+        { id: 'company-jobscam', name: 'Company & job Scam', api: '/api/modules/company-jobscam', type: 'job' },
         { id: 'linkedin', name: 'LinkedIn Investigation', api: '/api/modules/linkedin-investigation', type: 'linkedin' },
         { id: 'social-media', name: 'Social Media OSINT', api: '/api/modules/social-media', type: 'social' },
         { id: 'scam-website', name: 'Scam Website Analysis', api: '/api/modules/scam-website', type: 'website' },
@@ -134,6 +243,9 @@ const CurrentModules = ({
         const firstModule = sortedScans[0];
         setInternalSelectedModuleId(firstModule.id);
         onSelectModule(firstModule);
+        if (onRiskDataChange) {
+          onRiskDataChange(extractRiskData(firstModule), firstModule.target, firstModule.name);
+        }
       }
     } catch (error) {
       console.error('Error fetching scans:', error);
@@ -141,7 +253,7 @@ const CurrentModules = ({
       setLoading(false);
       isFetchingGlobal = false;
     }
-  }, [onSelectModule, selectedModuleId]);
+  }, [onSelectModule, selectedModuleId, onRiskDataChange, extractRiskData]);
 
   const forceRefresh = useCallback(async () => {
     await fetchScans(true);
@@ -257,12 +369,18 @@ const CurrentModules = ({
     const statusStyle = getStatusStyles(module.status);
     const progressColor = getProgressColor(module.progress);
     
+    const handleModuleClick = () => {
+      setInternalSelectedModuleId(module.id);
+      if (onSelectModule) onSelectModule(module);
+      if (onRiskDataChange) {
+        const riskData = extractRiskData(module);
+        onRiskDataChange(riskData, module.target, module.name);
+      }
+    };
+    
     return (
       <div
-        onClick={() => {
-          setInternalSelectedModuleId(module.id);
-          if (onSelectModule) onSelectModule(module);
-        }}
+        onClick={handleModuleClick}
         className="relative w-full overflow-hidden rounded-xl focus:outline-none transition-all duration-300 cursor-pointer group"
       >
         <div className={`bg-white/5 p-3 rounded-xl transition-all duration-300 border ${
@@ -322,7 +440,7 @@ const CurrentModules = ({
         </div>
       </div>
     );
-  }, [onSelectModule, getStatusStyles, getProgressColor, ModuleIcon]);
+  }, [onSelectModule, onRiskDataChange, extractRiskData, getStatusStyles, getProgressColor, ModuleIcon]);
 
   const handleViewAll = useCallback(() => navigate('/home?tab=scan'), [navigate]);
 
@@ -330,11 +448,9 @@ const CurrentModules = ({
     return <LoadingSkeleton />;
   }
 
-  // Fixed height container for both empty and populated states
   return (
     <div className="bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden w-full" style={{ height: '380px' }}>
       <div className="p-4 h-full flex flex-col">
-        {/* Header - BIGGER */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
@@ -360,7 +476,6 @@ const CurrentModules = ({
           </div>
         </div>
 
-        {/* Stats Row - BIGGER */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           <div className="bg-green-500/10 rounded-lg p-2.5 text-center border border-green-500/20">
             <div className="text-green-400 text-lg font-bold">{moduleStats.active}</div>
@@ -380,7 +495,6 @@ const CurrentModules = ({
           </div>
         </div>
 
-        {/* Projects List - Fixed height with scrollbar */}
         <div 
           className="flex-1 space-y-2 overflow-y-auto"
           style={{

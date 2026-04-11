@@ -23,3 +23,6 @@ TASKS [*=done / -=not yet]
     __________________________________________________________________________________________
 
 
+this is the table of job_requitement_scan from phpmyadmin, create a query for that edit the name of the the whole table from job_requitement_scans to company_jobscam, make sure you provid all the items that existed, also update the this api i mean the query on it, to inesrt the data that should be  
+
+

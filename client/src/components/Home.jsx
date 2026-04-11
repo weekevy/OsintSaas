@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  MobileSidebar,
   TopBar,
   DashboardHome,
   ScanDashboard,
@@ -13,10 +12,21 @@ import {
   AnalyticsDashboard
 } from "./home_components";
 import { AccountSettings } from "./home_components/settings";
+import ProgressBar from "./home_components/common/ProgressBar";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  
+  // Get tab from URL query parameter
+  const getTabFromUrl = () => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    const validTabs = ['dashboard', 'scan', 'projects', 'reports', 'team', 'apis', 'analytics', 'integrations'];
+    return tab && validTabs.includes(tab) ? tab : 'dashboard';
+  };
+
+  const [activeTab, setActiveTab] = useState(getTabFromUrl());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchType, setSearchType] = useState("url");
@@ -26,20 +36,108 @@ const Home = () => {
   const [alerts, setAlerts] = useState([]);
   const [timeRange, setTimeRange] = useState("week");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   
   // State for project selection
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectRiskScore, setProjectRiskScore] = useState(0);
   const [projectAlerts, setProjectAlerts] = useState([]);
+  
+  // NEW: State for risk data from CurrentModules
+  const [selectedRiskData, setSelectedRiskData] = useState(null);
+  const [selectedProjectName, setSelectedProjectName] = useState('');
+  const [selectedProjectTarget, setSelectedProjectTarget] = useState('');
+  const [selectedModuleId, setSelectedModuleId] = useState(null);
 
-  // Mock data
+  // Update URL when tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(location.search);
+    params.set('tab', tab);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  };
+
+  // Listen for browser back/forward buttons
   useEffect(() => {
+    const handlePopState = () => {
+      const tab = getTabFromUrl();
+      setActiveTab(tab);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [location]);
+
+  // Simulate page loading on refresh
+  useEffect(() => {
+    // Show progress bar on page load/refresh
+    setIsPageLoading(true);
+    
+    // Simulate loading time for data restoration
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 800); // Adjust this time based on your actual loading needs
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Load saved data from localStorage on mount
+  useEffect(() => {
+    const savedSearchInput = localStorage.getItem('searchInput');
+    const savedSearchType = localStorage.getItem('searchType');
+    const savedTimeRange = localStorage.getItem('timeRange');
+    const savedSelectedProject = localStorage.getItem('selectedProject');
+    const savedSelectedRiskData = localStorage.getItem('selectedRiskData');
+    const savedSelectedProjectName = localStorage.getItem('selectedProjectName');
+    const savedSelectedProjectTarget = localStorage.getItem('selectedProjectTarget');
+    
+    if (savedSearchInput) setSearchInput(savedSearchInput);
+    if (savedSearchType) setSearchType(savedSearchType);
+    if (savedTimeRange) setTimeRange(savedTimeRange);
+    if (savedSelectedProject) setSelectedProject(JSON.parse(savedSelectedProject));
+    if (savedSelectedRiskData) setSelectedRiskData(JSON.parse(savedSelectedRiskData));
+    if (savedSelectedProjectName) setSelectedProjectName(savedSelectedProjectName);
+    if (savedSelectedProjectTarget) setSelectedProjectTarget(savedSelectedProjectTarget);
+    
     setRecentScans([]);
     setAlerts([]);
     setRiskScore(1);
     setProjectRiskScore(78);
     setProjectAlerts(alerts);
   }, []);
+
+  // Save data to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('searchInput', searchInput);
+  }, [searchInput]);
+
+  useEffect(() => {
+    localStorage.setItem('searchType', searchType);
+  }, [searchType]);
+
+  useEffect(() => {
+    localStorage.setItem('timeRange', timeRange);
+  }, [timeRange]);
+
+  useEffect(() => {
+    if (selectedProject) {
+      localStorage.setItem('selectedProject', JSON.stringify(selectedProject));
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedRiskData) {
+      localStorage.setItem('selectedRiskData', JSON.stringify(selectedRiskData));
+    }
+  }, [selectedRiskData]);
+
+  useEffect(() => {
+    localStorage.setItem('selectedProjectName', selectedProjectName);
+  }, [selectedProjectName]);
+
+  useEffect(() => {
+    localStorage.setItem('selectedProjectTarget', selectedProjectTarget);
+  }, [selectedProjectTarget]);
 
   // Listen for openSettings event from UserMenu
   useEffect(() => {
@@ -85,7 +183,7 @@ const Home = () => {
       setSearchInput("");
       
       // Switch to scan tab to show results
-      setActiveTab("scan");
+      handleTabChange("scan");
     }, 2000);
   };
 
@@ -104,6 +202,15 @@ const Home = () => {
     console.log('Selected project:', project);
     console.log('Project risk:', calculatedRisk);
     console.log('Project alerts:', filteredAlerts);
+  };
+
+  // NEW: Handler for risk data change from CurrentModules
+  const handleRiskDataChange = (riskData, target, name) => {
+    console.log('Risk data received from CurrentModules:', riskData);
+    setSelectedRiskData(riskData);
+    setSelectedProjectName(name || riskData?.scan_name || 'Selected Scan');
+    setSelectedProjectTarget(target || riskData?.target || 'No target');
+    setSelectedModuleId(riskData?.scan_id);
   };
 
   // Helper function to calculate project risk
@@ -159,12 +266,21 @@ const Home = () => {
         </svg>
       )
     },
+    // { 
+    //   id: "projects", 
+    //   label: "Projects", 
+    //   icon: (
+    //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    //     </svg>
+    //   )
+    // },
     { 
       id: "reports", 
       label: "Reports", 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       )
     },
@@ -210,9 +326,13 @@ const Home = () => {
             alerts={projectAlerts}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
-            onAnalyzeClick={() => setActiveTab("scan")}
+            onAnalyzeClick={() => handleTabChange("scan")}
             onProjectSelect={handleProjectSelect}
             selectedProjectId={selectedProject?.id}
+            selectedRiskData={selectedRiskData}
+            selectedProjectName={selectedProjectName}
+            selectedProjectTarget={selectedProjectTarget}
+            onRiskDataChange={handleRiskDataChange}
           />
         );
       case "scan":
@@ -251,57 +371,57 @@ const Home = () => {
             alerts={projectAlerts}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
-            onAnalyzeClick={() => setActiveTab("scan")}
+            onAnalyzeClick={() => handleTabChange("scan")}
             onProjectSelect={handleProjectSelect}
             selectedProjectId={selectedProject?.id}
+            selectedRiskData={selectedRiskData}
+            selectedProjectName={selectedProjectName}
+            selectedProjectTarget={selectedProjectTarget}
+            onRiskDataChange={handleRiskDataChange}
           />
         );
     }
   };
 
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Mobile Sidebar - Only for mobile */}
-      <MobileSidebar 
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        navItems={navItems}
-      />
+    <>
+      {/* Progress Bar */}
+      <ProgressBar isLoading={isPageLoading} />
+      
+      <div className="flex h-screen bg-black text-white overflow-hidden">
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-black via-purple-950/5 to-black w-full">
+          
+          {/* Top Bar with Navigation */}
+          <TopBar 
+            onMenuClick={() => setIsSidebarOpen(true)}
+            searchInput={searchInput}
+            onSearchChange={setSearchInput}
+            searchType={searchType}
+            onSearchTypeChange={setSearchType}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+            onLogout={handleLogout}
+            alertsCount={projectAlerts.length}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            isMobileMenuOpen={isSidebarOpen}
+            navItems={navItems}
+          />
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-black via-purple-950/5 to-black w-full">
-        
-        {/* Top Bar with Navigation */}
-        <TopBar 
-          onMenuClick={() => setIsSidebarOpen(true)}
-          searchInput={searchInput}
-          onSearchChange={setSearchInput}
-          searchType={searchType}
-          onSearchTypeChange={setSearchType}
-          onAnalyze={handleAnalyze}
-          isAnalyzing={isAnalyzing}
-          onLogout={handleLogout}
-          alertsCount={projectAlerts.length}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          isMobileMenuOpen={isSidebarOpen}
-          navItems={navItems}  // Pass navItems to TopBar
+          {/* Dynamic Dashboard Content */}
+          <div className="flex-1 overflow-y-auto">
+            {renderDashboard()}
+          </div>
+        </main>
+
+        {/* Account Settings Modal */}
+        <AccountSettings 
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
         />
-
-        {/* Dynamic Dashboard Content */}
-        <div className="flex-1 overflow-y-auto">
-          {renderDashboard()}
-        </div>
-      </main>
-
-      {/* Account Settings Modal */}
-      <AccountSettings 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
-    </div>
+      </div>
+    </>
   );
 };
 

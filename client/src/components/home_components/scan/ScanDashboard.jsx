@@ -7,7 +7,7 @@ import { getIconName, getIcon } from './utils/icons';
 
 // All module configurations
 const ALL_MODULES = [
-  { id: 'job-recruitment', name: 'Job Recruitment', api: '/api/modules/job-recruitment', icon: 'job', color: 'from-purple-500 to-pink-500', textColor: 'text-purple-400' },
+  { id: 'job-recruitment', name: 'Company & Job Scam', api: '/api/modules/company-jobscam', icon: 'job', color: 'from-purple-500 to-pink-500', textColor: 'text-purple-400' },
   { id: 'linkedin', name: 'LinkedIn Investigation', api: '/api/modules/linkedin-investigation', icon: 'linkedin', color: 'from-blue-500 to-cyan-500', textColor: 'text-blue-400' },
   { id: 'social-media', name: 'Social Media OSINT', api: '/api/modules/social-media', icon: 'social', color: 'from-green-500 to-emerald-500', textColor: 'text-green-400' },
   { id: 'scam-website', name: 'Scam Website Analysis', api: '/api/modules/scam-website', icon: 'website', color: 'from-orange-500 to-red-500', textColor: 'text-orange-400' },
@@ -30,7 +30,13 @@ let isFetchingGlobal = false;
 const getTargetDisplay = (scan, moduleId) => {
   if (!scan.assets) return 'Scan';
   switch(moduleId) {
-    case 'job-recruitment': return scan.assets?.job_title ? `${scan.assets.job_title} at ${scan.assets.company_name}` : 'Job Scan';
+    case 'job-recruitment': 
+      if (scan.assets?.company_name && scan.assets?.job_title) {
+        return `${scan.assets.job_title} at ${scan.assets.company_name}`;
+      }
+      if (scan.assets?.company_name) return scan.assets.company_name;
+      if (scan.assets?.recruiter_name) return `Recruiter: ${scan.assets.recruiter_name}`;
+      return 'Job Scam Check';
     case 'linkedin': return scan.assets?.profile_name || 'LinkedIn Profile';
     case 'social-media': return scan.assets?.display_name || 'Social Profile';
     case 'scam-website': return scan.assets?.website_name || 'Suspicious Website';
@@ -72,12 +78,17 @@ const ScanDashboard = ({
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filterDropdownRef = useRef(null);
   
+  // Real stats
+  const [stats, setStats] = useState({
+    totalScans: 0,
+    activeNow: 0
+  });
+  
   const isSavingRef = useRef(false);
   const isRefreshingRef = useRef(false);
 
   // Fetch scans - updates both local state AND global cache
   const fetchAllScans = useCallback(async (forceRefresh = false) => {
-    // Prevent multiple simultaneous fetches
     if (isFetchingGlobal && !forceRefresh) return;
     
     isFetchingGlobal = true;
@@ -135,6 +146,16 @@ const ScanDashboard = ({
       
       const running = uniqueScans.filter(s => ['queued', 'running', 'paused'].includes(s.status));
       const history = uniqueScans.filter(s => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status));
+      
+      // Calculate real stats
+      const activeNowCount = uniqueScans.filter(s => 
+        ['queued', 'running'].includes(s.status)
+      ).length;
+      
+      setStats({
+        totalScans: uniqueScans.length,
+        activeNow: activeNowCount
+      });
       
       // Update GLOBAL cache
       globalRunningScans = running;
@@ -203,23 +224,57 @@ const ScanDashboard = ({
     setLoading(true);
     
     const module = getModuleById(assetData.moduleType);
-    const apiBase = module?.api || '/api/modules/job-recruitment';
+    const apiBase = module?.api || '/api/modules/company-jobscam';
     
     try {
-      const response = await fetch(apiBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...assetData.assets, project_id: selectedProjectForScan?.id })
-      });
+      // Handle file uploads if any
+      let formDataToSend = { ...assetData.assets, project_id: selectedProjectForScan?.id };
       
-      const data = await response.json();
-      
-      if (data.success) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await fetchAllScans(true);
-        setShowAddAssets(false);
-        setSelectedModule(null);
-      } 
+      // If there are files, convert to FormData
+      if (assetData.files && assetData.files.length > 0) {
+        const formData = new FormData();
+        formData.append('project_id', selectedProjectForScan?.id || '');
+        
+        // Append all asset fields
+        Object.keys(assetData.assets).forEach(key => {
+          if (assetData.assets[key]) {
+            formData.append(key, assetData.assets[key]);
+          }
+        });
+        
+        // Append files
+        assetData.files.forEach((file, index) => {
+          formData.append(`evidence_${index}`, file);
+        });
+        
+        const response = await fetch(apiBase, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await fetchAllScans(true);
+          setShowAddAssets(false);
+          setSelectedModule(null);
+        }
+      } else {
+        // Regular JSON post
+        const response = await fetch(apiBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formDataToSend)
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await fetchAllScans(true);
+          setShowAddAssets(false);
+          setSelectedModule(null);
+        }
+      }
     } catch (error) {
       console.error('Error saving scan:', error);
     } finally {
@@ -231,7 +286,7 @@ const ScanDashboard = ({
   const handleRemoveScan = async (scanId, moduleId) => {
     setLoading(true);
     const module = getModuleById(moduleId);
-    const apiBase = module?.api || '/api/modules/job-recruitment';
+    const apiBase = module?.api || '/api/modules/company-jobscam';
     const url = `${apiBase}?id=${scanId}`;
     
     try {
@@ -271,7 +326,6 @@ const ScanDashboard = ({
         await forceRefreshScans();
         setShowEditAssets(false);
         setEditingScan(null);
-      } else {
       }
     } catch (error) {
       console.error('Error updating assets:', error);
@@ -324,67 +378,62 @@ const ScanDashboard = ({
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
-      {/* Header Section - Fully Responsive */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+      {/* Header Section - Simplified without stats badges */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Left side - Logo and Title */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <span className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl">
+            <svg className="w-4 h-4 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
             </svg>
           </span>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Scan Dashboard</h1>
-            <p className="text-white/40 text-xs sm:text-sm mt-0.5 sm:mt-1">Showing: <span className="text-purple-400">{filterDisplayName}</span></p>
+            <h1 className="text-base sm:text-2xl font-bold text-white whitespace-nowrap">Scan Dashboard</h1>
+            <p className="text-white/40 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Showing: <span className="text-purple-400">{filterDisplayName}</span></p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        {/* Right side - Actions (Refresh & Filter) */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Refresh Button */}
           <button
-            onClick={forceRefreshScans}
-            disabled={loading}
-            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50 text-sm sm:text-base"
-            title="Refresh Scans"
-          >
-            <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              onClick={forceRefreshScans}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50 text-sm sm:text-base font-medium"
+>
+            <svg className={`w-3 h-3 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="hidden xs:inline text-xs sm:text-sm">Refresh</span>
+            <span className="hidden xs:inline text-[10px] sm:text-sm">Refresh</span>
           </button>
           
           {/* Filter Dropdown */}
           <div className="relative" ref={filterDropdownRef}>
-            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white text-sm sm:text-base">
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              <span className="hidden xs:inline">Filter</span>
-              <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white text-sm sm:text-base font-medium">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              <span className="hidden xs:inline text-[10px] sm:text-sm">Filter</span>
+              <svg className={`w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             
             {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden animate-fadeIn">
+              <div className="absolute right-0 mt-2 w-48 sm:w-64 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden animate-fadeIn">
                 <div className="p-2 border-b border-white/10"><h3 className="text-white font-semibold text-xs sm:text-sm px-2">Filter by Module</h3></div>
                 <div className="p-2 max-h-80 overflow-y-auto">
                   <button onClick={() => { setFilterModule('all'); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === 'all' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
                     <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    <span className="flex-1 text-left">All Modules</span>
+                    <span className="flex-1 text-left text-xs sm:text-sm">All Modules</span>
                     {filterModule === 'all' && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                   </button>
                   {ALL_MODULES.map((module) => (
                     <button key={module.id} onClick={() => { setFilterModule(module.id); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === module.id ? `bg-gradient-to-r ${module.color} text-white` : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
                       {getIcon(module.icon, "w-3.5 h-3.5 sm:w-4 sm:h-4")}
-                      <span className="flex-1 text-left">{module.name}</span>
+                      <span className="flex-1 text-left text-xs sm:text-sm">{module.name}</span>
                       {filterModule === module.id && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-          </div>
-          
-          {/* Total Scans Box */}
-          <div className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/10 px-3 sm:px-4 py-1.5 sm:py-2">
-            <div className="text-[10px] sm:text-xs text-white/40 whitespace-nowrap">Total Scans</div>
-            <div className="text-lg sm:text-xl font-bold text-white">{totalScans}</div>
           </div>
         </div>
       </div>
@@ -419,9 +468,56 @@ const ScanDashboard = ({
       {activeScanTab === 'custom' && <CustomScanConfig scanOptions={scanOptions} toggleOption={toggleOption} selectedProjectForScan={selectedProjectForScan} searchInput={searchInput} onStartCustomScan={handleStartCustomScan} isLoading={loading} />}
       {activeScanTab === 'scheduled' && <ScheduledScans scanHistory={scanHistory} runningScans={runningScans} />}
       
-      <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
+      {/* Scan History with Stats Box at the bottom */}
+      <div className="relative">
+        <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
+        
+        {/* Stats Box - Total Scans Currently & Active Now */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-gray-800/50 to-black/50 rounded-xl border border-white/10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-white/40 text-xs">Total Scans</div>
+                  <div className="text-2xl font-bold text-white">{stats.totalScans}</div>
+                </div>
+              </div>
+              
+              <div className="w-px h-8 bg-white/10"></div>
+              
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+                <div>
+                  <div className="text-white/40 text-xs">Active Now</div>
+                  <div className="text-2xl font-bold text-green-400">{stats.activeNow}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-white/30 text-xs">
+              Last updated: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <AddAssetsModal isOpen={showAddAssets} onClose={() => setShowAddAssets(false)} moduleType={selectedModule?.id} moduleName={selectedModule?.name} onSave={handleSaveAssets} projectId={selectedProjectForScan?.id} />
+      <AddAssetsModal 
+        isOpen={showAddAssets} 
+        onClose={() => setShowAddAssets(false)} 
+        moduleType={selectedModule?.id} 
+        moduleName={selectedModule?.name} 
+        onSave={handleSaveAssets} 
+        projectId={selectedProjectForScan?.id} 
+        allowFileUpload={true}
+      />
+      
       <EditAssetsModal isOpen={showEditAssets} onClose={() => setShowEditAssets(false)} scan={editingScan} onUpdate={handleUpdateAssets} />
 
       <style>{`

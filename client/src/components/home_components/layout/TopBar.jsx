@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import UserMenu from './UserMenu';
 
 const TopBar = ({ 
+  onMenuClick, 
   searchInput, 
   onSearchChange, 
   searchType, 
@@ -17,13 +18,16 @@ const TopBar = ({
   const [searchTypeDropdownOpen, setSearchTypeDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [credits, setCredits] = useState(250);
   
   // Refs for click outside detection
   const searchTypeRef = useRef(null);
   const notificationsRef = useRef(null);
   const quickActionsRef = useRef(null);
-  const mobileNavRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  const searchContainerRef = useRef(null);
 
   // Handle click outside for all dropdowns
   useEffect(() => {
@@ -37,8 +41,9 @@ const TopBar = ({
       if (quickActionsRef.current && !quickActionsRef.current.contains(event.target)) {
         setQuickActionsOpen(false);
       }
-      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
-        setMobileNavOpen(false);
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
+        setMobileSearchOpen(false);
+        setSearchExpanded(false);
       }
     };
 
@@ -47,6 +52,28 @@ const TopBar = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Handle escape key to close search
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape' && searchExpanded) {
+        setSearchExpanded(false);
+        setMobileSearchOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [searchExpanded]);
+
+  // Deduct credits when scanning
+  useEffect(() => {
+    if (isAnalyzing) {
+      const timer = setTimeout(() => {
+        setCredits(prev => Math.max(0, prev - 1));
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnalyzing]);
 
   const getSearchTypeIcon = (type) => {
     switch(type) {
@@ -128,108 +155,235 @@ const TopBar = ({
     }
   };
 
-  const quickActions = [
-    { label: 'Generate Report', action: 'Generate Report' },
-    { label: 'New Investigation', action: 'New Investigation' },
-    { label: 'Export Data', action: 'Export Data' },
-    { label: 'Invite Team Member', action: 'Invite Team Member' },
-  ];
+  // Toggle search expansion on mobile
+  const toggleSearch = () => {
+    setSearchExpanded(!searchExpanded);
+    if (!searchExpanded) {
+      setMobileSearchOpen(true);
+      setTimeout(() => {
+        const input = document.getElementById('mobile-search-input');
+        if (input) input.focus();
+      }, 200);
+    }
+  };
 
   return (
     <header className="flex flex-col bg-black/40 backdrop-blur-xl border-b border-white/10 relative z-[9998]">
       
-      {/* Top Row - Logo, Search, Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 lg:px-8 py-3 gap-3">
+      {/* Top Row - Logo and Search Bar on Left, Actions on Right */}
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 gap-3">
         
-        {/* Logo - Always visible */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="relative w-9 h-9 overflow-hidden">
-            <img 
-              src="/src/assets/images/logo6.png" 
-              alt="OsintSaas" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
-            OSINT<span className="text-white">Weekeyv</span>
-          </h1>
-        </div>
-
-        {/* Search Bar - Responsive */}
-        <div className="flex-1 w-full sm:max-w-2xl relative z-[9999]">
-          <div className="flex items-center bg-white/5 rounded-xl border border-white/10 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
-            
-            {/* Search Type Dropdown */}
-            <div className="relative" ref={searchTypeRef}>
-              <button 
-                onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
-                className="px-3 py-2 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
-              >
-                <span className="hidden sm:block">{getSearchTypeIcon(searchType)}</span>
-                <span className="text-sm capitalize">{searchType}</span>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {searchTypeDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-36 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-                  {['url', 'email', 'file'].map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        onSearchTypeChange(type);
-                        setSearchTypeDropdownOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-2 text-sm"
-                    >
-                      {getSearchTypeIcon(type)}
-                      <span>{type}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+        {/* Left Section - Logo and Search Bar */}
+        <div className="flex items-center gap-4 flex-1">
+          {/* Logo */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="relative w-9 h-9 overflow-hidden">
+              <img 
+                src="/src/assets/images/logo6.png" 
+                alt="OsintSaas" 
+                className="w-full h-full object-contain"
+              />
             </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
+              OSINT<span className="text-white">Weekeyv</span>
+            </h1>
+          </div>
 
-            {/* Input */}
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={`Enter ${searchType} to analyze...`}
-              className="flex-1 px-3 py-2 bg-transparent text-white placeholder-white/40 focus:outline-none text-sm w-full min-w-0"
-              onKeyPress={(e) => e.key === 'Enter' && onAnalyze()}
-            />
-
-            {/* Analyze Button */}
-            <button
-              onClick={onAnalyze}
-              disabled={isAnalyzing}
-              className="px-4 py-2 m-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 flex items-center gap-2 text-sm whitespace-nowrap"
-            >
-              {isAnalyzing ? (
-                <>
-                  <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  <span className="hidden sm:inline">Analyze</span>
-                </>
-              ) : (
-                <>
+          {/* Desktop Search Bar - Now on the left beside logo */}
+          <div className="hidden sm:flex flex-1 max-w-xl relative z-[9999]">
+            <div className="w-full flex items-center bg-white/5 rounded-xl border border-white/10 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+              
+              {/* Search Type Dropdown */}
+              <div className="relative" ref={searchTypeRef}>
+                <button 
+                  onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
+                  className="px-3 py-2 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
+                >
+                  <span className="hidden sm:block">{getSearchTypeIcon(searchType)}</span>
+                  <span className="text-sm capitalize">{searchType}</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                  <span className="hidden sm:inline">Analyze</span>
-                </>
-              )}
-            </button>
+                </button>
+                
+                {searchTypeDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-36 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+                    {['url', 'email', 'file'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          onSearchTypeChange(type);
+                          setSearchTypeDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-2 text-sm"
+                      >
+                        {getSearchTypeIcon(type)}
+                        <span>{type}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Input */}
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder={`Enter ${searchType} to analyze...`}
+                className="flex-1 px-3 py-2 bg-transparent text-white placeholder-white/40 focus:outline-none text-sm w-full min-w-0"
+                onKeyPress={(e) => e.key === 'Enter' && onAnalyze()}
+              />
+
+              {/* Analyze Button */}
+              <button
+                onClick={onAnalyze}
+                disabled={isAnalyzing || credits <= 0}
+                className="px-4 py-2 m-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 flex items-center gap-2 text-sm whitespace-nowrap"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span className="hidden sm:inline">Analyze</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span className="hidden sm:inline">Analyze</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 ml-auto sm:ml-0">
+        {/* Mobile Search - Icon that expands */}
+        <div className="sm:hidden flex items-center" ref={mobileSearchRef}>
+          {!searchExpanded ? (
+            <button
+              onClick={toggleSearch}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              aria-label="Search"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          ) : (
+            <div className="fixed inset-x-0 top-16 z-[10000] bg-black/95 backdrop-blur-xl border-b border-white/10 animate-slideDown p-4">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center bg-white/5 rounded-xl border border-white/10 focus-within:border-purple-500/50 transition-all">
+                  {/* Search Type Dropdown */}
+                  <div className="relative" ref={searchTypeRef}>
+                    <button 
+                      onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
+                      className="px-3 py-2.5 text-white/60 hover:text-white flex items-center gap-2 border-r border-white/10 transition-colors"
+                    >
+                      <span>{getSearchTypeIcon(searchType)}</span>
+                      <span className="text-sm capitalize hidden">{searchType}</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {searchTypeDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-36 bg-gray-900 rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+                        {['url', 'email', 'file'].map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => {
+                              onSearchTypeChange(type);
+                              setSearchTypeDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-left text-white/70 hover:bg-white/5 hover:text-white capitalize flex items-center gap-2 text-sm"
+                          >
+                            {getSearchTypeIcon(type)}
+                            <span>{type}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    id="mobile-search-input"
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder={`Enter ${searchType}...`}
+                    className="flex-1 px-3 py-2.5 bg-transparent text-white placeholder-white/40 focus:outline-none text-sm"
+                    onKeyPress={(e) => e.key === 'Enter' && onAnalyze()}
+                    autoFocus
+                  />
+                </div>
+                
+                <button
+                  onClick={onAnalyze}
+                  disabled={isAnalyzing || credits <= 0}
+                  className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+                >
+                  {isAnalyzing ? (
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </button>
+                
+                <button
+                  onClick={toggleSearch}
+                  className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Actions - Credits, Notifications, User Menu */}
+        <div className="flex items-center gap-2">
           
+          {/* Credits / Tokens Counter */}
+          <div className="relative group">
+            <button
+              className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full border border-purple-500/30 hover:border-purple-500/60 transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-white font-semibold text-sm">{credits}</span>
+              <span className="text-white/50 text-xs hidden sm:inline">credits</span>
+            </button>
+            
+            {/* Tooltip on hover */}
+            <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-xl border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10000]">
+              <div className="p-3">
+                <p className="text-white text-xs mb-1">Available Credits</p>
+                <p className="text-purple-400 font-bold text-lg">{credits}</p>
+                <p className="text-white/40 text-xs mt-2">1 credit = 1 scan</p>
+                {credits < 50 && credits > 0 && (
+                  <p className="text-yellow-500 text-xs mt-1">⚠️ Low credits! Buy more soon.</p>
+                )}
+                {credits === 0 && (
+                  <p className="text-red-500 text-xs mt-1">❌ No credits left! Please purchase.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>
             <button
@@ -245,7 +399,7 @@ const TopBar = ({
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
+              <div className="absolute right-0 mt-2 w-80 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center justify-between">
                     <h3 className="text-white font-semibold">Notifications</h3>
@@ -253,6 +407,28 @@ const TopBar = ({
                   </div>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
+                  {credits < 50 && credits > 0 && (
+                    <div className="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 mt-2 bg-yellow-500 rounded-full" />
+                        <div className="flex-1">
+                          <p className="text-white text-sm">⚠️ Low credits warning</p>
+                          <p className="text-white/40 text-xs mt-1">You have only {credits} credits left</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {credits === 0 && (
+                    <div className="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 mt-2 bg-red-500 rounded-full" />
+                        <div className="flex-1">
+                          <p className="text-white text-sm">❌ No credits remaining</p>
+                          <p className="text-white/40 text-xs mt-1">Please purchase more credits to continue scanning</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {[1,2,3].map((i) => (
                     <div key={i} className="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
                       <div className="flex items-start gap-3">
@@ -274,47 +450,14 @@ const TopBar = ({
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="relative" ref={quickActionsRef}>
-            <button
-              onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-              className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </button>
-
-            {quickActionsOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl z-[10000] overflow-hidden">
-                <div className="p-3 border-b border-white/10">
-                  <h3 className="text-white font-semibold">Quick Actions</h3>
-                </div>
-                <div className="p-2">
-                  {quickActions.map((action, i) => (
-                    <button
-                      key={i}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-xl transition-all group"
-                    >
-                      <span className="text-purple-400 group-hover:scale-110 transition-transform">
-                        {getQuickActionIcon(action.action)}
-                      </span>
-                      <span>{action.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* User Menu */}
           <UserMenu onLogout={onLogout} />
         </div>
       </div>
 
-      {/* Navigation Bar - Responsive */}
+      {/* Navigation Bar - Centered */}
       <div className="px-4 sm:px-6 lg:px-8 border-t border-white/10">
-        <nav className="flex flex-wrap items-center gap-1 py-2">
+           <nav className="flex justify-start items-center flex-wrap gap-1 py-2">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
@@ -344,6 +487,22 @@ const TopBar = ({
           })}
         </nav>
       </div>
+    
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slideDown {
+          animation: slideDown 0.2s ease-out;
+        }
+      `}</style>
     </header>
   );
 };

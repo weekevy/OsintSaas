@@ -87,6 +87,7 @@ export async function PUT(request) {
       );
     }
 
+
     const decoded = verifyToken(token);
     if (!decoded) {
       return NextResponse.json(

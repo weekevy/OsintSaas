@@ -1,6 +1,6 @@
 // Layout
-export { default as Sidebar } from './layout/Sidebar';
-export { default as MobileSidebar } from './layout/MobileSidebar';
+// export { default as Sidebar } from './layout/Sidebar';
+// export { default as MobileSidebar } from './layout/MobileSidebar';
 export { default as TopBar } from './layout/TopBar';
 export { default as UserMenu } from './layout/UserMenu';
 

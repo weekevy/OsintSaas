@@ -2,15 +2,15 @@
 export const investigationModules = [
   { 
     id: 'job-recruitment', 
-    name: 'Job Recruitment', 
-    description: 'Analyze job postings for scams and fraudulent companies', 
+    name: 'Company & Job Scam', 
+    description: 'Verify if a job offer, company, or recruiter is legitimate', 
     icon: 'job', 
     color: 'from-purple-500 to-pink-500' 
   },
   { 
     id: 'linkedin', 
-    name: 'LinkedIn Investigation', 
-    description: 'Profile analysis, connection mapping, and suspicious activity detection', 
+    name: 'Recruiter Check', 
+    description: 'Verify recruiters and suspicious LinkedIn profiles', 
     icon: 'linkedin', 
     color: 'from-blue-500 to-cyan-500' 
   },
@@ -107,8 +107,8 @@ export const openSourcePlatforms = [
 // Asset configuration for modules
 export const moduleAssetsConfig = {
   'job-recruitment': {
-    title: 'Job Recruitment Investigation',
-    description: 'Add assets related to the job posting or company',
+    title: 'Company & Job Scam Check',
+    description: 'Verify if a job offer, company, or recruiter is legitimate',
     categories: [
       {
         id: 'job_details',
@@ -116,11 +116,38 @@ export const moduleAssetsConfig = {
         icon: 'job',
         color: 'from-purple-500 to-pink-500',
         fields: [
-          { id: 'job_url', label: 'Job Posting URL', type: 'url', placeholder: 'https://example.com/job-posting', required: true },
-          { id: 'company_name', label: 'Company Name', type: 'text', placeholder: 'Enter company name', required: true },
-          { id: 'company_website', label: 'Company Website', type: 'url', placeholder: 'https://company.com', required: false },
-          { id: 'job_title', label: 'Job Title', type: 'text', placeholder: 'e.g., Software Engineer', required: true },
-          { id: 'job_description', label: 'Job Description', type: 'textarea', placeholder: 'Paste the job description here', required: false },
+          { 
+            id: 'job_url', 
+            label: 'Job Posting URL', 
+            type: 'url', 
+            placeholder: 'https://...', 
+            required: false,
+            help: 'Paste the link to the job posting'
+          },
+          { 
+            id: 'job_title', 
+            label: 'Job Title', 
+            type: 'text', 
+            placeholder: 'e.g., Software Engineer', 
+            required: false,
+            help: 'The position you applied for'
+          },
+          { 
+            id: 'salary_offered', 
+            label: 'Salary Offered', 
+            type: 'text', 
+            placeholder: '$50,000 - $70,000 per year', 
+            required: false,
+            help: 'What salary was promised?'
+          },
+          { 
+            id: 'job_description', 
+            label: 'Job Description', 
+            type: 'textarea', 
+            placeholder: 'Paste the full job description here...', 
+            required: false,
+            help: 'Copy the job description from the posting'
+          }
         ]
       },
       {
@@ -129,22 +156,152 @@ export const moduleAssetsConfig = {
         icon: 'website',
         color: 'from-blue-500 to-cyan-500',
         fields: [
-          { id: 'company_linkedin', label: 'Company LinkedIn', type: 'url', placeholder: 'https://linkedin.com/company/name', required: false },
-          { id: 'company_address', label: 'Company Address', type: 'text', placeholder: 'Physical address', required: false },
-          { id: 'company_phone', label: 'Company Phone', type: 'phone', placeholder: '+1 (555) 123-4567', required: false },
-          { id: 'company_email', label: 'Company Email', type: 'email', placeholder: 'contact@company.com', required: false },
+          { 
+            id: 'company_name', 
+            label: 'Company Name', 
+            type: 'text', 
+            placeholder: 'Company name', 
+            required: false,
+            help: 'Name of the company offering the job'
+          },
+          { 
+            id: 'company_website', 
+            label: 'Company Website', 
+            type: 'url', 
+            placeholder: 'https://company.com', 
+            required: false,
+            help: 'Official company website if provided'
+          },
+          { 
+            id: 'company_linkedin', 
+            label: 'Company LinkedIn', 
+            type: 'url', 
+            placeholder: 'https://linkedin.com/company/...', 
+            required: false,
+            help: 'LinkedIn company page URL'
+          },
+          { 
+            id: 'company_email_domain', 
+            label: 'Company Email Domain', 
+            type: 'text', 
+            placeholder: '@company.com', 
+            required: false,
+            help: 'The email domain used by the company'
+          },
+          { 
+            id: 'company_phone', 
+            label: 'Company Phone', 
+            type: 'tel', 
+            placeholder: '+1 555 123 4567', 
+            required: false,
+            help: 'Phone number listed for the company'
+          },
+          { 
+            id: 'company_address', 
+            label: 'Company Address', 
+            type: 'text', 
+            placeholder: '123 Business St, City, Country', 
+            required: false,
+            help: 'Physical address of the company'
+          }
         ]
       },
       {
-        id: 'contact_person',
-        name: 'Contact Person',
+        id: 'recruiter_info',
+        name: 'Recruiter Information',
         icon: 'contacts',
         color: 'from-green-500 to-emerald-500',
         fields: [
-          { id: 'recruiter_name', label: 'Recruiter Name', type: 'text', placeholder: 'Full name', required: false },
-          { id: 'recruiter_linkedin', label: 'Recruiter LinkedIn', type: 'url', placeholder: 'https://linkedin.com/in/username', required: false },
-          { id: 'recruiter_email', label: 'Recruiter Email', type: 'email', placeholder: 'recruiter@company.com', required: false },
-          { id: 'recruiter_phone', label: 'Recruiter Phone', type: 'phone', placeholder: '+1 (555) 123-4567', required: false },
+          { 
+            id: 'recruiter_name', 
+            label: 'Recruiter Name', 
+            type: 'text', 
+            placeholder: 'John Doe', 
+            required: false,
+            help: 'Name of the person contacting you'
+          },
+          { 
+            id: 'recruiter_email', 
+            label: 'Recruiter Email', 
+            type: 'email', 
+            placeholder: 'recruiter@company.com', 
+            required: false,
+            help: 'Email address of the recruiter'
+          },
+          { 
+            id: 'recruiter_phone', 
+            label: 'Recruiter Phone', 
+            type: 'tel', 
+            placeholder: '+1 555 123 4567', 
+            required: false,
+            help: 'Phone number of the recruiter'
+          },
+          { 
+            id: 'recruiter_linkedin', 
+            label: 'Recruiter LinkedIn', 
+            type: 'url', 
+            placeholder: 'https://linkedin.com/in/...', 
+            required: false,
+            help: 'LinkedIn profile URL of the recruiter'
+          },
+          { 
+            id: 'recruiter_title', 
+            label: 'Recruiter Title', 
+            type: 'text', 
+            placeholder: 'HR Manager / Talent Acquisition', 
+            required: false,
+            help: 'Job title claimed by the recruiter'
+          }
+        ]
+      },
+      {
+        id: 'communication',
+        name: 'Communication',
+        icon: 'email',
+        color: 'from-yellow-500 to-amber-500',
+        fields: [
+          { 
+            id: 'suspicious_message', 
+            label: 'Suspicious Message', 
+            type: 'textarea', 
+            placeholder: 'Paste any suspicious email or message here...', 
+            required: false,
+            help: 'Copy and paste the message you received',
+            rows: 4
+          },
+          { 
+            id: 'communication_channel', 
+            label: 'Communication Channel', 
+            type: 'select', 
+            options: ['Email', 'LinkedIn', 'WhatsApp', 'Telegram', 'SMS', 'Phone Call', 'Other'],
+            required: false,
+            help: 'How were you contacted?'
+          },
+          { 
+            id: 'red_flags_noticed', 
+            label: 'Red Flags Noticed', 
+            type: 'textarea', 
+            placeholder: 'List any suspicious things you noticed...', 
+            required: false,
+            help: 'Poor grammar, urgent requests, payment demands, etc.'
+          }
+        ]
+      },
+      {
+        id: 'evidence',
+        name: 'Upload Evidence',
+        icon: 'document',
+        color: 'from-red-500 to-pink-500',
+        fields: [
+          {
+            id: 'notes',
+            label: 'Additional Notes',
+            type: 'textarea',
+            placeholder: 'Any other information you want to share...',
+            required: false,
+            help: 'Add any additional context or observations',
+            rows: 3
+          }
         ]
       }
     ]
