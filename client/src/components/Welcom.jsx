@@ -10,7 +10,7 @@ import {
   FaqSection,
   Footer,
   LoginModal,
-  RegisterModal
+  RegisterModal,
 } from './welcom_components';
 import GlobalStyles from './welcom_components/GlobalStyles';
 
@@ -24,6 +24,7 @@ const Welcome = () => {
   // Modal states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ 
     email: '', 
@@ -32,8 +33,11 @@ const Welcome = () => {
   });
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
+  const [otpError, setOtpError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [modalAnimation, setModalAnimation] = useState('closed');
+  const [tempUserEmail, setTempUserEmail] = useState('');
+  const [tempUserPassword, setTempUserPassword] = useState('');
   
   // Refs for smooth scrolling
   const homeRef = useRef(null);
@@ -79,6 +83,7 @@ const Welcome = () => {
     setModalAnimation('opening');
     setIsLoginModalOpen(true);
     setIsRegisterModalOpen(false);
+    setIsOTPModalOpen(false);
     setLoginError('');
     setTimeout(() => setModalAnimation('open'), 50);
   };
@@ -87,14 +92,32 @@ const Welcome = () => {
     setModalAnimation('opening');
     setIsRegisterModalOpen(true);
     setIsLoginModalOpen(false);
+    setIsOTPModalOpen(false);
     setRegisterError('');
     setTimeout(() => setModalAnimation('open'), 50);
+  };
+
+  const openOTPModal = (email, password) => {
+    console.log('Opening OTP modal for:', email);
+    setTempUserEmail(email);
+    setTempUserPassword(password);
+    // Close login/register modals first
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(false);
+    // Then open OTP modal
+    setTimeout(() => {
+      setModalAnimation('opening');
+      setIsOTPModalOpen(true);
+      setOtpError('');
+      setTimeout(() => setModalAnimation('open'), 50);
+    }, 100);
   };
 
   const switchToLogin = () => {
     setModalAnimation('switching');
     setTimeout(() => {
       setIsRegisterModalOpen(false);
+      setIsOTPModalOpen(false);
       setIsLoginModalOpen(true);
       setLoginError('');
       setModalAnimation('open');
@@ -105,6 +128,7 @@ const Welcome = () => {
     setModalAnimation('switching');
     setTimeout(() => {
       setIsLoginModalOpen(false);
+      setIsOTPModalOpen(false);
       setIsRegisterModalOpen(true);
       setRegisterError('');
       setModalAnimation('open');
@@ -116,12 +140,73 @@ const Welcome = () => {
     setTimeout(() => {
       setIsLoginModalOpen(false);
       setIsRegisterModalOpen(false);
+      setIsOTPModalOpen(false);
       setModalAnimation('closed');
       setLoginData({ email: '', password: '' });
       setRegisterData({ email: '', password: '', confirmPassword: '' });
       setLoginError('');
       setRegisterError('');
+      setOtpError('');
+      setTempUserEmail('');
+      setTempUserPassword('');
     }, 300);
+  };
+
+  // Handle login with OTP flow (DEMO MODE)
+  const handleLogin = async (email, password, rememberMe) => {
+    console.log('Login attempt with:', email, password);
+    setIsLoading(true);
+    setLoginError('');
+    
+    // DEMO MODE: Accept any non-empty email/password
+    setTimeout(() => {
+      if (email && email.includes('@') && password.length >= 1) {
+        console.log('Login successful, opening OTP modal');
+        openOTPModal(email, password);
+      } else {
+        setLoginError('Invalid email or password');
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // Handle OTP verification
+  const handleOTPVerification = async (otpCode) => {
+    console.log('Verifying OTP:', otpCode);
+    setIsLoading(true);
+    setOtpError('');
+    
+    // Virtual OTP verification - accept "000000" for testing
+    if (otpCode === '000000') {
+      setTimeout(() => {
+        console.log('OTP verified successfully!');
+        // Store demo user in localStorage
+        const demoUser = {
+          id: 'demo123',
+          email: tempUserEmail,
+          name: 'Demo User',
+          role: 'user'
+        };
+        localStorage.setItem('token', 'demo-token-12345');
+        localStorage.setItem('user', JSON.stringify(demoUser));
+        
+        // Close OTP modal and navigate
+        setIsOTPModalOpen(false);
+        setModalAnimation('closing');
+        setTimeout(() => {
+          setModalAnimation('closed');
+          setTempUserEmail('');
+          setTempUserPassword('');
+          navigate('/home');
+        }, 300);
+        setIsLoading(false);
+      }, 1000);
+      return { success: true };
+    } else {
+      setIsLoading(false);
+      setOtpError('Invalid verification code. Please use 000000 for testing.');
+      return { success: false, error: 'Invalid verification code. Please use 000000 for testing.' };
+    }
   };
 
   return (
@@ -184,41 +269,9 @@ const Welcome = () => {
         loginError={loginError}
         isLoading={isLoading}
         onLoginDataChange={setLoginData}
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          setIsLoading(true);
-          setLoginError('');
-          
-          try {
-            const response = await fetch('/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: loginData.email,
-                password: loginData.password
-              })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-              localStorage.setItem('token', data.token);
-              localStorage.setItem('user', JSON.stringify(data.user));
-              
-              setModalAnimation('closing');
-              setTimeout(() => {
-                setIsLoginModalOpen(false);
-                setModalAnimation('closed');
-                setLoginData({ email: '', password: '' });
-              }, 300);
-            } else {
-              setLoginError(data.error || data.message || 'Login failed');
-            }
-          } catch (error) {
-            setLoginError('Network error. Please try again.');
-          } finally {
-            setIsLoading(false);
-          }
+          handleLogin(loginData.email, loginData.password, false);
         }}
         onClose={closeModals}
         onSwitchToRegister={switchToRegister}
@@ -231,7 +284,7 @@ const Welcome = () => {
         registerError={registerError}
         isLoading={isLoading}
         onRegisterDataChange={setRegisterData}
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
           
           if (registerData.password !== registerData.confirmPassword) {
@@ -242,55 +295,18 @@ const Welcome = () => {
           setIsLoading(true);
           setRegisterError('');
           
-          try {
-            const response = await fetch('/api/register', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: registerData.email,
-                password: registerData.password
-              })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-              const loginResponse = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  email: registerData.email,
-                  password: registerData.password
-                })
-              });
-
-              const loginData = await loginResponse.json();
-
-              if (loginResponse.ok) {
-                localStorage.setItem('token', loginData.token);
-                localStorage.setItem('user', JSON.stringify(loginData.user));
-                
-                setModalAnimation('closing');
-                setTimeout(() => {
-                  setIsRegisterModalOpen(false);
-                  setModalAnimation('closed');
-                  setRegisterData({ email: '', password: '', confirmPassword: '' });
-                }, 300);
-              }
-            } else {
-              setRegisterError(data.error || data.message || 'Registration failed');
-            }
-          } catch (error) {
-            setRegisterError('Network error. Please try again.');
-          } finally {
+          setTimeout(() => {
+            console.log('Registration successful for:', registerData.email);
+            openOTPModal(registerData.email, registerData.password);
             setIsLoading(false);
-          }
+          }, 1000);
         }}
         onClose={closeModals}
         onSwitchToLogin={switchToLogin}
       />
 
-    <GlobalStyles/>
+
+      <GlobalStyles/>
     </div>
   );
 };

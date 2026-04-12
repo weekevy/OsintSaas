@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
@@ -58,16 +58,16 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Set user but DON'T navigate immediately - let OTP handle it
         setUser(data.user);
         setIsAuthenticated(true);
-        // ✅ Redirect to home on successful login
-        navigate('/home');
+        // Return success with user data without redirecting
         return { success: true, user: data.user };
       } else {
         return { success: false, error: data.error };
@@ -76,6 +76,11 @@ export const AuthProvider = ({ children }) => {
       console.error('Login error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
+  };
+
+  // New function to finalize login after OTP verification
+  const finalizeLogin = () => {
+    navigate('/home');
   };
 
   const register = async (email, password, firstName, lastName) => {
@@ -94,8 +99,7 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setUser(data.user);
         setIsAuthenticated(true);
-        // ✅ Redirect to home on successful registration
-        navigate('/home');
+        // Don't redirect immediately for registration either
         return { success: true, user: data.user };
       } else {
         return { success: false, error: data.error };
@@ -117,7 +121,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
-      // ✅ Redirect to home page on logout
       navigate('/');
     }
   };
@@ -129,7 +132,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    checkAuth
+    checkAuth,
+    finalizeLogin
   };
 
   return (
