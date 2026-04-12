@@ -437,6 +437,7 @@ export const AddAssetsModal = ({ isOpen, onClose, moduleType, moduleName, onSave
   };
   
   const activeConfig = (isJobScam && !config) ? enhancedJobScamConfig : config;
+// const activeConfig = isJobScam ? enhancedJobScamConfig : config;
 
   // File validation
   const isValidFileType = (file) => {
