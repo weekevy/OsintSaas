@@ -1,47 +1,48 @@
 const APIEndpoint = ({ endpoint, detailed = false }) => {
   const getMethodColor = (method) => {
     switch(method) {
-      case 'GET': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'POST': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'PUT': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'DELETE': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-white/20 text-white/60';
+      case 'GET': return 'border-[#34d399]/30 text-[#34d399]';
+      case 'POST': return 'border-[#00ff88]/30 text-[#00ff88]';
+      case 'PUT': return 'border-[#fbbf24]/30 text-[#fbbf24]';
+      case 'DELETE': return 'border-[#f87171]/30 text-[#f87171]';
+      default: return 'border-white/20 text-white/40';
     }
   };
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'stable': return 'bg-green-500/20 text-green-400';
-      case 'degraded': return 'bg-yellow-500/20 text-yellow-400';
-      case 'down': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-white/20 text-white/60';
+      case 'stable': return 'border-[#34d399]/30 text-[#34d399]';
+      case 'degraded': return 'border-[#fbbf24]/30 text-[#fbbf24]';
+      case 'down': return 'border-[#f87171]/30 text-[#f87171]';
+      default: return 'border-white/20 text-white/40';
     }
   };
 
   if (!detailed) {
     return (
-      <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-all">
+      <div className="bg-[#090c0e] border border-white/10 p-3 hover:border-[#00ff88]/30 transition-all group relative">
+        <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00ff88]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className={`px-3 py-1 text-xs font-mono rounded-full border ${getMethodColor(endpoint.method)}`}>
+          <div className="flex items-center gap-3">
+            <span className={`px-2 py-0.5 text-[7px] font-mono border ${getMethodColor(endpoint.method)}`}>
               {endpoint.method}
             </span>
             <div>
-              <code className="text-white font-mono text-sm">{endpoint.path}</code>
-              <p className="text-white/60 text-xs mt-1">{endpoint.description}</p>
+              <code className="text-white font-mono text-[9px]">{endpoint.path}</code>
+              <p className="text-white/40 text-[7px] font-mono mt-0.5">{endpoint.description}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <div className="text-white text-sm">{endpoint.calls}</div>
-              <div className="text-white/40 text-xs">Calls</div>
+              <div className="text-white text-[8px] font-mono">{endpoint.calls}</div>
+              <div className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em]">CALLS</div>
             </div>
             <div className="text-right">
-              <div className="text-white text-sm">{endpoint.avgResponse}</div>
-              <div className="text-white/40 text-xs">Avg Response</div>
+              <div className="text-white text-[8px] font-mono">{endpoint.avgResponse}</div>
+              <div className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em]">AVG RESPONSE</div>
             </div>
-            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(endpoint.status)}`}>
+            <span className={`px-1.5 py-0.5 text-[6px] font-mono border ${getStatusColor(endpoint.status)}`}>
               {endpoint.status}
             </span>
           </div>
@@ -51,60 +52,63 @@ const APIEndpoint = ({ endpoint, detailed = false }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+    <div className="bg-[#090c0e] border border-white/10 p-5 relative">
+      <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00ff88]/30" />
+      <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00ff88]/30" />
+      
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <span className={`px-4 py-2 text-sm font-mono rounded-lg border ${getMethodColor(endpoint.method)}`}>
+        <div className="flex items-center gap-3">
+          <span className={`px-2 py-1 text-[8px] font-mono border ${getMethodColor(endpoint.method)}`}>
             {endpoint.method}
           </span>
           <div>
-            <code className="text-white font-mono text-lg">{endpoint.path}</code>
-            <p className="text-white/60 text-sm mt-1">{endpoint.description}</p>
+            <code className="text-white font-mono text-[11px]">{endpoint.path}</code>
+            <p className="text-white/40 text-[8px] font-mono mt-0.5">{endpoint.description}</p>
           </div>
         </div>
-        <span className={`px-3 py-1.5 text-sm rounded-full ${getStatusColor(endpoint.status)}`}>
+        <span className={`px-2 py-0.5 text-[7px] font-mono border ${getStatusColor(endpoint.status)}`}>
           {endpoint.status}
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="p-4 rounded-xl bg-white/5">
-          <div className="text-white/40 text-xs mb-1">Total Calls</div>
-          <div className="text-2xl font-bold text-white">{endpoint.calls}</div>
+      <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="bg-[#0d1114] border border-white/10 p-2 text-center">
+          <div className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em] mb-0.5">TOTAL CALLS</div>
+          <div className="text-base font-bold text-white font-mono">{endpoint.calls}</div>
         </div>
-        <div className="p-4 rounded-xl bg-white/5">
-          <div className="text-white/40 text-xs mb-1">Avg Response</div>
-          <div className="text-2xl font-bold text-white">{endpoint.avgResponse}</div>
+        <div className="bg-[#0d1114] border border-white/10 p-2 text-center">
+          <div className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em] mb-0.5">AVG RESPONSE</div>
+          <div className="text-base font-bold text-white font-mono">{endpoint.avgResponse}</div>
         </div>
-        <div className="p-4 rounded-xl bg-white/5">
-          <div className="text-white/40 text-xs mb-1">Error Rate</div>
-          <div className="text-2xl font-bold text-green-400">0.01%</div>
+        <div className="bg-[#0d1114] border border-white/10 p-2 text-center">
+          <div className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em] mb-0.5">ERROR RATE</div>
+          <div className="text-base font-bold text-[#34d399] font-mono">0.01%</div>
         </div>
       </div>
 
       <div className="space-y-4">
         <div>
-          <h4 className="text-white font-medium mb-2">Request Parameters</h4>
-          <div className="bg-white/5 rounded-xl p-4">
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="text-white/40">Parameter</div>
-              <div className="text-white/40">Type</div>
-              <div className="text-white/40">Description</div>
+          <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-2">REQUEST PARAMETERS</h4>
+          <div className="bg-[#0d1114] border border-white/10 p-3">
+            <div className="grid grid-cols-3 gap-2 text-[7px] font-mono">
+              <div className="text-white/30 uppercase tracking-[0.08em]">PARAMETER</div>
+              <div className="text-white/30 uppercase tracking-[0.08em]">TYPE</div>
+              <div className="text-white/30 uppercase tracking-[0.08em]">DESCRIPTION</div>
               {endpoint.method === 'POST' && (
                 <>
-                  <div className="text-white font-mono">url</div>
-                  <div className="text-white/80">string</div>
-                  <div className="text-white/60">The URL to analyze</div>
-                  <div className="text-white font-mono">options</div>
-                  <div className="text-white/80">object</div>
-                  <div className="text-white/60">Additional analysis options</div>
+                  <div className="text-[#00ff88]">url</div>
+                  <div className="text-white/60">string</div>
+                  <div className="text-white/50">The URL to analyze</div>
+                  <div className="text-[#00ff88]">options</div>
+                  <div className="text-white/60">object</div>
+                  <div className="text-white/50">Additional analysis options</div>
                 </>
               )}
               {endpoint.method === 'GET' && (
                 <>
-                  <div className="text-white font-mono">id</div>
-                  <div className="text-white/80">string</div>
-                  <div className="text-white/60">Report ID to retrieve</div>
+                  <div className="text-[#00ff88]">id</div>
+                  <div className="text-white/60">string</div>
+                  <div className="text-white/50">Report ID to retrieve</div>
                 </>
               )}
             </div>
@@ -112,8 +116,8 @@ const APIEndpoint = ({ endpoint, detailed = false }) => {
         </div>
 
         <div>
-          <h4 className="text-white font-medium mb-2">Example Response</h4>
-          <pre className="bg-black/50 rounded-xl p-4 text-white/60 text-xs overflow-x-auto">
+          <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-2">EXAMPLE RESPONSE</h4>
+          <pre className="bg-[#0d1114] border border-white/10 p-3 text-white/50 text-[7px] font-mono overflow-x-auto">
             {`{
   "success": true,
   "data": {

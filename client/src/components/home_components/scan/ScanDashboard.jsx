@@ -1,59 +1,131 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ScanTabs from './ScanTabs';
 import { InvestigationModules, CustomScanConfig } from './core/Modules';
 import { RunningScans, ScanHistory, ScheduledScans } from './core/ScansManager';
-import { AddAssetsModal, EditAssetsModal } from './core/Modals';
-import { getIconName, getIcon } from './utils/icons';
+import { getModuleAddModal, getModuleEditModal } from './modules';
+import { getIcon } from './utils/icons';
 
-// All module configurations
+// ─── Module Definitions ───────────────────────────────────────────────────────
 const ALL_MODULES = [
-  { id: 'job-recruitment', name: 'Company & Job Scam', api: '/api/modules/company-jobscam', icon: 'job', color: 'from-purple-500 to-pink-500', textColor: 'text-purple-400' },
-  { id: 'linkedin', name: 'LinkedIn Investigation', api: '/api/modules/linkedin-investigation', icon: 'linkedin', color: 'from-blue-500 to-cyan-500', textColor: 'text-blue-400' },
-  { id: 'social-media', name: 'Social Media OSINT', api: '/api/modules/social-media', icon: 'social', color: 'from-green-500 to-emerald-500', textColor: 'text-green-400' },
-  { id: 'scam-website', name: 'Scam Website Analysis', api: '/api/modules/scam-website', icon: 'website', color: 'from-orange-500 to-red-500', textColor: 'text-orange-400' },
-  { id: 'email-leak', name: 'Email Leak Check', api: '/api/modules/email-leak', icon: 'email', color: 'from-yellow-500 to-amber-500', textColor: 'text-yellow-400' },
-  { id: 'scam-email', name: 'Scam Email Analysis', api: '/api/modules/scam-email', icon: 'email-scam', color: 'from-red-500 to-pink-500', textColor: 'text-red-400' },
-  { id: 'phone-number', name: 'Phone Number OSINT', api: '/api/modules/phone-number', icon: 'phone', color: 'from-teal-500 to-cyan-500', textColor: 'text-teal-400' },
-  { id: 'crypto-wallet', name: 'Crypto Wallet Tracker', api: '/api/modules/crypto-wallet', icon: 'crypto', color: 'from-indigo-500 to-purple-500', textColor: 'text-indigo-400' }
+  {
+    id: 'job-recruitment',
+    name: 'Company & Job Scam',
+    api: '/api/modules/company-jobscam',
+    icon: 'job',
+    color: 'from-[#00ff88] to-[#22d3ee]',
+    textColor: 'text-[#00ff88]',
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn Investigation',
+    api: '/api/modules/linkedin-investigation',
+    icon: 'linkedin',
+    color: 'from-[#22d3ee] to-[#00ff88]',
+    textColor: 'text-[#22d3ee]',
+  },
 ];
 
-const getModuleById = (moduleId) => {
-  return ALL_MODULES.find(m => m.id === moduleId) || ALL_MODULES[0];
-};
-
-// --- GLOBAL CACHE (persists across component unmounts/remounts) ---
-let globalRunningScans = [];
-let globalScanHistory = [];
-let globalInitialLoadDone = false;
-let isFetchingGlobal = false;
+const getModuleById = (moduleId) =>
+  ALL_MODULES.find((m) => m.id === moduleId) || ALL_MODULES[0];
 
 const getTargetDisplay = (scan, moduleId) => {
-  if (!scan.assets) return 'Scan';
-  switch(moduleId) {
-    case 'job-recruitment': 
-      if (scan.assets?.company_name && scan.assets?.job_title) {
+  if (!scan.assets) return 'SCAN';
+  switch (moduleId) {
+    case 'job-recruitment':
+      if (scan.assets?.company_name && scan.assets?.job_title)
         return `${scan.assets.job_title} at ${scan.assets.company_name}`;
-      }
       if (scan.assets?.company_name) return scan.assets.company_name;
       if (scan.assets?.recruiter_name) return `Recruiter: ${scan.assets.recruiter_name}`;
-      return 'Job Scam Check';
-    case 'linkedin': return scan.assets?.profile_name || 'LinkedIn Profile';
-    case 'social-media': return scan.assets?.display_name || 'Social Profile';
-    case 'scam-website': return scan.assets?.website_name || 'Suspicious Website';
-    case 'email-leak': return scan.assets?.email_address || 'Email Check';
-    case 'scam-email': return scan.assets?.subject || 'Scam Email';
-    case 'phone-number': return scan.assets?.phone_number || 'Phone Number';
-    case 'crypto-wallet': return scan.assets?.wallet_address || 'Crypto Wallet';
-    default: return 'Scan';
+      return 'JOB SCAM CHECK';
+    case 'linkedin':
+      return scan.assets?.profile_name || 'LINKEDIN PROFILE';
+    default:
+      return 'SCAN';
   }
 };
 
-const ScanDashboard = ({ 
-  searchInput, 
-  onSearchChange, 
-  onAnalyze, 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+const LoadingSkeleton = () => (
+  <div className="space-y-3">
+    {[0, 1].map((i) => (
+      <div
+        key={i}
+        className="bg-[#090c0e] border-2 border-[#00ff88]/15 rounded-2xl p-6 animate-pulse"
+        style={{ animationDelay: `${i * 120}ms`, minHeight: '110px' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-xl" />
+            <div className="space-y-2.5">
+              <div className="h-5 w-44 bg-white/8 rounded-lg" />
+              <div className="h-3.5 w-64 bg-white/5 rounded-lg" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-10 h-10 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-lg" />
+            <div className="w-10 h-10 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const EmptyState = () => (
+  <div
+    className="bg-[#090c0e] border-2 border-[#00ff88]/20 rounded-2xl p-8 flex items-center justify-center"
+    style={{ minHeight: '110px' }}
+  >
+    <div className="flex items-center gap-5">
+      <div className="w-14 h-14 border-2 border-[#00ff88]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+        <svg className="w-7 h-7 text-[#00ff88]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-bold text-white/60 uppercase tracking-widest">
+          No Active Scans
+        </p>
+        <p className="text-white/30 text-xs font-mono uppercase tracking-[0.1em] mt-1">
+          Select a module below to begin
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const StatBadge = ({ label, value, accent, pulse }) => (
+  <div className="flex items-center gap-4">
+    <div
+      className="w-12 h-12 border-2 rounded-xl flex items-center justify-center flex-shrink-0"
+      style={{ borderColor: `${accent}40`, background: `${accent}08` }}
+    >
+      {pulse ? (
+        <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: accent }} />
+      ) : (
+        <svg className="w-5 h-5" style={{ color: accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )}
+    </div>
+    <div>
+      <div className="text-white/35 text-[11px] font-mono uppercase tracking-[0.15em]">{label}</div>
+      <div className="text-3xl font-bold font-mono leading-tight" style={{ color: pulse ? accent : 'white' }}>
+        {value}
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+const ScanDashboard = ({
+  searchInput,
+  onSearchChange,
+  onAnalyze,
   isAnalyzing,
-  selectedProject 
+  selectedProject,
 }) => {
   const [activeScanTab, setActiveScanTab] = useState('module');
   const [scanOptions, setScanOptions] = useState({
@@ -64,469 +136,495 @@ const ScanDashboard = ({
     followRedirects: true,
   });
 
-  const [selectedProjectForScan, setSelectedProjectForScan] = useState(selectedProject);
-  
-  // Initialize state from GLOBAL cache (immediate, no loading flash)
-  const [runningScans, setRunningScans] = useState(globalRunningScans);
-  const [scanHistory, setScanHistory] = useState(globalScanHistory);
-  const [selectedModule, setSelectedModule] = useState(null);
-  const [showAddAssets, setShowAddAssets] = useState(false);
-  const [showEditAssets, setShowEditAssets] = useState(false);
-  const [editingScan, setEditingScan] = useState(null);
-  const [loading, setLoading] = useState(!globalInitialLoadDone);
-  const [filterModule, setFilterModule] = useState('all');
+  const [runningScans, setRunningScans] = useState([]);
+  const [scanHistory,  setScanHistory]  = useState([]);
+  const [status,       setStatus]       = useState('idle');
+  const [lastUpdated,  setLastUpdated]  = useState(null);
+
+  const [newScanIds,      setNewScanIds]      = useState(new Set());
+  const prevScanIdsRef = useRef(new Set());
+
+  const [selectedModule,  setSelectedModule]  = useState(null);
+  const [showAddAssets,   setShowAddAssets]   = useState(false);
+  const [showEditAssets,  setShowEditAssets]  = useState(false);
+  const [editingScan,     setEditingScan]     = useState(null);
+
+  const [filterModule,       setFilterModule]       = useState('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filterDropdownRef = useRef(null);
-  
-  // Real stats
-  const [stats, setStats] = useState({
-    totalScans: 0,
-    activeNow: 0
-  });
-  
-  const isSavingRef = useRef(false);
-  const isRefreshingRef = useRef(false);
 
-  // Fetch scans - updates both local state AND global cache
-  const fetchAllScans = useCallback(async (forceRefresh = false) => {
-    if (isFetchingGlobal && !forceRefresh) return;
-    
-    isFetchingGlobal = true;
-    setLoading(true);
-    
-    try {
-      const modulesToFetch = filterModule === 'all' 
-        ? ALL_MODULES 
-        : ALL_MODULES.filter(m => m.id === filterModule);
-      
-      const allScansPromises = modulesToFetch.map(async (module) => {
-        try {
-          const cacheBuster = forceRefresh ? `?_=${Date.now()}` : '';
-          const response = await fetch(`${module.api}${cacheBuster}`);
-          const data = await response.json();
-          
-          if (data.success && data.scans && data.scans.length > 0) {
-            return data.scans.map(scan => ({
-              id: `${module.id}_${scan.id}`,
-              originalId: scan.id,
-              moduleId: module.id,
-              moduleName: module.name,
-              moduleIcon: module.icon,
-              moduleColor: module.color,
-              moduleTextColor: module.textColor,
-              toolIcon: module.icon,
-              target: getTargetDisplay(scan, module.id),
-              status: scan.status,
-              progress: scan.progress || 0,
-              assets: scan.assets,
-              findings: scan.findings_count || 0,
-              createdAt: scan.created_at
-            }));
-          }
-          return [];
-        } catch (error) {
-          console.error(`Error fetching ${module.name} scans:`, error);
-          return [];
-        }
-      });
-      
-      const allScansArrays = await Promise.all(allScansPromises);
-      const allScans = allScansArrays.flat();
-      
-      const uniqueScansMap = new Map();
-      allScans.forEach(scan => {
-        const key = `${scan.moduleId}_${scan.originalId}`;
-        if (!uniqueScansMap.has(key)) {
-          uniqueScansMap.set(key, scan);
-        }
-      });
-      
-      const uniqueScans = Array.from(uniqueScansMap.values());
-      uniqueScans.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      const running = uniqueScans.filter(s => ['queued', 'running', 'paused'].includes(s.status));
-      const history = uniqueScans.filter(s => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status));
-      
-      // Calculate real stats
-      const activeNowCount = uniqueScans.filter(s => 
-        ['queued', 'running'].includes(s.status)
-      ).length;
-      
-      setStats({
-        totalScans: uniqueScans.length,
-        activeNow: activeNowCount
-      });
-      
-      // Update GLOBAL cache
-      globalRunningScans = running;
-      globalScanHistory = history;
-      globalInitialLoadDone = true;
-      
-      // Update local state
-      setRunningScans(running);
-      setScanHistory(history);
-      
-    } catch (error) {
-      console.error('Error fetching all scans:', error);
-    } finally {
-      setLoading(false);
-      isFetchingGlobal = false;
-    }
-  }, [filterModule]);
+  const fetchAbortRef = useRef(null);
+  const isSavingRef   = useRef(false);
+  const isEditOpenRef = useRef(false);
+  const isAddOpenRef  = useRef(false);
 
-  const forceRefreshScans = useCallback(async () => {
-    if (isRefreshingRef.current) return;
-    isRefreshingRef.current = true;
-    await fetchAllScans(true);
-    isRefreshingRef.current = false;
-  }, [fetchAllScans]);
-
-  // ONLY fetch on mount if global cache is empty
-  useEffect(() => {
-    if (!globalInitialLoadDone) {
-      fetchAllScans(true);
-    }
-  }, []); // Empty dependency = runs once on mount ONLY
-
-  // When filter changes, fetch fresh data
-  useEffect(() => {
-    if (globalInitialLoadDone) {
-      fetchAllScans(true);
-    }
-  }, [filterModule]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
-        setShowFilterDropdown(false);
-      }
+  const stats = useMemo(() => {
+    const all = [...runningScans, ...scanHistory];
+    return {
+      total:     all.length,
+      activeNow: runningScans.filter((s) => ['queued', 'running'].includes(s.status)).length,
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [runningScans, scanHistory]);
 
-  const toggleOption = (option) => {
-    setScanOptions(prev => ({ ...prev, [option]: !prev[option] }));
-  };
+  // ─── Fetch ────────────────────────────────────────────────────────────────
+  const fetchAllScans = useCallback(
+    async ({ silent = false } = {}) => {
+      if (fetchAbortRef.current) fetchAbortRef.current.abort();
+      const controller = new AbortController();
+      fetchAbortRef.current = controller;
 
-  const handleStartScan = (module, target) => {
-    setSelectedModule(module);
-    setShowAddAssets(true);
-  };
+      setStatus(silent ? 'refreshing' : 'loading');
 
-  const handleStartCustomScan = () => {
-    console.log('Starting custom scan with options:', scanOptions);
-  };
+      try {
+        const modulesToFetch =
+          filterModule === 'all'
+            ? ALL_MODULES
+            : ALL_MODULES.filter((m) => m.id === filterModule);
 
-  const handleSaveAssets = async (assetData) => {
-    if (isSavingRef.current) return;
-    isSavingRef.current = true;
-    setLoading(true);
-    
-    const module = getModuleById(assetData.moduleType);
-    const apiBase = module?.api || '/api/modules/company-jobscam';
-    
-    try {
-      // Handle file uploads if any
-      let formDataToSend = { ...assetData.assets, project_id: selectedProjectForScan?.id };
-      
-      // If there are files, convert to FormData
-      if (assetData.files && assetData.files.length > 0) {
-        const formData = new FormData();
-        formData.append('project_id', selectedProjectForScan?.id || '');
-        
-        // Append all asset fields
-        Object.keys(assetData.assets).forEach(key => {
-          if (assetData.assets[key]) {
-            formData.append(key, assetData.assets[key]);
-          }
-        });
-        
-        // Append files
-        assetData.files.forEach((file, index) => {
-          formData.append(`evidence_${index}`, file);
-        });
-        
-        const response = await fetch(apiBase, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          await fetchAllScans(true);
-          setShowAddAssets(false);
-          setSelectedModule(null);
+        const results = await Promise.allSettled(
+          modulesToFetch.map(async (module) => {
+            const res  = await fetch(`${module.api}?_=${Date.now()}`, { signal: controller.signal });
+            const data = await res.json();
+            if (!data.success || !data.scans?.length) return [];
+            return data.scans.map((scan) => ({
+              id:              `${module.id}_${scan.id}`,
+              originalId:      scan.id,
+              moduleId:        module.id,
+              moduleName:      module.name,
+              moduleIcon:      module.icon,
+              moduleColor:     module.color,
+              moduleTextColor: module.textColor,
+              toolIcon:        module.icon,
+              target:          getTargetDisplay(scan, module.id),
+              status:          scan.status,
+              progress:        scan.progress || 0,
+              assets:          scan.assets,
+              findings:        scan.findings_count || 0,
+              createdAt:       scan.created_at,
+            }));
+          })
+        );
+
+        if (controller.signal.aborted) return;
+
+        const seen = new Set();
+        const all = results
+          .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
+          .filter((scan) => {
+            const key = `${scan.moduleId}_${scan.originalId}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const allNextIds = new Set(all.map((s) => s.id));
+        const brandNew   = new Set([...allNextIds].filter((id) => !prevScanIdsRef.current.has(id)));
+        if (brandNew.size > 0 && prevScanIdsRef.current.size > 0) {
+          setNewScanIds(brandNew);
+          setTimeout(() => setNewScanIds(new Set()), 700);
         }
-      } else {
-        // Regular JSON post
-        const response = await fetch(apiBase, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formDataToSend)
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          await fetchAllScans(true);
-          setShowAddAssets(false);
-          setSelectedModule(null);
-        }
+        prevScanIdsRef.current = allNextIds;
+
+        setRunningScans(all.filter((s) => ['queued', 'running', 'paused'].includes(s.status)));
+        setScanHistory( all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
+        setLastUpdated(new Date());
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Fetch error:', err);
+      } finally {
+        if (!controller.signal.aborted) setStatus('idle');
       }
-    } catch (error) {
-      console.error('Error saving scan:', error);
-    } finally {
-      setLoading(false);
-      isSavingRef.current = false;
-    }
-  };
-
-  const handleRemoveScan = async (scanId, moduleId) => {
-    setLoading(true);
-    const module = getModuleById(moduleId);
-    const apiBase = module?.api || '/api/modules/company-jobscam';
-    const url = `${apiBase}?id=${scanId}`;
-    
-    try {
-      const response = await fetch(url, { method: 'DELETE' });
-      const data = await response.json();
-      
-      if (data.success) {
-        await forceRefreshScans();
-      }
-    } catch (error) {
-      console.error('Error removing scan:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditScan = (scan) => {
-    setEditingScan({ id: scan.originalId, toolId: scan.moduleId, tool: scan.moduleName, assets: scan.assets, status: scan.status });
-    setShowEditAssets(true);
-  };
-
-  const handleUpdateAssets = async (scanId, updatedAssets) => {
-    if (!editingScan) return;
-    setLoading(true);
-    const module = getModuleById(editingScan.toolId);
-    const apiBase = module?.api || '/api/modules/job-recruitment';
-    
-    try {
-      const response = await fetch(`${apiBase}?id=${scanId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedAssets)
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        await forceRefreshScans();
-        setShowEditAssets(false);
-        setEditingScan(null);
-      }
-    } catch (error) {
-      console.error('Error updating assets:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const totalScans = scanHistory.length + runningScans.length;
-  const currentFilterModule = getModuleById(filterModule);
-  const filterDisplayName = filterModule === 'all' ? 'All Modules' : currentFilterModule.name;
-
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="space-y-3 sm:space-y-4 animate-pulse">
-      <div className="bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10"></div>
-            <div>
-              <div className="h-4 sm:h-5 w-24 sm:w-32 bg-white/10 rounded mb-1 sm:mb-2"></div>
-              <div className="h-3 sm:h-4 w-36 sm:w-48 bg-white/10 rounded"></div>
-            </div>
-          </div>
-          <div className="flex gap-1 sm:gap-2">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10"></div>
-            <div>
-              <div className="h-4 sm:h-5 w-28 sm:w-40 bg-white/10 rounded mb-1 sm:mb-2"></div>
-              <div className="h-3 sm:h-4 w-40 sm:w-52 bg-white/10 rounded"></div>
-            </div>
-          </div>
-          <div className="flex gap-1 sm:gap-2">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    },
+    [filterModule]
   );
 
-  return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
-      {/* Header Section - Simplified without stats badges */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {/* Left side - Logo and Title */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <span className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl">
-            <svg className="w-4 h-4 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
-            </svg>
-          </span>
-          <div>
-            <h1 className="text-base sm:text-2xl font-bold text-white whitespace-nowrap">Scan Dashboard</h1>
-            <p className="text-white/40 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Showing: <span className="text-purple-400">{filterDisplayName}</span></p>
-          </div>
-        </div>
-        
-        {/* Right side - Actions (Refresh & Filter) */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Refresh Button */}
-          <button
-              onClick={forceRefreshScans}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white disabled:opacity-50 text-sm sm:text-base font-medium"
->
-            <svg className={`w-3 h-3 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="hidden xs:inline text-[10px] sm:text-sm">Refresh</span>
-          </button>
-          
-          {/* Filter Dropdown */}
-          <div className="relative" ref={filterDropdownRef}>
-            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 text-white/80 hover:text-white text-sm sm:text-base font-medium">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              <span className="hidden xs:inline text-[10px] sm:text-sm">Filter</span>
-              <svg className={`w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            
-            {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-48 sm:w-64 bg-gradient-to-b from-gray-900 to-black rounded-xl border border-white/10 shadow-2xl z-[10000] overflow-hidden animate-fadeIn">
-                <div className="p-2 border-b border-white/10"><h3 className="text-white font-semibold text-xs sm:text-sm px-2">Filter by Module</h3></div>
-                <div className="p-2 max-h-80 overflow-y-auto">
-                  <button onClick={() => { setFilterModule('all'); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === 'all' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    <span className="flex-1 text-left text-xs sm:text-sm">All Modules</span>
-                    {filterModule === 'all' && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                  </button>
-                  {ALL_MODULES.map((module) => (
-                    <button key={module.id} onClick={() => { setFilterModule(module.id); setShowFilterDropdown(false); }} className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-xs sm:text-sm ${filterModule === module.id ? `bg-gradient-to-r ${module.color} text-white` : 'text-white/70 hover:bg-white/5 hover:text-white'}`}>
-                      {getIcon(module.icon, "w-3.5 h-3.5 sm:w-4 sm:h-4")}
-                      <span className="flex-1 text-left text-xs sm:text-sm">{module.name}</span>
-                      {filterModule === module.id && <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+  useEffect(() => {
+    fetchAllScans();
+    return () => fetchAbortRef.current?.abort();
+  }, [fetchAllScans]);
 
-      <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
+  useEffect(() => {
+    const handler = (e) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target))
+        setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-      {/* Show loading skeleton ONLY on first-ever load with no cached data */}
-      {loading && !globalInitialLoadDone ? (
-        <LoadingSkeleton />
-      ) : (
-        <>
-          <RunningScans
-            runningScans={runningScans}
-            onEditScan={handleEditScan}
-            onRemoveScan={handleRemoveScan}
-          />
+  // ─── Handlers ─────────────────────────────────────────────────────────────
+  const handleStartScan = useCallback((module) => {
+    if (isAddOpenRef.current) return;
+    isAddOpenRef.current = true;
+    setSelectedModule(module);
+    setShowAddAssets(true);
+  }, []);
 
-          {/* Only show "No Active Scans" when not loading and no running scans */}
-          {!loading && runningScans.length === 0 && globalInitialLoadDone && (
-            <div className="text-center py-8 sm:py-12 animate-fadeIn">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                <svg className="w-8 h-8 sm:w-12 sm:h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              </div>
-              <h3 className="text-white font-semibold text-base sm:text-lg mb-1 sm:mb-2">No Active Scans</h3>
-              <p className="text-white/40 text-xs sm:text-sm">Click on any module above to start an investigation</p>
-            </div>
-          )}
-        </>
-      )}
+  const handleCloseAdd = useCallback(() => {
+    setShowAddAssets(false);
+    setSelectedModule(null);
+    setTimeout(() => { isAddOpenRef.current = false; }, 100);
+  }, []);
 
-      {activeScanTab === 'module' && <InvestigationModules onStartScan={handleStartScan} selectedTarget={selectedProjectForScan?.name || searchInput} />}
-      {activeScanTab === 'custom' && <CustomScanConfig scanOptions={scanOptions} toggleOption={toggleOption} selectedProjectForScan={selectedProjectForScan} searchInput={searchInput} onStartCustomScan={handleStartCustomScan} isLoading={loading} />}
-      {activeScanTab === 'scheduled' && <ScheduledScans scanHistory={scanHistory} runningScans={runningScans} />}
-      
-      {/* Scan History with Stats Box at the bottom */}
-      <div className="relative">
-        <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
-        
-        {/* Stats Box - Total Scans Currently & Active Now */}
-        <div className="mt-4 p-4 bg-gradient-to-r from-gray-800/50 to-black/50 rounded-xl border border-white/10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-white/40 text-xs">Total Scans</div>
-                  <div className="text-2xl font-bold text-white">{stats.totalScans}</div>
-                </div>
-              </div>
-              
-              <div className="w-px h-8 bg-white/10"></div>
-              
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                </div>
-                <div>
-                  <div className="text-white/40 text-xs">Active Now</div>
-                  <div className="text-2xl font-bold text-green-400">{stats.activeNow}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-white/30 text-xs">
-              Last updated: {new Date().toLocaleTimeString()}
-            </div>
-          </div>
-        </div>
-      </div>
+  const handleSaveAssets = useCallback(async (assetData) => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
 
-      <AddAssetsModal 
-        isOpen={showAddAssets} 
-        onClose={() => setShowAddAssets(false)} 
-        moduleType={selectedModule?.id} 
-        moduleName={selectedModule?.name} 
-        onSave={handleSaveAssets} 
-        projectId={selectedProjectForScan?.id} 
-        allowFileUpload={true}
+    const module  = getModuleById(assetData.moduleType);
+    const apiBase = module?.api || '/api/modules/company-jobscam';
+
+    try {
+      let success = false;
+      if (assetData.files?.length) {
+        const fd = new FormData();
+        fd.append('project_id', selectedProject?.id || '');
+        Object.entries(assetData.assets).forEach(([k, v]) => v && fd.append(k, v));
+        assetData.files.forEach((file, i) => fd.append(`evidence_${i}`, file));
+        const res  = await fetch(apiBase, { method: 'POST', body: fd });
+        const data = await res.json();
+        success = data.success;
+      } else {
+        const res  = await fetch(apiBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...assetData.assets, project_id: selectedProject?.id }),
+        });
+        const data = await res.json();
+        success = data.success;
+      }
+
+      if (success) {
+        handleCloseAdd();
+        setTimeout(() => fetchAllScans({ silent: true }), 300);
+      }
+    } catch (err) {
+      console.error('Save error:', err);
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [selectedProject, fetchAllScans, handleCloseAdd]);
+
+  const handleRemoveScan = useCallback(async (scanId, moduleId) => {
+    const module  = getModuleById(moduleId);
+    const apiBase = module?.api || '/api/modules/company-jobscam';
+
+    setRunningScans((p) => p.filter((s) => s.originalId !== scanId));
+    setScanHistory( (p) => p.filter((s) => s.originalId !== scanId));
+
+    try {
+      const res  = await fetch(`${apiBase}?id=${scanId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.success) fetchAllScans({ silent: true });
+    } catch (err) {
+      console.error('Remove error:', err);
+      fetchAllScans({ silent: true });
+    }
+  }, [fetchAllScans]);
+
+  const handleEditScan = useCallback((scan) => {
+    if (isEditOpenRef.current) return;
+    isEditOpenRef.current = true;
+    setEditingScan({ id: scan.originalId, toolId: scan.moduleId, tool: scan.moduleName, assets: scan.assets, status: scan.status });
+    setShowEditAssets(true);
+  }, []);
+
+  const handleCloseEdit = useCallback(() => {
+    setShowEditAssets(false);
+    setEditingScan(null);
+    setTimeout(() => { isEditOpenRef.current = false; }, 100);
+  }, []);
+
+  const handleUpdateAssets = useCallback(async (scanId, updatedAssets) => {
+    if (!editingScan) return;
+    const module  = getModuleById(editingScan.toolId);
+    const apiBase = module?.api || '/api/modules/job-recruitment';
+
+    try {
+      const res  = await fetch(`${apiBase}?id=${scanId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAssets),
+      });
+      const data = await res.json();
+      if (data.success) {
+        handleCloseEdit();
+        fetchAllScans({ silent: true });
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+    }
+  }, [editingScan, fetchAllScans, handleCloseEdit]);
+
+  // ─── Render helpers ───────────────────────────────────────────────────────
+  const renderAddModal = () => {
+    if (!showAddAssets || !selectedModule) return null;
+    const Modal = getModuleAddModal(selectedModule.id);
+    if (!Modal) return null;
+    return (
+      <Modal
+        isOpen={showAddAssets}
+        onClose={handleCloseAdd}
+        moduleType={selectedModule.id}
+        moduleName={selectedModule.name}
+        onSave={handleSaveAssets}
+        projectId={selectedProject?.id}
       />
-      
-      <EditAssetsModal isOpen={showEditAssets} onClose={() => setShowEditAssets(false)} scan={editingScan} onUpdate={handleUpdateAssets} />
+    );
+  };
+
+  const renderEditModal = () => {
+    if (!showEditAssets || !editingScan) return null;
+    const Modal = getModuleEditModal(editingScan.toolId);
+    if (!Modal) return null;
+    return (
+      <Modal
+        isOpen={showEditAssets}
+        onClose={handleCloseEdit}
+        scan={editingScan}
+        onUpdate={handleUpdateAssets}
+      />
+    );
+  };
+
+  const filterLabel  = filterModule === 'all' ? 'All Modules' : getModuleById(filterModule).name;
+  const isLoading    = status === 'loading';
+  const isRefreshing = status === 'refreshing';
+
+  const annotatedRunningScans = useMemo(
+    () => runningScans.map((s) => ({ ...s, _isNew: newScanIds.has(s.id) })),
+    [runningScans, newScanIds]
+  );
+
+  // ─── JSX ──────────────────────────────────────────────────────────────────
+  return (
+    <div className="w-full bg-[#06080a] text-white">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.015]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.06) 2px, rgba(0,255,136,0.06) 4px)',
+        }}
+      />
+
+      <div className="relative z-10 p-5 sm:p-6 md:p-8 lg:p-10 space-y-7 w-full">
+
+        {/* ══ HEADER ══════════════════════════════════════════════════════════ */}
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="w-14 h-14 border-2 border-[#00ff88]/40 rounded-xl flex items-center justify-center bg-[#00ff88]/5">
+                <svg className="w-7 h-7 text-[#00ff88]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                </svg>
+              </div>
+              {isRefreshing && (
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75 animate-ping" />
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#00ff88]" />
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h1 className="font-mono text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.06em]">
+                Scan Dashboard
+              </h1>
+              <p className="text-xs font-mono text-white/35 uppercase tracking-[0.14em] mt-1">
+                Filter:{' '}
+                <span className="text-[#00ff88]/80">{filterLabel}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fetchAllScans({ silent: true })}
+              disabled={isLoading || isRefreshing}
+              className="group flex items-center gap-2 px-5 py-2.5 border-2 border-[#00ff88]/25 rounded-xl bg-[#00ff88]/5 hover:bg-[#00ff88]/10 text-white/60 hover:text-[#00ff88] transition-all duration-200 text-xs font-mono uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform duration-500 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="hidden sm:inline text-xs">Refresh</span>
+            </button>
+
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => setShowFilterDropdown((v) => !v)}
+                className="flex items-center gap-2 px-5 py-2.5 border-2 border-[#00ff88]/25 rounded-xl bg-[#00ff88]/5 hover:bg-[#00ff88]/10 text-white/60 hover:text-[#00ff88] transition-all duration-200 text-xs font-mono uppercase tracking-[0.1em]"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="hidden sm:inline text-xs">Filter</span>
+                <svg
+                  className={`w-3 h-3 transition-transform duration-200 ${showFilterDropdown ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showFilterDropdown && (
+                <div className="absolute right-0 mt-2 w-64 bg-[#0a0d10] border-2 border-[#00ff88]/20 rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden animate-slideDown">
+                  <div className="px-4 py-3 border-b border-[#00ff88]/15">
+                    <span className="text-xs font-mono text-white/40 uppercase tracking-[0.14em]">Filter by module</span>
+                  </div>
+                  <div className="p-2">
+                    {[{ id: 'all', name: 'All Modules' }, ...ALL_MODULES].map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => { setFilterModule(m.id); setShowFilterDropdown(false); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors text-xs font-mono uppercase tracking-[0.08em] rounded-lg ${
+                          filterModule === m.id
+                            ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30'
+                            : 'text-white/60 hover:bg-[#00ff88]/5 hover:text-white/90'
+                        }`}
+                      >
+                        {m.id !== 'all' && getIcon(m.icon, 'w-4 h-4 flex-shrink-0')}
+                        <span className="flex-1">{m.name}</span>
+                        {filterModule === m.id && (
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-[#00ff88]/20 to-transparent" />
+
+        {/* ══ TABS ════════════════════════════════════════════════════════════ */}
+        <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
+
+        {/* ══ RUNNING SCANS ════════════════════════════════════════════════════ */}
+        <section style={{ minHeight: '110px' }}>
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : annotatedRunningScans.length > 0 ? (
+            <div className="space-y-3">
+              {annotatedRunningScans.map((scan) => (
+                <div
+                  key={scan.id}
+                  className={scan._isNew ? 'animate-scanEntry' : ''}
+                >
+                  <RunningScans
+                    runningScans={[scan]}
+                    onEditScan={handleEditScan}
+                    onRemoveScan={handleRemoveScan}
+                    onUpdateScanStatus={(scanId, newStatus) =>
+                      setRunningScans((prev) =>
+                        prev.map((s) => s.originalId === scanId ? { ...s, status: newStatus } : s)
+                      )
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState />
+          )}
+        </section>
+
+        {/* ══ TAB PANELS ══════════════════════════════════════════════════════ */}
+        {activeScanTab === 'module' && (
+          <InvestigationModules
+            onStartScan={handleStartScan}
+            selectedTarget={selectedProject?.name || searchInput}
+          />
+        )}
+        {activeScanTab === 'custom' && (
+          <CustomScanConfig
+            scanOptions={scanOptions}
+            toggleOption={(opt) => setScanOptions((p) => ({ ...p, [opt]: !p[opt] }))}
+            selectedProjectForScan={selectedProject}
+            searchInput={searchInput}
+            onStartCustomScan={() => console.log('custom scan', scanOptions)}
+            isLoading={isLoading}
+          />
+        )}
+        {activeScanTab === 'scheduled' && (
+          <ScheduledScans scanHistory={scanHistory} runningScans={runningScans} />
+        )}
+
+        {/* ══ HISTORY + STATS ═════════════════════════════════════════════════ */}
+        <section>
+          <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
+
+          <div className="border-2 border-t-0 border-[#00ff88]/20 rounded-b-2xl bg-[#090c0e] px-6 py-5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+              <div className="flex items-center gap-7">
+                <StatBadge label="Total Scans" value={stats.total}     accent="#00ff88" />
+                <div className="w-px h-10 bg-[#00ff88]/15" />
+                <StatBadge label="Active Now"  value={stats.activeNow} accent="#34d399" pulse />
+              </div>
+
+              <div className="flex items-center gap-2 text-white/25 text-[11px] font-mono uppercase tracking-[0.12em]">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Not yet updated'}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {renderAddModal()}
+      {renderEditModal()}
 
       <style>{`
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .animate-shimmer { animation: shimmer 2s infinite; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-        @media (min-width: 480px) {
-          .xs\\:inline { display: inline; }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slideDown { animation: slideDown 0.15s ease-out; }
+
+        @keyframes scanEntry {
+          0%   {
+            opacity: 0;
+            transform: translateY(-16px) scaleY(0.88);
+            filter: brightness(2) saturate(1.5);
+          }
+          35%  {
+            opacity: 1;
+            filter: brightness(1.5) saturate(1.2);
+          }
+          65%  {
+            transform: translateY(3px) scaleY(1.02);
+            filter: brightness(1.1);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+            filter: brightness(1) saturate(1);
+          }
+        }
+        .animate-scanEntry {
+          animation: scanEntry 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          transform-origin: top center;
+        }
+
+        @keyframes scanGlow {
+          0%   { box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 0 0 1px rgba(0,255,136,0); }
+          25%  { box-shadow: 0 0 20px 4px rgba(0,255,136,0.18), inset 0 0 0 1px rgba(0,255,136,0.4); }
+          100% { box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 0 0 1px rgba(0,255,136,0); }
+        }
+        .animate-scanEntry > * {
+          animation: scanGlow 0.65s ease-out forwards;
         }
       `}</style>
     </div>

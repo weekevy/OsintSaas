@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 
 const ProgressBar = ({ isLoading }) => {
+  // TEMPORARILY DISABLED - Remove the line below to re-enable the progress bar
+  return null;
+  
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {

@@ -1,16 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
-
+/* In your global CSS file */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
    --font-rubik: "Rubik", sans-serif;
 }
-
 /* View Transitions */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.2s;
 }
+
+
+html {
+  font-size: 115%;  /* 18px base */
+  scroll-behavior: smooth;
+}
+
+body {
+  line-height: 1.6;  /* Better readability */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Optional: Scale down on very large screens to prevent too large text */
+@media (min-width: 2560px) {
+  html {
+    font-size: 100%;  /* Back to 16px on 4K screens */
+  }
+}
+
+
+
+
+
+
+
 
 /* Fade animations */
 .fade-enter {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-// Mock alert data for different scenarios
+// Mock alert data for different scenarios - COMMENTED OUT
+/*
 const getRandomAlerts = (projectId = null) => {
   // Generate different alerts based on project ID for variety
   const projectSpecificPrefix = projectId ? `[Project ${projectId}] ` : '';
@@ -31,22 +32,33 @@ const getRandomAlerts = (projectId = null) => {
     ...alert
   }));
 };
+*/
 
 const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
   const [alerts, setAlerts] = useState([]);
 
-  // THIS WILL TRIGGER EVERY TIME selectedProjectId CHANGES
+  // COMMENTED OUT - Using externalAlerts from props instead of generating mock data
+  /*
   useEffect(() => {
     console.log('Project changed, generating new alerts for project:', selectedProjectId);
     const newAlerts = getRandomAlerts(selectedProjectId);
     setAlerts(newAlerts);
-  }, [selectedProjectId]); // ← This dependency is key
+  }, [selectedProjectId]);
 
-  // Initial load
   useEffect(() => {
     const newAlerts = getRandomAlerts(selectedProjectId);
     setAlerts(newAlerts);
   }, []);
+  */
+
+  // Use externalAlerts from props
+  useEffect(() => {
+    if (externalAlerts && externalAlerts.length > 0) {
+      setAlerts(externalAlerts);
+    } else {
+      setAlerts([]);
+    }
+  }, [externalAlerts, selectedProjectId]);
 
   const getSeverityColor = (severity) => {
     switch(severity) {
@@ -75,9 +87,67 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
   };
 
   const handleRefresh = () => {
-    const newAlerts = getRandomAlerts(selectedProjectId);
-    setAlerts(newAlerts);
+    // Refresh logic - can be passed as prop or handled by parent
+    console.log('Refresh alerts');
   };
+
+  // Check if no project is selected
+  if (!selectedProjectId) {
+    return (
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg lg:text-xl font-semibold text-white flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Active Threats & Alerts
+          </h3>
+        </div>
+
+        {/* No Project Selected Message - No Border */}
+        <div className="p-8 text-center">
+          <svg className="w-16 h-16 mx-auto text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-white/60 text-base mb-2">No Project Selected Yet</p>
+          <p className="text-white/30 text-sm">Select a project or scan from the left panel to view alerts and threats</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if no alerts exist for selected project
+  if (alerts.length === 0) {
+    return (
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg lg:text-xl font-semibold text-white flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Active Threats & Alerts
+          </h3>
+          <button 
+            onClick={handleRefresh}
+            className="text-white/60 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div className="p-8 text-center bg-white/5 rounded-xl border border-white/10">
+          <svg className="w-12 h-12 mx-auto text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-white/60">No active threats detected</p>
+          <p className="text-white/30 text-sm mt-1">System is secure for this scan</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 lg:space-y-4">
@@ -103,52 +173,42 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:gap-4">
-        {alerts.length > 0 ? (
-          alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`p-4 lg:p-5 rounded-xl lg:rounded-2xl border-2 ${getSeverityColor(alert.severity)} backdrop-blur-xl flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:scale-[1.01] cursor-pointer`}
-            >
-              <div className="flex-shrink-0">
-                {getSeverityIcon(alert.severity)}
-              </div>
-              <div className="flex-1 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className={`font-semibold text-sm lg:text-base capitalize ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
-                    {alert.severity} Risk
-                  </span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-white/10">
-                    {alert.source}
-                  </span>
-                </div>
-                <p className="text-white/90 text-sm lg:text-base">{alert.message}</p>
-                <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs lg:text-sm">
-                  <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Review</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Watch</span>
-                  </button>
-                </div>
-              </div>
-              <span className="text-white/40 text-xs sm:text-sm sm:ml-auto">{alert.time}</span>
+        {alerts.map((alert) => (
+          <div
+            key={alert.id}
+            className={`p-4 lg:p-5 rounded-xl lg:rounded-2xl border-2 ${getSeverityColor(alert.severity)} backdrop-blur-xl flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:scale-[1.01] cursor-pointer`}
+          >
+            <div className="flex-shrink-0">
+              {getSeverityIcon(alert.severity)}
             </div>
-          ))
-        ) : (
-          <div className="p-8 text-center bg-white/5 rounded-xl border border-white/10">
-            <svg className="w-12 h-12 mx-auto text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-white/60">No active threats detected</p>
-            <p className="text-white/30 text-sm mt-1">System is secure</p>
+            <div className="flex-1 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className={`font-semibold text-sm lg:text-base capitalize ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
+                  {alert.severity} Risk
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-white/10">
+                  {alert.source}
+                </span>
+              </div>
+              <p className="text-white/90 text-sm lg:text-base">{alert.message}</p>
+              <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs lg:text-sm">
+                <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Review</span>
+                </button>
+                <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>Watch</span>
+                </button>
+              </div>
+            </div>
+            <span className="text-white/40 text-xs sm:text-sm sm:ml-auto">{alert.time}</span>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

@@ -1,214 +1,335 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-const RiskCircle = ({ 
-  riskData = null, 
-  projectName, 
-  projectTarget, 
-  getRiskColor, 
-  getRiskBgColor,
-  onRiskChange 
+const EnhancedRiskCircle = ({
+  riskData = null,
+  projectName,
+  projectTarget,
+  onRiskChange
 }) => {
-  const [animate, setAnimate] = useState(false);
   const [displayScore, setDisplayScore] = useState(0);
   const [riskLevel, setRiskLevel] = useState('low');
   const [riskDetails, setRiskDetails] = useState(null);
+  const animationTimerRef = useRef(null);
+  const prevRiskDataRef = useRef(null);
 
-  // Extract risk score and details from JSON data
+  const cleanupTimers = () => {
+    if (animationTimerRef.current) {
+      clearInterval(animationTimerRef.current);
+      animationTimerRef.current = null;
+    }
+  };
+
   useEffect(() => {
-    if (riskData) {
+    if (!projectName || projectName === 'No Project Selected') {
+      cleanupTimers();
+      setDisplayScore(0);
+      setRiskDetails(null);
+      setRiskLevel('low');
+      if (onRiskChange) onRiskChange(0, 'low', null);
+      prevRiskDataRef.current = null;
+      return;
+    }
+
+    cleanupTimers();
+
+    if (riskData && Object.keys(riskData).length > 0) {
       let score = 0;
       let level = 'low';
       let details = null;
-      
-      // If riskData is a number directly
+
       if (typeof riskData === 'number') {
         score = riskData;
-      } 
-      // If riskData has risk_score property
-      else if (riskData.risk_score !== undefined) {
+      } else if (riskData.risk_score !== undefined) {
         score = riskData.risk_score;
         details = riskData;
-      }
-      // If riskData has score property
-      else if (riskData.score !== undefined) {
+      } else if (riskData.score !== undefined) {
         score = riskData.score;
         details = riskData;
-      }
-      // If riskData has risk_level
-      else if (riskData.risk_level) {
+      } else if (riskData.risk_level) {
         level = riskData.risk_level;
-        const levelMap = { 'low': 15, 'medium': 45, 'high': 70, 'critical': 85 };
+        const levelMap = { low: 15, medium: 45, high: 70, critical: 85 };
         score = levelMap[riskData.risk_level] || 15;
         details = riskData;
       }
-      
+
       setRiskDetails(details);
       setRiskLevel(level);
-      animateScoreChange(score);
+
+      const isNewProject = prevRiskDataRef.current !== riskData;
+      const isScoreDifferent = displayScore !== score;
+
+      if (isNewProject || isScoreDifferent || (displayScore === 0 && score > 0)) {
+        animateScoreChange(score);
+      } else {
+        setDisplayScore(score);
+      }
+
+      prevRiskDataRef.current = riskData;
     } else {
-      animateScoreChange(0);
       setRiskDetails(null);
       setRiskLevel('low');
+      setDisplayScore(0);
+      if (onRiskChange) onRiskChange(0, 'low', null);
+      prevRiskDataRef.current = null;
     }
-  }, [riskData]);
 
-  // Animate when riskScore changes
+    return cleanupTimers;
+  }, [riskData, projectName]);
+
   const animateScoreChange = (newScore) => {
-    setAnimate(true);
-    
-    const duration = 500;
-    const steps = 20;
+    if (newScore === 0 && displayScore === 0) return;
+    cleanupTimers();
+    const duration = 700;
+    const steps = 35;
     const stepTime = duration / steps;
-    const startScore = displayScore;
-    const difference = newScore - startScore;
+    let currentScore = displayScore;
+    const difference = newScore - currentScore;
     let step = 0;
-    
-    const timer = setInterval(() => {
+    animationTimerRef.current = setInterval(() => {
       step++;
       const progress = step / steps;
-      const currentScore = Math.round(startScore + (difference * progress));
-      setDisplayScore(currentScore);
-      
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(currentScore + difference * ease));
       if (step >= steps) {
-        clearInterval(timer);
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
         setDisplayScore(newScore);
-        if (onRiskChange) {
-          onRiskChange(newScore, riskLevel, riskDetails);
-        }
+        if (onRiskChange) onRiskChange(newScore, riskLevel, riskDetails);
       }
     }, stepTime);
-    
-    const scaleTimer = setTimeout(() => setAnimate(false), 700);
-    
-    return () => {
-      clearInterval(timer);
-      clearTimeout(scaleTimer);
+  };
+
+  const getRiskConfig = (score) => {
+    if (score >= 75) return {
+      label: 'CRITICAL', short: 'C',
+      color: '#f87171', colorDim: '#f8717133', colorBg: 'rgba(248,113,113,0.07)',
+      gradStart: '#f87171', gradEnd: '#ef4444',
+      trackColor: 'rgba(248,113,113,0.12)',
+      border: 'rgba(248,113,113,0.3)',
+    };
+    if (score >= 50) return {
+      label: 'HIGH', short: 'H',
+      color: '#fbbf24', colorDim: '#fbbf2433', colorBg: 'rgba(251,191,36,0.07)',
+      gradStart: '#fbbf24', gradEnd: '#f59e0b',
+      trackColor: 'rgba(251,191,36,0.12)',
+      border: 'rgba(251,191,36,0.3)',
+    };
+    if (score >= 25) return {
+      label: 'MEDIUM', short: 'M',
+      color: '#fb923c', colorDim: '#fb923c33', colorBg: 'rgba(251,146,60,0.07)',
+      gradStart: '#fb923c', gradEnd: '#f97316',
+      trackColor: 'rgba(251,146,60,0.12)',
+      border: 'rgba(251,146,60,0.3)',
+    };
+    return {
+      label: 'LOW', short: 'L',
+      color: '#22d3ee', colorDim: '#22d3ee33', colorBg: 'rgba(34,211,238,0.07)',
+      gradStart: '#22d3ee', gradEnd: '#06b6d4',
+      trackColor: 'rgba(34,211,238,0.12)',
+      border: 'rgba(34,211,238,0.3)',
     };
   };
 
-  // Calculate circle properties
-  const size = 200;
-  const radius = 85;
+  const size = 180;
+  const outerR = 78;
+  const innerR = 66;
   const center = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (displayScore / 100) * circumference;
+  const outerCirc = 2 * Math.PI * outerR;
+  const innerCirc = 2 * Math.PI * innerR;
+  const outerOffset = outerCirc - (displayScore / 100) * outerCirc;
+  const innerOffset = innerCirc - ((displayScore * 0.7) / 100) * innerCirc;
 
-  // Helper function to get risk level text
-  const getRiskLevelText = (score) => {
-    if (score >= 75) return 'Critical Risk';
-    if (score >= 50) return 'High Risk';
-    if (score >= 25) return 'Medium Risk';
-    return 'Low Risk';
-  };
+  const cfg = getRiskConfig(displayScore);
+  const isNoProject = !projectName || projectName === 'No Project Selected';
+  const hasData = displayScore > 0 && !isNoProject;
 
-  // Get gradient colors based on score
-  const getGradientColors = (score) => {
-    if (score >= 75) return { start: '#EF4444', end: '#DC2626' };
-    if (score >= 50) return { start: '#F97316', end: '#EA580C' };
-    if (score >= 25) return { start: '#F59E0B', end: '#D97706' };
-    return { start: '#10B981', end: '#059669' };
-  };
-
-  const colors = getGradientColors(displayScore);
+  const gradId = `rg_${Math.round(displayScore)}`;
 
   return (
-    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/10 p-5 lg:p-6 flex flex-col items-center justify-center overflow-hidden relative w-full max-w-[550px] mx-auto">
-      
-      <h3 className="text-lg lg:text-xl font-semibold text-white mb-3 lg:mb-4 relative z-10 flex items-center gap-2">
-        Risk Assessment
-        {animate && (
-          <span className="flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-purple-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
-          </span>
-        )}
-      </h3>
-      
-      {/* Circle Container */}
-      <div className={`relative w-44 h-44 sm:w-48 sm:h-48 lg:w-52 lg:h-52 mb-3 lg:mb-4 transition-all duration-700 ${animate ? 'scale-105' : 'scale-100'}`}>
-        <svg className="w-full h-full" viewBox={`0 0 ${size} ${size}`}>
-          {/* Background circle */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="12"
-            strokeDasharray="4 4"
-          />
-          
-          {/* Progress circle with animation */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={`url(#riskGradient-${displayScore})`}
-            strokeWidth="12"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            className="transition-all duration-1000 ease-out"
-            style={{
-              transition: 'stroke-dashoffset 1000ms ease-out'
-            }}
-          />
-          
-          {/* Dynamic gradient based on risk score */}
-          <defs>
-            <linearGradient id={`riskGradient-${displayScore}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.start} />
-              <stop offset="100%" stopColor={colors.end} />
-            </linearGradient>
-          </defs>
-        </svg>
-        
-        {/* Center text with counting animation */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-3xl sm:text-4xl lg:text-5xl font-bold transition-colors duration-500`} style={{ color: colors.start }}>
-            {displayScore}
-          </span>
-          <span className="text-white/40 text-xs mt-1">Risk Score</span>
-        </div>
-      </div>
+    <div style={{
+      background: 'linear-gradient(160deg, #0c1115 0%, #090d10 100%)',
+      border: `1px solid ${hasData ? cfg.border : 'rgba(255,255,255,0.08)'}`,
+      borderRadius: 14,
+      padding: '18px 16px 16px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      position: 'relative',
+      minHeight: 445,
+      width: '100%',
+      fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', 'monospace'",
+      overflow: 'hidden',
+      transition: 'border-color 0.4s ease',
+    }}>
 
-      {/* Risk level indicator with animation */}
-      <div className={`flex items-center gap-2 transition-all duration-500 mb-3 lg:mb-4 ${animate ? 'scale-105' : 'scale-100'}`}>
-        <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${animate ? 'animate-pulse' : ''}`} style={{ backgroundColor: colors.start }} />
-        <span className="text-sm text-white font-medium">
-          {getRiskLevelText(displayScore)}
-        </span>
-      </div>
-
-      {/* Risk Factors from JSON */}
-      {riskDetails && riskDetails.risk_factors && riskDetails.risk_factors.length > 0 && (
-        <div className="w-full text-left space-y-2 pt-2 border-t border-white/10 mb-3">
-          <div className="text-white/40 text-xs">Risk Factors:</div>
-          <div className="flex flex-wrap gap-1">
-            {riskDetails.risk_factors.slice(0, 3).map((factor, idx) => (
-              <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full">
-                {factor}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* Background glow blob */}
+      {hasData && (
+        <div style={{
+          position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)',
+          width: 200, height: 200, borderRadius: '50%',
+          background: `radial-gradient(circle, ${cfg.color}0a 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }} />
       )}
 
-      {/* Current Project Info */}
-      <div className="text-center pt-3 border-t border-white/10 w-full">
-        <div className="text-white/60 text-xs mb-1">Current Project</div>
-        <div className="text-white font-medium text-sm truncate px-2">
-          {projectName || 'No Project Selected'}
+      {/* Dot grid */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0)',
+        backgroundSize: '20px 20px',
+      }} />
+
+      {/* Header with Project Name */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 16, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+          <div style={{ width: 3, height: 14, borderRadius: 2, background: hasData ? cfg.color : 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.12em', display: 'block' }}>RISK ASSESSMENT</span>
+            <p style={{
+              fontSize: 8, color: hasData ? cfg.color : 'rgba(255,255,255,0.35)',
+              margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              fontWeight: 600, letterSpacing: '0.06em',
+            }}>
+              {isNoProject ? 'NO PROJECT SELECTED' : projectName}
+            </p>
+          </div>
         </div>
-        {projectTarget && (
-          <div className="text-white/40 text-xs truncate px-2 mt-1">
-            {projectTarget}
+        {hasData && (
+          <span style={{
+            padding: '2px 8px', borderRadius: 4,
+            background: cfg.colorBg, border: `1px solid ${cfg.border}`,
+            fontSize: 7, color: cfg.color, fontWeight: 700, letterSpacing: '0.1em',
+            display: 'flex', alignItems: 'center', gap: 4,
+            flexShrink: 0, marginLeft: 8,
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color, display: 'inline-block', animation: 'pulseDot 2s ease-in-out infinite' }} />
+            {cfg.label}
+          </span>
+        )}
+      </div>
+
+      {/* SVG Ring — fixed dimensions, no layout shift */}
+      <div style={{ position: 'relative', width: size, height: size, flexShrink: 0, marginBottom: 12 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={cfg.gradStart} />
+              <stop offset="100%" stopColor={cfg.gradEnd} />
+            </linearGradient>
+            {Array.from({ length: 20 }).map((_, i) => {
+              const angle = (i / 20) * 360;
+              const rad = (angle * Math.PI) / 180;
+              const x1 = center + (outerR + 6) * Math.cos(rad);
+              const y1 = center + (outerR + 6) * Math.sin(rad);
+              const x2 = center + (outerR + 9) * Math.cos(rad);
+              const y2 = center + (outerR + 9) * Math.sin(rad);
+              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />;
+            })}
+          </defs>
+
+          <circle cx={center} cy={center} r={outerR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="5" />
+
+          <circle
+            cx={center} cy={center} r={outerR} fill="none"
+            stroke={hasData ? `url(#${gradId})` : 'transparent'}
+            strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={outerCirc}
+            strokeDashoffset={hasData ? outerOffset : outerCirc}
+            style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1), stroke 0.4s' }}
+          />
+
+          <circle cx={center} cy={center} r={innerR} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+
+          <circle
+            cx={center} cy={center} r={innerR} fill="none"
+            stroke={hasData ? cfg.color + '44' : 'transparent'}
+            strokeWidth="3" strokeLinecap="round"
+            strokeDasharray={innerCirc}
+            strokeDashoffset={hasData ? innerOffset : innerCirc}
+            style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1), stroke 0.4s' }}
+          />
+        </svg>
+
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{
+            fontSize: 44, fontWeight: 700, lineHeight: 1,
+            color: hasData ? cfg.color : 'rgba(255,255,255,0.15)',
+            fontVariantNumeric: 'tabular-nums',
+            transition: 'color 0.4s',
+          }}>
+            {displayScore}
+          </span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.15em', marginTop: 4 }}>/100</span>
+          <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', marginTop: 2 }}>SCORE</span>
+        </div>
+      </div>
+
+      {/* Threat meter bar — fixed height always rendered */}
+      <div style={{ width: '100%', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          {['LOW', 'MED', 'HIGH', 'CRIT'].map((lbl, i) => {
+            const thresholds = [0, 25, 50, 75];
+            const isActive = hasData && displayScore >= thresholds[i];
+            const segColors = ['#22d3ee', '#fb923c', '#fbbf24', '#f87171'];
+            return (
+              <span key={lbl} style={{ fontSize: 7, letterSpacing: '0.08em', color: isActive ? segColors[i] : 'rgba(255,255,255,0.2)', fontWeight: isActive ? 700 : 400, transition: 'color 0.4s' }}>
+                {lbl}
+              </span>
+            );
+          })}
+        </div>
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', borderRadius: 3,
+            width: hasData ? `${displayScore}%` : '0%',
+            background: hasData ? `linear-gradient(90deg, #22d3ee, #fb923c, ${cfg.color})` : 'transparent',
+            transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+          }} />
+        </div>
+      </div>
+
+      {/* Risk factors — fixed-height container so it doesn't collapse */}
+      <div style={{ width: '100%', minHeight: 110, marginBottom: 0, position: 'relative', zIndex: 1, flex: 1 }}>
+        {riskDetails?.risk_factors?.length > 0 && !isNoProject ? (
+          <>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', marginBottom: 8 }}>DETECTED RISK FACTORS</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {riskDetails.risk_factors.slice(0, 4).map((factor, idx) => (
+                <span key={idx} style={{
+                  fontSize: 8, padding: '3px 8px', borderRadius: 4,
+                  border: `1px solid ${cfg.color}35`,
+                  color: cfg.color, background: cfg.colorBg,
+                  letterSpacing: '0.06em', fontWeight: 700,
+                }}>
+                  {factor}
+                </span>
+              ))}
+            </div>
+            {projectTarget && !isNoProject && (
+              <p style={{
+                fontSize: 7, color: 'rgba(255,255,255,0.3)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                margin: '10px 0 0', letterSpacing: '0.08em',
+              }}>
+                TARGET: {projectTarget}
+              </p>
+            )}
+          </>
+        ) : (
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80 }}>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em' }}>
+              {isNoProject ? 'SELECT A PROJECT TO VIEW RISK' : 'NO RISK FACTORS DETECTED'}
+            </span>
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+      `}</style>
     </div>
   );
 };
 
-export default RiskCircle;
+export default EnhancedRiskCircle;
