@@ -7,7 +7,7 @@ const APIDocumentation = () => {
   const endpoints = [
     {
       id: 'analyze',
-      name: 'Analyze URL',
+      name: 'ANALYZE URL',
       method: 'POST',
       path: '/api/v1/analyze/url',
       description: 'Submit a URL for threat analysis',
@@ -25,7 +25,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'email',
-      name: 'Analyze Email',
+      name: 'ANALYZE EMAIL',
       method: 'POST',
       path: '/api/v1/analyze/email',
       description: 'Analyze email address for threats and breaches',
@@ -41,7 +41,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'file',
-      name: 'Scan File',
+      name: 'SCAN FILE',
       method: 'POST',
       path: '/api/v1/analyze/file',
       description: 'Upload and scan a file for malware',
@@ -57,7 +57,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'report',
-      name: 'Get Report',
+      name: 'GET REPORT',
       method: 'GET',
       path: '/api/v1/reports/{id}',
       description: 'Retrieve analysis report by ID',
@@ -202,98 +202,92 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
   const selectedEndpointData = endpoints.find(e => e.id === selectedEndpoint);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Sidebar */}
       <div className="lg:col-span-1">
-        <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">API Endpoints</h3>
-          <div className="space-y-2">
+        <div className="bg-[#090c0e] border border-white/10 p-5 relative">
+          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00ff88]/30" />
+          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00ff88]/30" />
+          
+          <h3 className="text-white font-mono text-[10px] font-bold uppercase tracking-[0.12em] mb-4">API ENDPOINTS</h3>
+          <div className="space-y-1.5">
             {endpoints.map((endpoint) => (
               <button
                 key={endpoint.id}
                 onClick={() => setSelectedEndpoint(endpoint.id)}
-                className={`w-full p-3 rounded-xl transition-all text-left
+                className={`w-full p-2 transition-all text-left border
                   ${selectedEndpoint === endpoint.id
-                    ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30'
-                    : 'hover:bg-white/5'
+                    ? 'border-[#00ff88] bg-[#00ff88]/5'
+                    : 'border-transparent hover:border-white/10'
                   }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className={`px-2 py-1 text-xs font-mono rounded ${
-                    endpoint.method === 'GET' ? 'bg-green-500/20 text-green-400' :
-                    endpoint.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-yellow-500/20 text-yellow-400'
+                <div className="flex items-center gap-2">
+                  <span className={`px-1.5 py-0.5 text-[6px] font-mono border ${
+                    endpoint.method === 'GET' ? 'border-[#34d399]/30 text-[#34d399]' :
+                    endpoint.method === 'POST' ? 'border-[#00ff88]/30 text-[#00ff88]' :
+                    'border-[#fbbf24]/30 text-[#fbbf24]'
                   }`}>
                     {endpoint.method}
                   </span>
-                  <span className="text-white font-medium truncate">{endpoint.name}</span>
+                  <span className="text-white text-[8px] font-mono uppercase tracking-[0.08em]">{endpoint.name}</span>
                 </div>
-                <code className="text-white/40 text-xs block mt-1 truncate">
+                <code className="text-white/30 text-[6px] font-mono block mt-0.5 truncate">
                   {endpoint.path}
                 </code>
               </button>
             ))}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <h4 className="text-white font-medium mb-3">Authentication</h4>
-            <div className="bg-black/30 rounded-xl p-4">
-              <p className="text-white/60 text-sm mb-2">
-                All API requests require authentication using an API key:
-              </p>
-              <code className="text-purple-400 text-xs break-all">
-                Authorization: Bearer YOUR_API_KEY
-              </code>
+          <div className="mt-5 pt-4 border-t border-white/10">
+            <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-2">AUTHENTICATION</h4>
+            <div className="bg-[#0d1114] border border-white/10 p-3">
+              <p className="text-white/40 text-[7px] font-mono mb-1 uppercase tracking-[0.08em]">ALL API REQUESTS REQUIRE AN API KEY:</p>
+              <code className="text-[#00ff88] text-[7px] font-mono break-all">Authorization: Bearer YOUR_API_KEY</code>
             </div>
           </div>
         </div>
       </div>
 
       {/* Documentation */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-5">
         {/* Endpoint Details */}
-        <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className={`px-3 py-1.5 text-sm font-mono rounded-lg ${
-              selectedEndpointData.method === 'GET' ? 'bg-green-500/20 text-green-400' :
-              selectedEndpointData.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
-              'bg-yellow-500/20 text-yellow-400'
+        <div className="bg-[#090c0e] border border-white/10 p-5 relative">
+          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00ff88]/30" />
+          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00ff88]/30" />
+          
+          <div className="flex items-center gap-2 mb-3">
+            <span className={`px-2 py-0.5 text-[8px] font-mono border ${
+              selectedEndpointData.method === 'GET' ? 'border-[#34d399]/30 text-[#34d399]' :
+              selectedEndpointData.method === 'POST' ? 'border-[#00ff88]/30 text-[#00ff88]' :
+              'border-[#fbbf24]/30 text-[#fbbf24]'
             }`}>
               {selectedEndpointData.method}
             </span>
-            <code className="text-white font-mono text-lg">{selectedEndpointData.path}</code>
+            <code className="text-white font-mono text-[10px]">{selectedEndpointData.path}</code>
           </div>
           
-          <p className="text-white/80 mb-6">{selectedEndpointData.description}</p>
+          <p className="text-white/60 text-[8px] font-mono mb-4">{selectedEndpointData.description}</p>
 
           {/* Parameters */}
-          <div className="mb-6">
-            <h4 className="text-white font-medium mb-3">Parameters</h4>
-            <div className="bg-white/5 rounded-xl overflow-hidden">
-              <table className="w-full">
+          <div className="mb-4">
+            <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-2">PARAMETERS</h4>
+            <div className="bg-[#0d1114] border border-white/10 overflow-x-auto">
+              <table className="w-full text-[7px]">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4 text-white/40 text-xs">Parameter</th>
-                    <th className="text-left py-3 px-4 text-white/40 text-xs">Type</th>
-                    <th className="text-left py-3 px-4 text-white/40 text-xs">Required</th>
-                    <th className="text-left py-3 px-4 text-white/40 text-xs">Description</th>
+                    <th className="text-left py-2 px-2 text-white/30 font-mono uppercase">PARAMETER</th>
+                    <th className="text-left py-2 px-2 text-white/30 font-mono uppercase">TYPE</th>
+                    <th className="text-left py-2 px-2 text-white/30 font-mono uppercase">REQUIRED</th>
+                    <th className="text-left py-2 px-2 text-white/30 font-mono uppercase">DESCRIPTION</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedEndpointData.parameters.map((param, i) => (
                     <tr key={i} className="border-b border-white/5 last:border-0">
-                      <td className="py-3 px-4">
-                        <code className="text-purple-400 text-sm">{param.name}</code>
-                      </td>
-                      <td className="py-3 px-4 text-white/60 text-sm">{param.type}</td>
-                      <td className="py-3 px-4">
-                        {param.required ? (
-                          <span className="text-red-400 text-sm">Yes</span>
-                        ) : (
-                          <span className="text-white/40 text-sm">No</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-white/60 text-sm">{param.description}</td>
+                      <td className="py-2 px-2"><code className="text-[#00ff88]">{param.name}</code></td>
+                      <td className="py-2 px-2 text-white/50">{param.type}</td>
+                      <td className="py-2 px-2">{param.required ? <span className="text-[#f87171]">YES</span> : <span className="text-white/30">NO</span>}</td>
+                      <td className="py-2 px-2 text-white/50">{param.description}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -302,20 +296,20 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
           </div>
 
           {/* Responses */}
-          <div className="mb-6">
-            <h4 className="text-white font-medium mb-3">Responses</h4>
-            <div className="space-y-2">
+          <div className="mb-4">
+            <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-2">RESPONSES</h4>
+            <div className="space-y-1.5">
               {selectedEndpointData.responses.map((response, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                  <span className={`px-2 py-1 text-xs font-mono rounded ${
-                    response.code === 200 ? 'bg-green-500/20 text-green-400' :
-                    response.code === 202 ? 'bg-blue-500/20 text-blue-400' :
-                    response.code >= 400 ? 'bg-red-500/20 text-red-400' :
-                    'bg-yellow-500/20 text-yellow-400'
+                <div key={i} className="flex items-center gap-2 p-2 bg-[#0d1114] border border-white/10">
+                  <span className={`px-1.5 py-0.5 text-[7px] font-mono border ${
+                    response.code === 200 ? 'border-[#34d399]/30 text-[#34d399]' :
+                    response.code === 202 ? 'border-[#00ff88]/30 text-[#00ff88]' :
+                    response.code >= 400 ? 'border-[#f87171]/30 text-[#f87171]' :
+                    'border-[#fbbf24]/30 text-[#fbbf24]'
                   }`}>
                     {response.code}
                   </span>
-                  <span className="text-white/80 text-sm">{response.description}</span>
+                  <span className="text-white/50 text-[7px] font-mono">{response.description}</span>
                 </div>
               ))}
             </div>
@@ -323,18 +317,21 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
         </div>
 
         {/* Code Examples */}
-        <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+        <div className="bg-[#090c0e] border border-white/10 p-5 relative">
+          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00ff88]/30" />
+          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00ff88]/30" />
+          
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-white">Code Examples</h4>
-            <div className="flex gap-2">
+            <h4 className="text-white font-mono text-[9px] font-bold uppercase tracking-[0.12em]">CODE EXAMPLES</h4>
+            <div className="flex gap-1">
               {['curl', 'python', 'javascript'].map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-all
+                  className={`px-2 py-1 text-[7px] font-mono uppercase tracking-[0.08em] transition-all border
                     ${language === lang
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      ? 'border-[#00ff88] text-[#00ff88]'
+                      : 'border-white/10 text-white/40 hover:text-white'
                     }`}
                 >
                   {lang}
@@ -343,45 +340,48 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
             </div>
           </div>
 
-          <div className="bg-black/50 rounded-xl p-4 overflow-x-auto">
-            <pre className="text-white/80 text-sm font-mono">
+          <div className="bg-[#0d1114] border border-white/10 p-3 overflow-x-auto">
+            <pre className="text-white/60 text-[7px] font-mono whitespace-pre-wrap">
               {codeExamples[language]?.[selectedEndpoint] || codeExamples.curl.analyze}
             </pre>
           </div>
 
-          <div className="mt-4 flex items-center gap-4 text-sm">
-            <button className="text-purple-400 hover:text-purple-300 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          <div className="mt-3 flex items-center gap-3">
+            <button className="text-[#00ff88] hover:text-[#22d3ee] text-[7px] font-mono uppercase tracking-[0.08em] flex items-center gap-1 transition-colors">
+              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
-              Copy code
+              COPY CODE
             </button>
-            <button className="text-purple-400 hover:text-purple-300 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            <button className="text-[#00ff88] hover:text-[#22d3ee] text-[7px] font-mono uppercase tracking-[0.08em] flex items-center gap-1 transition-colors">
+              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
-              Try it now
+              TRY IT NOW
             </button>
           </div>
         </div>
 
         {/* Rate Limits Info */}
-        <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-xl rounded-2xl border border-yellow-500/30 p-6">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="bg-[#090c0e] border border-white/10 p-4 relative">
+          <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00ff88]/30" />
+          <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00ff88]/30" />
+          
+          <div className="flex items-start gap-2">
+            <div className="w-6 h-6 border border-[#fbbf24]/30 flex items-center justify-center flex-shrink-0">
+              <svg className="w-3 h-3 text-[#fbbf24]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h4 className="text-white font-medium mb-1">Rate Limits</h4>
-              <p className="text-white/80 text-sm">
-                Free tier: <span className="text-white">1,000 requests/hour</span> • 
-                Pro tier: <span className="text-white">10,000 requests/hour</span> • 
-                Enterprise: <span className="text-white">Custom limits</span>
+              <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-1">RATE LIMITS</h4>
+              <p className="text-white/50 text-[7px] font-mono uppercase tracking-[0.08em]">
+                FREE TIER: <span className="text-white">1,000 REQUESTS/HOUR</span> • 
+                PRO TIER: <span className="text-white">10,000 REQUESTS/HOUR</span> • 
+                ENTERPRISE: <span className="text-white">CUSTOM LIMITS</span>
               </p>
-              <p className="text-white/60 text-xs mt-2">
-                Rate limit headers are included in all API responses. Upgrade your plan for higher limits.
+              <p className="text-white/30 text-[6px] font-mono uppercase tracking-[0.08em] mt-1">
+                RATE LIMIT HEADERS ARE INCLUDED IN ALL API RESPONSES. UPGRADE YOUR PLAN FOR HIGHER LIMITS.
               </p>
             </div>
           </div>

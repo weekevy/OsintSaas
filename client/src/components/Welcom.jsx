@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BackgroundEffects,
   Navbar,
@@ -12,6 +12,10 @@ import {
   LoginModal,
   RegisterModal,
 } from './welcom_components';
+import ChatAssistant from './common/ChatAssistant';
+import SessionExpiredModal from './common/SessionExpiredModal'; // 👈 ADDED
+import { useSessionCheck } from '../hooks/useSessionCheck'; // 👈 ADDED
+import { clearSession } from '../utils/authUtils'; // 👈 ADDED
 import GlobalStyles from './welcom_components/GlobalStyles';
 
 const Welcome = () => {
@@ -20,17 +24,13 @@ const Welcome = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showExpiredModal, setShowExpiredModal] = useState(false); // 👈 ADDED
   
-  // Modal states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ 
-    email: '', 
-    password: '', 
-    confirmPassword: '' 
-  });
+  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '' });
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [otpError, setOtpError] = useState('');
@@ -39,34 +39,48 @@ const Welcome = () => {
   const [tempUserEmail, setTempUserEmail] = useState('');
   const [tempUserPassword, setTempUserPassword] = useState('');
   
-  // Refs for smooth scrolling
   const homeRef = useRef(null);
   const aboutRef = useRef(null);
   const servicesRef = useRef(null);
   const faqRef = useRef(null);
 
+  // 👇 ADDED - Session expired handler
+  const handleSessionExpired = useCallback(() => {
+    clearSession();
+    setShowExpiredModal(true);
+  }, []);
+
+  const handleCloseExpiredModal = useCallback(() => {
+    setShowExpiredModal(false);
+    navigate('/');
+  }, [navigate]);
+
+  // 👇 ADDED - Check session every 30 seconds
+  useSessionCheck(handleSessionExpired);
+
+  useEffect(() => {
+    document.body.classList.add('font-mono');
+    document.body.style.backgroundColor = '#080b0d';
+    return () => {
+      document.body.classList.remove('font-mono');
+    };
+  }, []);
+
   useEffect(() => {
     setHasAnimated(true);
   }, []);
 
-  // Mouse move effect for gradient
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
+    const handleMouseMove = (e) => setMousePosition({ x: e.clientX, y: e.clientY });
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Smooth scroll function
   const scrollToSection = (sectionRef, path) => {
     navigate(path, { replace: true });
     setTimeout(() => {
       if (sectionRef?.current) {
-        sectionRef.current.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
+        sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 50);
   };
@@ -78,7 +92,6 @@ const Welcome = () => {
     { name: "Answers", path: "/faq", ref: faqRef }
   ];
 
-  // Modal handlers
   const openLoginModal = () => {
     setModalAnimation('opening');
     setIsLoginModalOpen(true);
@@ -98,13 +111,10 @@ const Welcome = () => {
   };
 
   const openOTPModal = (email, password) => {
-    console.log('Opening OTP modal for:', email);
     setTempUserEmail(email);
     setTempUserPassword(password);
-    // Close login/register modals first
     setIsLoginModalOpen(false);
     setIsRegisterModalOpen(false);
-    // Then open OTP modal
     setTimeout(() => {
       setModalAnimation('opening');
       setIsOTPModalOpen(true);
@@ -152,16 +162,11 @@ const Welcome = () => {
     }, 300);
   };
 
-  // Handle login with OTP flow (DEMO MODE)
   const handleLogin = async (email, password, rememberMe) => {
-    console.log('Login attempt with:', email, password);
     setIsLoading(true);
     setLoginError('');
-    
-    // DEMO MODE: Accept any non-empty email/password
     setTimeout(() => {
       if (email && email.includes('@') && password.length >= 1) {
-        console.log('Login successful, opening OTP modal');
         openOTPModal(email, password);
       } else {
         setLoginError('Invalid email or password');
@@ -170,27 +175,14 @@ const Welcome = () => {
     }, 1000);
   };
 
-  // Handle OTP verification
   const handleOTPVerification = async (otpCode) => {
-    console.log('Verifying OTP:', otpCode);
     setIsLoading(true);
     setOtpError('');
-    
-    // Virtual OTP verification - accept "000000" for testing
     if (otpCode === '000000') {
       setTimeout(() => {
-        console.log('OTP verified successfully!');
-        // Store demo user in localStorage
-        const demoUser = {
-          id: 'demo123',
-          email: tempUserEmail,
-          name: 'Demo User',
-          role: 'user'
-        };
+        const demoUser = { id: 'demo123', email: tempUserEmail, name: 'Demo User', role: 'user' };
         localStorage.setItem('token', 'demo-token-12345');
         localStorage.setItem('user', JSON.stringify(demoUser));
-        
-        // Close OTP modal and navigate
         setIsOTPModalOpen(false);
         setModalAnimation('closing');
         setTimeout(() => {
@@ -210,17 +202,20 @@ const Welcome = () => {
   };
 
   return (
-    <div className="relative bg-black overflow-x-hidden">
+    <div className="relative bg-[#080b0d] overflow-x-hidden font-mono">
+      {/* 👇 ADDED - Session Expired Modal */}
+      <SessionExpiredModal 
+        isOpen={showExpiredModal} 
+        onClose={handleCloseExpiredModal}
+      />
+      
       <BackgroundEffects mousePosition={mousePosition} />
       
       <Navbar 
         location={location}
         navItems={navItems}
         hasAnimated={hasAnimated}
-        onNavClick={(item) => {
-          scrollToSection(item.ref, item.path);
-          setIsMenuOpen(false);
-        }}
+        onNavClick={(item) => { scrollToSection(item.ref, item.path); setIsMenuOpen(false); }}
         onLoginClick={openLoginModal}
         onRegisterClick={openRegisterModal}
         onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
@@ -230,36 +225,16 @@ const Welcome = () => {
         isOpen={isMenuOpen}
         navItems={navItems}
         location={location}
-        onNavClick={(item) => {
-          scrollToSection(item.ref, item.path);
-          setIsMenuOpen(false);
-        }}
-        onLoginClick={() => {
-          openLoginModal();
-          setIsMenuOpen(false);
-        }}
-        onRegisterClick={() => {
-          openRegisterModal();
-          setIsMenuOpen(false);
-        }}
+        onNavClick={(item) => { scrollToSection(item.ref, item.path); setIsMenuOpen(false); }}
+        onLoginClick={() => { openLoginModal(); setIsMenuOpen(false); }}
+        onRegisterClick={() => { openRegisterModal(); setIsMenuOpen(false); }}
         onClose={() => setIsMenuOpen(false)}
       />
 
-      <HomeSection 
-        ref={homeRef}
-        hasAnimated={hasAnimated}
-        onRegisterClick={openRegisterModal}
-        onServicesClick={() => scrollToSection(servicesRef, '/services')}
-      />
-
+      <HomeSection ref={homeRef} hasAnimated={hasAnimated} onRegisterClick={openRegisterModal} onServicesClick={() => scrollToSection(servicesRef, '/services')} />
       <AboutSection ref={aboutRef} />
       <ServicesSection ref={servicesRef} />
-      
-      <FaqSection 
-        ref={faqRef}
-        onRegisterClick={openRegisterModal}
-      />
-
+      <FaqSection ref={faqRef} onRegisterClick={openRegisterModal} />
       <Footer />
 
       <LoginModal
@@ -269,10 +244,7 @@ const Welcome = () => {
         loginError={loginError}
         isLoading={isLoading}
         onLoginDataChange={setLoginData}
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleLogin(loginData.email, loginData.password, false);
-        }}
+        onSubmit={(e) => { e.preventDefault(); handleLogin(loginData.email, loginData.password, false); }}
         onClose={closeModals}
         onSwitchToRegister={switchToRegister}
       />
@@ -286,17 +258,13 @@ const Welcome = () => {
         onRegisterDataChange={setRegisterData}
         onSubmit={(e) => {
           e.preventDefault();
-          
           if (registerData.password !== registerData.confirmPassword) {
             setRegisterError('Passwords do not match');
             return;
           }
-          
           setIsLoading(true);
           setRegisterError('');
-          
           setTimeout(() => {
-            console.log('Registration successful for:', registerData.email);
             openOTPModal(registerData.email, registerData.password);
             setIsLoading(false);
           }, 1000);
@@ -305,8 +273,8 @@ const Welcome = () => {
         onSwitchToLogin={switchToLogin}
       />
 
-
       <GlobalStyles/>
+      <ChatAssistant />
     </div>
   );
 };

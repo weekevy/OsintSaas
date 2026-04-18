@@ -2,10 +2,12 @@ import pool from '../../../../database/config';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
+// Track pending requests to prevent duplicates
+const pendingRequests = new Map();
+
 // Helper function to verify JWT token
 async function verifyToken(request) {
   try {
-    // Check Authorization header first
     const authHeader = request.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
@@ -13,7 +15,6 @@ async function verifyToken(request) {
       return decoded;
     }
     
-    // Then check cookies
     const cookieHeader = request.headers.get('cookie');
     if (cookieHeader) {
       const cookies = Object.fromEntries(
@@ -36,7 +37,7 @@ async function verifyToken(request) {
   }
 }
 
-// Helper function to query the database using the pool
+// Helper function to query the database
 async function query(sql, params) {
   try {
     const [results] = await pool.execute(sql, params);
@@ -47,16 +48,14 @@ async function query(sql, params) {
   }
 }
 
-// GET /api/modules/job-recruitment - Get all job recruitment scans for the current user
+// GET /api/modules/company-jobscam - Get all company job scam scans
 export async function GET(request) {
   try {
-    // Verify user from token
     const user = await verifyToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all scans for the current user that are job-recruitment type
     const [scans] = await query(`
       SELECT 
         s.id,
@@ -80,7 +79,6 @@ export async function GET(request) {
       ORDER BY s.created_at DESC
     `, [user.id]);
 
-    // Format the response
     const formattedScans = scans.map(scan => ({
       id: scan.id,
       scan_type: scan.scan_type,
@@ -95,21 +93,31 @@ export async function GET(request) {
         label: scan.target_label
       },
       assets: {
+        id: scan.id,
         job_url: scan.job_url,
-        company_name: scan.company_name,
-        company_website: scan.company_website,
         job_title: scan.job_title,
         job_description: scan.job_description,
+        salary_offered: scan.salary_offered,
+        company_name: scan.company_name,
+        company_website: scan.company_website,
         company_linkedin: scan.company_linkedin,
-        company_address: scan.company_address,
+        company_email_domain: scan.company_email_domain,
         company_phone: scan.company_phone,
+        company_address: scan.company_address,
         company_email: scan.company_email,
         recruiter_name: scan.recruiter_name,
-        recruiter_linkedin: scan.recruiter_linkedin,
         recruiter_email: scan.recruiter_email,
         recruiter_phone: scan.recruiter_phone,
+        recruiter_linkedin: scan.recruiter_linkedin,
+        recruiter_title: scan.recruiter_title,
+        suspicious_message: scan.suspicious_message,
+        communication_channel: scan.communication_channel,
+        red_flags_noticed: scan.red_flags_noticed,
+        notes: scan.notes,
         risk_score: scan.risk_score,
-        risk_level: scan.risk_level
+        risk_level: scan.risk_level,
+        analysis_status: scan.analysis_status,
+        findings_summary: scan.findings_summary
       },
       findings_count: scan.findings_count || 0
     }));
@@ -128,27 +136,76 @@ export async function GET(request) {
   }
 }
 
-// POST /api/modules/job-recruitment - Create new job recruitment scan
+// POST /api/modules/company-jobscam - Create new job scam scan with duplicate prevention
 export async function POST(request) {
+  let connection;
+  
+  // Generate unique request ID to prevent duplicates
+  const requestId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
+  // Check if this exact request is already being processed
+  if (pendingRequests.has(requestId)) {
+    console.log(`⛔ Duplicate POST request blocked: ${requestId}`);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Duplicate request - already processing' 
+    }, { status: 429 });
+  }
+  
+  // Mark this request as processing
+  pendingRequests.set(requestId, true);
+  console.log(`📝 Processing POST request: ${requestId}`);
+  
+  // Clean up after 3 seconds
+  setTimeout(() => {
+    pendingRequests.delete(requestId);
+  }, 3000);
+  
   try {
-    // Verify user from token
     const user = await verifyToken(request);
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      pendingRequests.delete(requestId);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized - Please login first' 
+      }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    const contentType = request.headers.get('content-type');
     
-    // Start transaction
-    const connection = await pool.getConnection();
+    if (contentType && contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      body = {};
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          if (!body.files) body.files = [];
+          body.files.push(value);
+        } else {
+          body[key] = value;
+        }
+      }
+    } else {
+      body = await request.json();
+    }
+    
+    // Validate required fields
+    if (!body.company_name && !body.job_url) {
+      pendingRequests.delete(requestId);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Please provide at least company name or job URL' 
+      }, { status: 400 });
+    }
+    
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
-      // First, find or create a project for this user
+      // Get or create project
       let projectId = body.project_id;
       
       if (!projectId) {
-        // Check if user has a default project
         const [projects] = await connection.execute(
           'SELECT id FROM projects WHERE user_id = ? AND name = ? LIMIT 1',
           [user.id, 'Default Project']
@@ -157,10 +214,9 @@ export async function POST(request) {
         if (projects.length > 0) {
           projectId = projects[0].id;
         } else {
-          // Create a default project for the user
           const [newProject] = await connection.execute(
             `INSERT INTO projects (user_id, name, description, status, created_at) 
-             VALUES (?, 'Default Project', 'Default project for job scans', 'active', NOW())`,
+             VALUES (?, 'Default Project', 'Default project for job scam scans', 'active', NOW())`,
             [user.id]
           );
           projectId = newProject.insertId;
@@ -168,16 +224,17 @@ export async function POST(request) {
       }
 
       // Create target
+      const targetLabel = `${body.company_name || 'Unknown Company'} - ${body.job_title || 'Job Scam Investigation'}`;
+      
       const [targetResult] = await connection.execute(
         `INSERT INTO targets (
           project_id, type, value, label, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, NOW())`,
+        ) VALUES (?, ?, ?, ?, 'pending', NOW())`,
         [
           projectId,
           'url',
-          body.job_url || 'Unknown',
-          `${body.company_name || 'Unknown'} - ${body.job_title || 'Job'}`,
-          'pending'
+          body.job_url || body.company_website || 'Manual Entry',
+          targetLabel
         ]
       );
 
@@ -187,143 +244,243 @@ export async function POST(request) {
       const [scanResult] = await connection.execute(
         `INSERT INTO scans (
           target_id, scan_type, status, priority, created_at
-        ) VALUES (?, ?, ?, ?, NOW())`,
-        [
-          targetId,
-          'job-recruitment',
-          'queued',
-          1
-        ]
+        ) VALUES (?, 'job-recruitment', 'queued', 1, NOW())`,
+        [targetId]
       );
 
       const scanId = scanResult.insertId;
 
-      // Calculate initial risk score
+      // Calculate risk score
       const riskScore = calculateRiskScore(body);
       const riskLevel = getRiskLevel(riskScore);
 
-      // Create job recruitment specific data
+      // Insert ALL data into job_recruitment_scans table
       await connection.execute(
         `INSERT INTO job_recruitment_scans (
-          scan_id, job_url, company_name, company_website, job_title,
-          job_description, company_linkedin, company_address, company_phone,
-          company_email, recruiter_name, recruiter_linkedin, recruiter_email,
-          recruiter_phone, risk_score, risk_level, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          scan_id, 
+          job_url, 
+          job_title, 
+          job_description,
+          salary_offered,
+          company_name, 
+          company_website, 
+          company_linkedin,
+          company_email_domain,
+          company_phone, 
+          company_address,
+          company_email,
+          recruiter_name, 
+          recruiter_email, 
+          recruiter_phone,
+          recruiter_linkedin,
+          recruiter_title,
+          suspicious_message,
+          communication_channel,
+          red_flags_noticed,
+          notes,
+          risk_score, 
+          risk_level,
+          analysis_status,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
         [
           scanId,
-          body.job_url || '',
-          body.company_name || '',
-          body.company_website || '',
-          body.job_title || '',
-          body.job_description || '',
-          body.company_linkedin || '',
-          body.company_address || '',
-          body.company_phone || '',
-          body.company_email || '',
-          body.recruiter_name || '',
-          body.recruiter_linkedin || '',
-          body.recruiter_email || '',
-          body.recruiter_phone || '',
+          body.job_url || null,
+          body.job_title || null,
+          body.job_description || null,
+          body.salary_offered || null,
+          body.company_name || null,
+          body.company_website || null,
+          body.company_linkedin || null,
+          body.company_email_domain || null,
+          body.company_phone || null,
+          body.company_address || null,
+          body.company_email || null,
+          body.recruiter_name || null,
+          body.recruiter_email || null,
+          body.recruiter_phone || null,
+          body.recruiter_linkedin || null,
+          body.recruiter_title || null,
+          body.suspicious_message || null,
+          body.communication_channel || null,
+          body.red_flags_noticed || null,
+          body.notes || null,
           riskScore,
           riskLevel
         ]
       );
+
+      // Handle file uploads if any
+      let fileUrls = [];
+      if (body.files && body.files.length > 0) {
+        fileUrls = body.files.map((file, index) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type
+        }));
+        console.log(`Files to upload: ${body.files.length} files`);
+      }
+
+      await connection.commit();
+      connection.release();
+      
+      console.log(`✅ POST request ${requestId} completed successfully`);
+
+      return NextResponse.json({ 
+        success: true, 
+        message: '✅ Scan created successfully! Your investigation has been saved.',
+        scan: {
+          id: scanId,
+          status: 'queued',
+          company_name: body.company_name,
+          job_title: body.job_title,
+          risk_level: riskLevel,
+          risk_score: riskScore
+        },
+        files_uploaded: fileUrls.length
+      });
+
+    } catch (error) {
+      await connection.rollback();
+      if (connection) connection.release();
+      console.error('Transaction error:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to save scan data. Please try again.',
+        details: error.message 
+      }, { status: 500 });
+    }
+  } catch (error) {
+    if (connection) connection.release();
+    console.error('Error creating job scan:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: '❌ Failed to create scan. Please check your input and try again.',
+      details: error.message 
+    }, { status: 500 });
+  }
+}
+
+// DELETE /api/modules/company-jobscam - Fixed to handle both ID types
+export async function DELETE(request) {
+  try {
+    const user = await verifyToken(request);
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const providedId = parseInt(searchParams.get('id'));
+
+    if (!providedId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid scan ID' 
+      }, { status: 400 });
+    }
+
+    console.log(`DELETE request for ID: ${providedId} by user: ${user.id}`);
+
+    // First, try to find the scans.id directly
+    let scanId = providedId;
+    let found = false;
+
+    // Check if the provided ID exists in the scans table
+    const [scanCheck] = await query(`
+      SELECT s.id 
+      FROM scans s
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE s.id = ? AND p.user_id = ?
+    `, [providedId, user.id]);
+
+    if (scanCheck.length > 0) {
+      found = true;
+      console.log(`ID ${providedId} found in scans table`);
+    } else {
+      // If not found, check if it exists in job_recruitment_scans (as its own id)
+      const [jobScanCheck] = await query(`
+        SELECT j.scan_id 
+        FROM job_recruitment_scans j
+        JOIN scans s ON j.scan_id = s.id
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        WHERE j.id = ? AND p.user_id = ?
+      `, [providedId, user.id]);
+
+      if (jobScanCheck.length > 0) {
+        scanId = jobScanCheck[0].scan_id;
+        found = true;
+        console.log(`ID ${providedId} found in job_recruitment_scans table, mapped to scan_id ${scanId}`);
+      }
+    }
+
+    if (!found) {
+      console.log(`ID ${providedId} not found in either scans or job_recruitment_scans for user ${user.id}`);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Scan not found or unauthorized' 
+      }, { status: 404 });
+    }
+
+    // Now get the target_id using the verified scanId
+    const [scanDetails] = await query(`
+      SELECT s.target_id
+      FROM scans s
+      WHERE s.id = ?
+    `, [scanId]);
+
+    if (scanDetails.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Scan details not found' 
+      }, { status: 404 });
+    }
+
+    const targetId = scanDetails[0].target_id;
+
+    // Start transaction for safe deletion
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Delete from job_recruitment_scans
+      await connection.execute('DELETE FROM job_recruitment_scans WHERE scan_id = ?', [scanId]);
+      console.log(`Deleted from job_recruitment_scans for scan_id: ${scanId}`);
+      
+      // Delete from scans
+      await connection.execute('DELETE FROM scans WHERE id = ?', [scanId]);
+      console.log(`Deleted from scans for id: ${scanId}`);
+      
+      // Check if target has other scans
+      const [remainingScans] = await connection.execute(
+        'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
+        [targetId]
+      );
+      
+      // Delete target if no other scans reference it
+      if (remainingScans[0].count === 0) {
+        await connection.execute('DELETE FROM targets WHERE id = ?', [targetId]);
+        console.log(`Deleted target ${targetId} (no other scans)`);
+      } else {
+        console.log(`Target ${targetId} has ${remainingScans[0].count} other scans, not deleting`);
+      }
 
       await connection.commit();
       connection.release();
 
       return NextResponse.json({ 
         success: true, 
-        scan: {
-          id: scanId,
-          status: 'queued',
-          assets: {
-            job_url: body.job_url,
-            company_name: body.company_name,
-            job_title: body.job_title,
-            risk_level: riskLevel
-          }
-        },
-        message: 'Scan created successfully' 
+        message: '✅ Scan deleted successfully' 
       });
-
     } catch (error) {
       await connection.rollback();
       connection.release();
       throw error;
     }
-  } catch (error) {
-    console.error('Error creating job scan:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to create scan',
-      details: error.message 
-    }, { status: 500 });
-  }
-}
-//////////////////////////////////////////////////////////////////////////////
-
-
-
-export async function DELETE(request) {
-  try {
-    const user = await verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const jobRecruitmentId = parseInt(searchParams.get('id'));
-
-    if (!jobRecruitmentId) {
-      return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
-    }
-
-    // First, get the scan_id from job_recruitment_scans and verify ownership
-    const [jobRecruitmentScans] = await query(`
-      SELECT jrs.scan_id, jrs.id as job_recruitment_id
-      FROM job_recruitment_scans jrs
-      JOIN scans s ON jrs.scan_id = s.id
-      JOIN targets t ON s.target_id = t.id
-      JOIN projects p ON t.project_id = p.id
-      WHERE jrs.id = ? AND p.user_id = ?
-    `, [jobRecruitmentId, user.id]);
-
-    if (jobRecruitmentScans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
-    }
-
-    const scanId = jobRecruitmentScans[0].scan_id;
-    const jobRecruitmentRecordId = jobRecruitmentScans[0].job_recruitment_id;
-
-    // Get the target_id from scans table
-    const [scans] = await query(`SELECT target_id FROM scans WHERE id = ?`, [scanId]);
-    const targetId = scans[0]?.target_id;
-
-    // Delete in correct order
-    // 1. Delete from job_recruitment_scans
-    await pool.execute('DELETE FROM job_recruitment_scans WHERE id = ?', [jobRecruitmentRecordId]);
-    
-    // 2. Delete from scans table
-    await pool.execute('DELETE FROM scans WHERE id = ?', [scanId]);
-    
-    // 3. Delete target if no other scans reference it
-    if (targetId) {
-      const [remainingScans] = await pool.execute(
-        'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
-        [targetId]
-      );
-      
-      if (remainingScans[0].count === 0) {
-        await pool.execute('DELETE FROM targets WHERE id = ?', [targetId]);
-      }
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Scan deleted successfully' 
-    });
   } catch (error) {
     console.error('Error deleting scan:', error);
     return NextResponse.json({ 
@@ -334,76 +491,200 @@ export async function DELETE(request) {
   }
 }
 
-
-
-
-  ////////////////////////////////////////////////////////////////////
-// PUT /api/modules/job-recruitment?id=1 - Update scan assets
+// PUT /api/modules/company-jobscam - Update scan assets
 export async function PUT(request) {
   try {
-    // Verify user from token
     const user = await verifyToken(request);
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id'));
+    const providedId = parseInt(searchParams.get('id'));
     const body = await request.json();
 
-    // Verify the scan belongs to this user before updating
-    const [scans] = await query(`
-      SELECT j.scan_id 
-      FROM job_recruitment_scans j
-      JOIN scans s ON j.scan_id = s.id
-      JOIN targets t ON s.target_id = t.id
-      JOIN projects p ON t.project_id = p.id
-      WHERE j.scan_id = ? AND p.user_id = ?
-    `, [id, user.id]);
-
-    if (scans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    if (!providedId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid scan ID' 
+      }, { status: 400 });
     }
 
-    // Update job recruitment specific data
-    await pool.execute(
-      `UPDATE job_recruitment_scans SET
-        job_url = ?,
-        company_name = ?,
-        company_website = ?,
-        job_title = ?,
-        job_description = ?,
-        company_linkedin = ?,
-        company_address = ?,
-        company_phone = ?,
-        company_email = ?,
-        recruiter_name = ?,
-        recruiter_linkedin = ?,
-        recruiter_email = ?,
-        recruiter_phone = ?,
-        updated_at = NOW()
-      WHERE scan_id = ?`,
-      [
-        body.job_url || '',
-        body.company_name || '',
-        body.company_website || '',
-        body.job_title || '',
-        body.job_description || '',
-        body.company_linkedin || '',
-        body.company_address || '',
-        body.company_phone || '',
-        body.company_email || '',
-        body.recruiter_name || '',
-        body.recruiter_linkedin || '',
-        body.recruiter_email || '',
-        body.recruiter_phone || '',
-        id
-      ]
+    console.log(`PUT request for ID: ${providedId} by user: ${user.id}`);
+
+    // First, try to find the scans.id directly
+    let scanId = providedId;
+    let found = false;
+
+    // Check if the provided ID exists in the scans table
+    const [scanCheck] = await query(`
+      SELECT s.id 
+      FROM scans s
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE s.id = ? AND p.user_id = ?
+    `, [providedId, user.id]);
+
+    if (scanCheck.length > 0) {
+      found = true;
+      console.log(`ID ${providedId} found in scans table`);
+    } else {
+      // If not found, check if it exists in job_recruitment_scans (as its own id)
+      const [jobScanCheck] = await query(`
+        SELECT j.scan_id 
+        FROM job_recruitment_scans j
+        JOIN scans s ON j.scan_id = s.id
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        WHERE j.id = ? AND p.user_id = ?
+      `, [providedId, user.id]);
+
+      if (jobScanCheck.length > 0) {
+        scanId = jobScanCheck[0].scan_id;
+        found = true;
+        console.log(`ID ${providedId} found in job_recruitment_scans table, mapped to scan_id ${scanId}`);
+      }
+    }
+
+    if (!found) {
+      console.log(`ID ${providedId} not found in either scans or job_recruitment_scans for user ${user.id}`);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Scan not found or unauthorized' 
+      }, { status: 404 });
+    }
+
+    // Recalculate risk score based on updated data
+    const riskScore = calculateRiskScore(body);
+    const riskLevel = getRiskLevel(riskScore);
+
+    // Check if record exists in job_recruitment_scans
+    const [existingRecord] = await query(
+      'SELECT scan_id FROM job_recruitment_scans WHERE scan_id = ?',
+      [scanId]
     );
+
+    if (existingRecord.length === 0) {
+      // Insert new record
+      await pool.execute(
+        `INSERT INTO job_recruitment_scans (
+          scan_id, job_url, job_title, job_description, salary_offered,
+          company_name, company_website, company_linkedin, company_email_domain,
+          company_phone, company_address, company_email,
+          recruiter_name, recruiter_email, recruiter_phone, recruiter_linkedin,
+          recruiter_title, suspicious_message, communication_channel,
+          red_flags_noticed, notes, risk_score, risk_level, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          scanId,
+          body.job_url || null,
+          body.job_title || null,
+          body.job_description || null,
+          body.salary_offered || null,
+          body.company_name || null,
+          body.company_website || null,
+          body.company_linkedin || null,
+          body.company_email_domain || null,
+          body.company_phone || null,
+          body.company_address || null,
+          body.company_email || null,
+          body.recruiter_name || null,
+          body.recruiter_email || null,
+          body.recruiter_phone || null,
+          body.recruiter_linkedin || null,
+          body.recruiter_title || null,
+          body.suspicious_message || null,
+          body.communication_channel || null,
+          body.red_flags_noticed || null,
+          body.notes || null,
+          riskScore,
+          riskLevel
+        ]
+      );
+    } else {
+      // Update existing record
+      await pool.execute(
+        `UPDATE job_recruitment_scans SET
+          job_url = ?,
+          job_title = ?,
+          job_description = ?,
+          salary_offered = ?,
+          company_name = ?,
+          company_website = ?,
+          company_linkedin = ?,
+          company_email_domain = ?,
+          company_phone = ?,
+          company_address = ?,
+          company_email = ?,
+          recruiter_name = ?,
+          recruiter_email = ?,
+          recruiter_phone = ?,
+          recruiter_linkedin = ?,
+          recruiter_title = ?,
+          suspicious_message = ?,
+          communication_channel = ?,
+          red_flags_noticed = ?,
+          notes = ?,
+          risk_score = ?,
+          risk_level = ?,
+          updated_at = NOW()
+        WHERE scan_id = ?`,
+        [
+          body.job_url || null,
+          body.job_title || null,
+          body.job_description || null,
+          body.salary_offered || null,
+          body.company_name || null,
+          body.company_website || null,
+          body.company_linkedin || null,
+          body.company_email_domain || null,
+          body.company_phone || null,
+          body.company_address || null,
+          body.company_email || null,
+          body.recruiter_name || null,
+          body.recruiter_email || null,
+          body.recruiter_phone || null,
+          body.recruiter_linkedin || null,
+          body.recruiter_title || null,
+          body.suspicious_message || null,
+          body.communication_channel || null,
+          body.red_flags_noticed || null,
+          body.notes || null,
+          riskScore,
+          riskLevel,
+          scanId
+        ]
+      );
+    }
+
+    // Update target label if company name or job title changed
+    if (body.company_name || body.job_title) {
+      const [targetInfo] = await query(`
+        SELECT t.id 
+        FROM targets t
+        JOIN scans s ON t.id = s.target_id
+        WHERE s.id = ?
+      `, [scanId]);
+      
+      if (targetInfo.length > 0) {
+        const newLabel = `${body.company_name || 'Unknown Company'} - ${body.job_title || 'Job Scam Investigation'}`;
+        await pool.execute(
+          'UPDATE targets SET label = ? WHERE id = ?',
+          [newLabel, targetInfo[0].id]
+        );
+      }
+    }
+
+    console.log(`Successfully updated scan ${scanId}`);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Scan updated successfully' 
+      message: '✅ Scan updated successfully!',
+      risk_score: riskScore,
+      risk_level: riskLevel
     });
   } catch (error) {
     console.error('Error updating scan:', error);
@@ -426,7 +707,6 @@ function calculateProgress(scan) {
 function calculateRiskScore(data) {
   let score = 0;
   
-  // Check for suspicious email domains
   if (data.recruiter_email) {
     const suspiciousDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
     const domain = data.recruiter_email.split('@')[1];
@@ -435,17 +715,25 @@ function calculateRiskScore(data) {
     }
   }
 
-  // Check for missing company website
   if (!data.company_website) {
     score += 15;
   }
 
-  // Check for URL shorteners in job URL
   if (data.job_url) {
     const shorteners = ['bit.ly', 'tinyurl', 'short.link', 'rb.gy'];
     if (shorteners.some(s => data.job_url.includes(s))) {
       score += 25;
     }
+  }
+
+  if (data.suspicious_message) {
+    const redFlagWords = ['urgent', 'immediately', 'wire transfer', 'western union', 'paypal', 'crypto', 'bitcoin'];
+    const lowerMessage = data.suspicious_message.toLowerCase();
+    redFlagWords.forEach(word => {
+      if (lowerMessage.includes(word)) {
+        score += 10;
+      }
+    });
   }
 
   return Math.min(score, 100);
@@ -456,4 +744,4 @@ function getRiskLevel(score) {
   if (score >= 50) return 'high';
   if (score >= 30) return 'medium';
   return 'low';
-}
+} 
