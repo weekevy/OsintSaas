@@ -46,9 +46,9 @@ const Home = () => {
   const [dashboardRefreshTrigger, setDashboardRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    document.body.classList.add('font-mono');
-    document.body.style.backgroundColor = '#080b0d';
-    return () => { document.body.classList.remove('font-mono'); };
+    document.body.style.backgroundColor = '#000000';
+    document.body.style.fontFamily = "'Inter', sans-serif";
+    return () => { };
   }, []);
 
   const resetRiskData = () => {
@@ -80,6 +80,26 @@ const Home = () => {
   useEffect(() => {
     if (activeTab === 'dashboard') setDashboardRefreshTrigger(prev => prev + 1);
   }, [activeTab]);
+
+  useEffect(() => {
+    const autoSelectProject = async () => {
+      const savedSelectedProject = localStorage.getItem('selectedProject');
+      if (savedSelectedProject) return; // Already have a selection
+
+      try {
+        const response = await fetch('/api/projects', { credentials: 'include' });
+        const data = await response.json();
+        if (response.ok && data.projects?.length > 0) {
+          // Select the first created project
+          const firstProject = data.projects[0];
+          handleProjectSelect(firstProject);
+        }
+      } catch (error) {
+        console.error('Auto-select failed:', error);
+      }
+    };
+    autoSelectProject();
+  }, []);
 
   useEffect(() => {
     const savedSearchInput = localStorage.getItem('searchInput');

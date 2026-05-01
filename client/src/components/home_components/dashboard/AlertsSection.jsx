@@ -152,18 +152,18 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
   return (
     <div className="space-y-3 lg:space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg lg:text-xl font-semibold text-white flex items-center gap-2">
+        <h3 className="text-lg lg:text-xl font-semibold text-white flex items-center gap-2 font-sans">
           <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           Active Threats & Alerts
-          <span className="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 animate-pulse">
+          <span className="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg border border-red-500/30">
             {alerts.length} New
           </span>
         </h3>
         <button 
           onClick={handleRefresh}
-          className="text-white/60 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors"
+          className="text-white/60 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors font-sans"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -176,22 +176,22 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
         {alerts.map((alert) => (
           <div
             key={alert.id}
-            className={`p-4 lg:p-5 rounded-xl lg:rounded-2xl border-2 ${getSeverityColor(alert.severity)} backdrop-blur-xl flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:scale-[1.01] cursor-pointer`}
+            className={`p-4 lg:p-5 rounded-xl lg:rounded-2xl border-2 ${getSeverityColor(alert.severity)} glass-card flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:scale-[1.01] cursor-pointer`}
           >
             <div className="flex-shrink-0">
               {getSeverityIcon(alert.severity)}
             </div>
             <div className="flex-1 w-full sm:w-auto">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className={`font-semibold text-sm lg:text-base capitalize ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
+                <span className={`font-semibold text-sm lg:text-base capitalize font-sans ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
                   {alert.severity} Risk
                 </span>
-                <span className="text-xs px-2 py-1 rounded-full bg-white/10">
+                <span className="text-xs px-2 py-1 rounded-full bg-white/10 font-sans">
                   {alert.source}
                 </span>
               </div>
-              <p className="text-white/90 text-sm lg:text-base">{alert.message}</p>
-              <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs lg:text-sm">
+              <p className="text-white/90 text-sm lg:text-base font-sans">{alert.message}</p>
+              <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs lg:text-sm font-sans">
                 <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -206,7 +206,7 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
                 </button>
               </div>
             </div>
-            <span className="text-white/40 text-xs sm:text-sm sm:ml-auto">{alert.time}</span>
+            <span className="text-white/40 text-xs sm:text-sm sm:ml-auto font-sans">{alert.time}</span>
           </div>
         ))}
       </div>

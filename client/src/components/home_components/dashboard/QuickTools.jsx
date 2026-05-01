@@ -57,16 +57,18 @@ const QuickTools = () => {
   ];
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 lg:gap-4">
-      {tools.map((tool, i) => (
-        <button
-          key={i}
-          className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-gradient-to-br ${tool.color} bg-opacity-20 hover:shadow-xl transition-all transform hover:scale-105 flex flex-col items-center gap-2`}
-        >
-          <span className="text-white">{tool.icon}</span>
-          <span className="text-white text-xs lg:text-sm font-medium">{tool.name}</span>
-        </button>
-      ))}
+    <div className="glass-card p-4 lg:p-6 rounded-2xl lg:rounded-3xl">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 lg:gap-4">
+        {tools.map((tool, i) => (
+          <button
+            key={i}
+            className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#00E5FF]/5 border border-[#00E5FF]/10 hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 transition-all transform hover:scale-105 flex flex-col items-center gap-2 group"
+          >
+            <span className="text-[#00E5FF] group-hover:text-white transition-colors">{tool.icon}</span>
+            <span className="text-white text-xs lg:text-sm font-medium font-sans">{tool.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

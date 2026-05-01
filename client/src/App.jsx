@@ -23,7 +23,6 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Home - redirect if not authenticated */}
       <Route 
         path="/home" 
         element={
@@ -33,7 +32,6 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Catch all - redirect to root */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -43,13 +41,11 @@ function App() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Hide the index.html loading screen
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
       loadingScreen.style.display = 'none';
     }
     
-    // Short delay to ensure everything is mounted
     const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
   }, []);

@@ -18,7 +18,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Invite Team Member">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 font-sans">
         <div>
           <label className="block text-white/80 text-sm font-medium mb-2">
             Email Address
@@ -28,7 +28,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#00E5FF]/50 focus:ring-2 focus:ring-[#00E5FF]/20"
             placeholder="colleague@company.com"
           />
         </div>
@@ -40,7 +40,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 focus:ring-2 focus:ring-[#00E5FF]/20"
           >
             <option value="admin">Admin - Full access</option>
             <option value="analyst">Analyst - Create investigations, generate reports</option>
@@ -57,7 +57,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
             rows="3"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#00E5FF]/50 focus:ring-2 focus:ring-[#00E5FF]/20"
             placeholder="Add a personal message to your invitation..."
           />
         </div>
@@ -67,7 +67,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
             type="checkbox"
             checked={formData.sendInvite}
             onChange={(e) => setFormData({ ...formData, sendInvite: e.target.checked })}
-            className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500/20"
+            className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#00E5FF] focus:ring-[#00E5FF]/20"
           />
           <span className="text-white/80 text-sm">Send invitation email immediately</span>
         </label>
@@ -82,7 +82,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            className="flex-1 px-4 py-3 bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-[#00E5FF]/30 transition-all"
           >
             Send Invitation
           </button>

@@ -88,74 +88,75 @@ const CustomReports = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
       {/* Report Builder */}
       <div className="lg:col-span-2 space-y-6">
-        <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Custom Report Builder</h3>
+        <div className="glass-card border border-white/10 p-6 relative">
+          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6">CUSTOM REPORT BUILDER</h3>
           
           {/* Report Name */}
           <div className="mb-6">
-            <label className="block text-white/80 text-sm font-medium mb-2">
-              Report Name
+            <label className="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2">
+              REPORT NAME
             </label>
             <input
               type="text"
               value={reportName}
               onChange={(e) => setReportName(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50"
-              placeholder="e.g., Executive Security Summary"
+              className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm font-sans focus:outline-none focus:border-[#00E5FF]/50 uppercase tracking-wider"
+              placeholder="E.G., EXECUTIVE SECURITY SUMMARY"
             />
           </div>
 
           {/* Date Range */}
           <div className="mb-6">
-            <label className="block text-white/80 text-sm font-medium mb-2">
-              Date Range
+            <label className="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2">
+              DATE RANGE
             </label>
-            <div className="flex gap-2">
-              {['24h', '7d', '30d', '90d', '12m'].map((range) => (
+            <div className="flex flex-wrap gap-2">
+              {['24H', '7D', '30D', '90D', '12M'].map((range) => (
                 <button
                   key={range}
-                  onClick={() => setDateRange(range)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                    ${dateRange === range
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                  onClick={() => setDateRange(range.toLowerCase())}
+                  className={`px-4 py-2 border transition-all text-[10px] font-bold uppercase tracking-widest
+                    ${dateRange === range.toLowerCase()
+                      ? 'border-[#00E5FF] bg-[#00E5FF]/5 text-[#00E5FF]'
+                      : 'border-white/10 bg-white/5 text-white/40 hover:text-white hover:border-white/30'
                     }`}
                 >
                   {range}
                 </button>
               ))}
-              <button className="px-4 py-2 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg text-sm font-medium">
-                Custom
+              <button className="px-4 py-2 border border-white/10 bg-white/5 text-white/40 hover:text-white hover:border-white/30 text-[10px] font-bold uppercase tracking-widest">
+                CUSTOM
               </button>
             </div>
           </div>
 
           {/* Metrics Selection */}
           <div className="mb-6">
-            <label className="block text-white/80 text-sm font-medium mb-3">
-              Select Metrics
+            <label className="block text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">
+              SELECT METRICS
             </label>
-            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin">
               {availableMetrics.map((category) => (
-                <div key={category.category} className="bg-white/5 rounded-xl p-4">
-                  <h4 className="text-white font-medium mb-3">{category.category}</h4>
+                <div key={category.category} className="glass-card border border-white/10 p-4">
+                  <h4 className="text-white font-bold text-[10px] uppercase tracking-wider mb-3">{category.category}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {category.items.map((metric) => (
                       <label
                         key={metric.id}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer"
+                        className="flex items-center gap-3 p-2 hover:bg-white/5 cursor-pointer transition-colors"
                       >
                         <input
                           type="checkbox"
                           checked={selectedMetrics.includes(metric.id)}
                           onChange={() => toggleMetric(metric.id)}
-                          className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500"
+                          className="w-4 h-4 rounded-none border-white/20 bg-transparent text-[#00E5FF] focus:ring-0"
                         />
                         <span className="text-xl">{metric.icon}</span>
-                        <span className="text-white/80 text-sm">{metric.name}</span>
+                        <span className="text-white/60 text-[10px] font-bold uppercase tracking-wider">{metric.name}</span>
                       </label>
                     ))}
                   </div>
@@ -169,25 +170,26 @@ const CustomReports = () => {
             <button
               onClick={saveReport}
               disabled={!reportName || selectedMetrics.length === 0}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+              className="flex-1 px-6 py-4 bg-[#00E5FF] text-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-white transition-all disabled:opacity-50"
             >
-              Save Report Template
+              SAVE REPORT TEMPLATE
             </button>
             <button
               disabled={selectedMetrics.length === 0}
-              className="px-6 py-3 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all disabled:opacity-50"
+              className="px-6 py-4 border border-white/10 text-white/40 hover:text-white hover:bg-white/5 text-xs font-bold uppercase tracking-[0.2em] transition-all disabled:opacity-50"
             >
-              Preview
+              PREVIEW
             </button>
           </div>
         </div>
 
-        {/* Report Preview (if metrics selected) */}
+        {/* Report Preview */}
         {selectedMetrics.length > 0 && (
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Report Preview</h3>
-              <span className="text-white/40 text-sm">Sample data for {dateRange}</span>
+          <div className="glass-card border border-white/10 p-6 relative">
+            <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest">REPORT PREVIEW</h3>
+              <span className="text-white/20 text-[8px] font-bold uppercase tracking-widest">SAMPLE DATA FOR {dateRange.toUpperCase()}</span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -197,15 +199,15 @@ const CustomReports = () => {
                   .find(m => m.id === metricId);
                 
                 return (
-                  <div key={metricId} className="p-4 bg-white/5 rounded-xl">
+                  <div key={metricId} className="p-4 border border-white/5 bg-white/[0.02] glass-card">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">{metric?.icon || '📊'}</span>
-                      <span className="text-white/60 text-xs">{metric?.name || metricId}</span>
+                      <span className="text-xl">{metric?.icon || '📊'}</span>
+                      <span className="text-white/40 text-[8px] font-bold uppercase tracking-widest">{metric?.name || metricId}</span>
                     </div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-2xl font-bold text-white font-mono">
                       {Math.floor(Math.random() * 1000)}
                     </div>
-                    <div className="text-green-400 text-xs">+12% vs previous</div>
+                    <div className="text-[#00E5FF] text-[8px] font-bold uppercase tracking-wider mt-1">+12% VS PREVIOUS</div>
                   </div>
                 );
               })}
@@ -216,46 +218,46 @@ const CustomReports = () => {
 
       {/* Saved Reports */}
       <div className="lg:col-span-1">
-        <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6 sticky top-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Saved Reports</h3>
+        <div className="glass-card border border-white/10 p-6 sticky top-6">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6">SAVED REPORTS</h3>
           
           <div className="space-y-3">
             {savedReports.map((report) => (
               <div
                 key={report.id}
-                className="p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all cursor-pointer"
+                className="p-4 border border-white/10 glass-card hover:border-[#00E5FF]/30 transition-all cursor-pointer group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-white font-medium">{report.name}</h4>
-                  <span className="text-white/40 text-xs">{report.schedule}</span>
+                  <h4 className="text-white font-bold text-[10px] uppercase tracking-wider">{report.name}</h4>
+                  <span className="text-white/20 text-[8px] font-bold uppercase tracking-widest">{report.schedule.toUpperCase()}</span>
                 </div>
-                <div className="flex flex-wrap gap-1 mb-2">
+                <div className="flex flex-wrap gap-1 mb-3">
                   {report.metrics.slice(0, 3).map((metric) => (
-                    <span key={metric} className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
+                    <span key={metric} className="px-1.5 py-0.5 border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] text-[7px] font-bold uppercase tracking-widest">
                       {metric}
                     </span>
                   ))}
                   {report.metrics.length > 3 && (
-                    <span className="px-2 py-0.5 bg-white/10 text-white/60 text-xs rounded-full">
+                    <span className="px-1.5 py-0.5 border border-white/10 text-white/40 text-[7px] font-bold uppercase tracking-widest">
                       +{report.metrics.length - 3}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-white/40">Last run: {report.lastRun}</span>
-                  <button className="text-purple-400 hover:text-purple-300">
-                    Run Now
+                <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest">
+                  <span className="text-white/20">LAST RUN: <span className="text-white/40">{report.lastRun.toUpperCase()}</span></span>
+                  <button className="text-[#00E5FF] hover:text-white transition-colors">
+                    RUN NOW
                   </button>
                 </div>
               </div>
             ))}
           </div>
 
-          <button className="w-full mt-4 pt-4 text-purple-400 hover:text-purple-300 text-sm flex items-center justify-center gap-1 border-t border-white/10">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className="w-full mt-6 pt-6 text-[#00E5FF] hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 border-t border-white/10 transition-colors">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Schedule New Report
+            SCHEDULE NEW REPORT
           </button>
         </div>
       </div>

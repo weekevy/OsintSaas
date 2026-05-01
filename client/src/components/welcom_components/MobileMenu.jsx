@@ -7,67 +7,64 @@ const MobileMenu = ({
   onRegisterClick,
   onClose 
 }) => {
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* Backdrop - Tactical */}
+      {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-[#080b0d]/95 backdrop-blur-sm z-40 md:hidden transition-all duration-300
-          ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] md:hidden"
         onClick={onClose}
       />
 
-      {/* Menu Panel - Tactical */}
+      {/* Menu Panel - Border removed */}
       <div 
-        className={`fixed top-0 right-0 h-screen w-72 bg-[#090c0e] border-l border-white/10 z-40 md:hidden transition-transform duration-300 ease-out
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className="fixed top-0 right-0 h-screen w-80 bg-black/95 backdrop-blur-2xl z-[70] md:hidden shadow-2xl"
       >
-        {/* Corner brackets */}
-        <div className="absolute top-3 left-3 w-5 h-5 border-t border-l border-[#00ff88]/30" />
-        <div className="absolute top-3 right-3 w-5 h-5 border-t border-r border-[#00ff88]/30" />
-        <div className="absolute bottom-3 left-3 w-5 h-5 border-b border-l border-[#00ff88]/30" />
-        <div className="absolute bottom-3 right-3 w-5 h-5 border-b border-r border-[#00ff88]/30" />
-        
-        <div className="flex flex-col h-full pt-20 px-5">
-          {/* Navigation Items - Tactical Style */}
-          <div className="flex flex-col gap-3 mb-10">
+        <div className="flex flex-col h-full p-8 pt-24">
+          <button 
+            onClick={onClose}
+            className="absolute top-8 right-8 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="flex flex-col gap-6">
             {navItems.map((item, index) => (
               <button
                 key={item.name}
                 onClick={() => onNavClick(item)}
-                className={`relative text-left text-sm font-mono uppercase tracking-[0.08em] transition-all duration-300 py-2
+                className={`text-left text-2xl font-bold tracking-tight transition-all
                   ${location.pathname === item.path 
-                    ? 'text-[#00ff88] translate-x-2' 
-                    : 'text-white/40 hover:text-[#00ff88] hover:translate-x-2'
+                    ? 'text-[#00E5FF]' 
+                    : 'text-white/40 hover:text-white'
                   }
                 `}
-                style={{ transitionDelay: `${index * 50}ms` }}
               >
                 {item.name}
-                {location.pathname === item.path && (
-                  <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#00ff88] rounded-full" />
-                )}
               </button>
             ))}
           </div>
 
-          {/* Action Buttons - Tactical Style */}
-          <div className="flex flex-col gap-3 mt-auto mb-8">
+          <div className="mt-auto space-y-4">
             <button
               onClick={onLoginClick}
-              className="w-full px-5 py-2.5 text-white/60 hover:text-[#00ff88] font-mono text-[10px] uppercase tracking-[0.08em] transition-all duration-300 text-center border border-white/10 hover:border-[#00ff88]/50" 
+              className="w-full py-4 bg-white/5 text-white font-bold rounded-2xl border border-white/10 hover:bg-white/10 transition-all"
             >
-              Log in
+              Sign In
             </button>
             <button
               onClick={onRegisterClick}
-              className="w-full px-5 py-2.5 bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88] font-mono text-[10px] uppercase tracking-[0.08em] hover:bg-[#00ff88]/20 transition-all duration-300"
+              className="w-full py-4 bg-[#00E5FF] text-black font-bold rounded-2xl hover:bg-[#00D4EB] transition-all"
             >
               Get Started
             </button>
+            <p className="text-center text-[10px] text-white/20 font-bold uppercase tracking-widest mt-8">
+              Weekey<span className="text-[#00E5FF]">Osint</span>
+            </p>
           </div>
-          
-          {/* Scanline effect at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00ff88]/20 to-transparent" />
         </div>
       </div>
     </>

@@ -42,10 +42,10 @@ const ScheduledReports = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-sans">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-white">Scheduled Reports</h3>
-        <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all">
+        <button className="px-4 py-2 bg-gradient-to-r from-[#00E5FF] to-blue-500 text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all">
           New Schedule
         </button>
       </div>
@@ -54,7 +54,7 @@ const ScheduledReports = () => {
         {schedules.map((schedule) => (
           <div
             key={schedule.id}
-            className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-all"
+            className="glass-card backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -62,7 +62,7 @@ const ScheduledReports = () => {
                   <h4 className="text-white font-medium">{schedule.name}</h4>
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     schedule.status === 'active'
-                      ? 'bg-green-500/20 text-green-400'
+                      ? 'bg-[#00E5FF]/20 text-[#00E5FF]'
                       : 'bg-yellow-500/20 text-yellow-400'
                   }`}>
                     {schedule.status}
@@ -102,7 +102,7 @@ const ScheduledReports = () => {
                   className={`p-2 rounded-lg transition-all ${
                     schedule.status === 'active'
                       ? 'text-yellow-400 hover:bg-yellow-500/10'
-                      : 'text-green-400 hover:bg-green-500/10'
+                      : 'text-[#00E5FF] hover:bg-[#00E5FF]/10'
                   }`}
                 >
                   {schedule.status === 'active' ? (
