@@ -1,200 +1,162 @@
 const GlobalStyles = () => {
   return (
     <style>{`
-      /* Tactical Animations */
-      @keyframes blob {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+      :root {
+        --accent: #00E5FF;
+        --accent-secondary: #007AFF;
+        --accent-glow: rgba(0, 229, 255, 0.4);
+        --bg-black: #000000;
+        --card-bg: rgba(10, 10, 10, 0.4);
+        --border-color: rgba(255, 255, 255, 0.08);
       }
-      
-      @keyframes ping {
-        0% { transform: scale(1); opacity: 0.6; }
-        100% { transform: scale(1.8); opacity: 0; }
-      }
-      
-      @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(200%); }
-      }
-      
-      @keyframes glow {
-        0% { box-shadow: 0 0 6px rgba(0, 255, 136, 0.2); }
-        100% { box-shadow: 0 0 18px rgba(0, 255, 136, 0.45); }
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
-      /* Animation Classes */
-      .animate-blob {
-        animation: blob 7s infinite;
-      }
-      
-      .animate-ping {
-        animation: ping 0.9s cubic-bezier(0, 0, 0.2, 1) infinite;
-      }
-      
-      .animate-shimmer {
-        animation: shimmer 1.6s linear infinite;
-      }
-      
-      .animate-glow {
-        animation: glow 2s ease-in-out infinite;
-      }
-      
-      .animate-fadeIn {
-        animation: fadeIn 0.2s ease-out;
-      }
-      
-      .animate-slideUp {
-        animation: slideUp 0.3s ease-out;
-      }
-      
-      .animation-delay-2000 {
-        animation-delay: 2s;
-      }
-      
-      .animation-delay-4000 {
-        animation-delay: 4s;
-      }
-      
-      /* Tactical Utility Classes */
-      .corner-brackets {
-        position: relative;
-      }
-      
-      .corner-brackets::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 10px;
-        height: 10px;
-        border-top: 1px solid #00ff88;
-        border-left: 1px solid #00ff88;
-      }
-      
-      .corner-brackets::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 10px;
-        height: 10px;
-        border-bottom: 1px solid #00ff88;
-        border-right: 1px solid #00ff88;
-      }
-      
-      /* Scanline Overlay */
-      .scanline {
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .scanline::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        pointer-events: none;
-        background: repeating-linear-gradient(
-          0deg,
-          transparent 3px,
-          rgba(0, 255, 136, 0.012) 3px,
-          rgba(0, 255, 136, 0.012) 4px
+
+      .text-wave {
+        background: linear-gradient(
+          90deg, 
+          #00E5FF 0%, 
+          #007AFF 25%, 
+          #00E5FF 50%, 
+          #007AFF 75%, 
+          #00E5FF 100%
         );
-        z-index: 1;
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
-      
-      /* Top Accent Line */
-      .accent-line {
+
+      .border-wave {
         position: relative;
       }
       
-      .accent-line::before {
-        content: '';
+      .border-wave::after {
+        content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #00ff88 40%, #22d3ee 60%, transparent);
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          90deg, 
+          transparent 0%, 
+          rgba(0, 229, 255, 0.5) 25%, 
+          rgba(0, 122, 255, 0.8) 50%, 
+          rgba(0, 229, 255, 0.5) 75%, 
+          transparent 100%
+        );
+        background-size: 200% auto;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
       }
-      
-      /* Custom Scrollbar - Tactical */
-      ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
+
+      .bg-wave {
+        background: linear-gradient(
+          90deg, 
+          #00E5FF 0%, 
+          #007AFF 50%, 
+          #00E5FF 100%
+        );
+        background-size: 200% auto;
       }
-      
-      ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-      }
-      
-      ::-webkit-scrollbar-thumb {
-        background: rgba(0, 255, 136, 0.3);
-        border-radius: 0;
-      }
-      
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 255, 136, 0.5);
-      }
-      
-      /* Selection Color */
-      ::selection {
-        background: rgba(0, 255, 136, 0.2);
-        color: #00ff88;
-      }
-      
-      /* Focus Ring - Tactical */
-      *:focus {
-        outline: none;
-      }
-      
-      *:focus-visible {
-        outline: 1px solid #00ff88;
-        outline-offset: 2px;
-      }
-      
-      /* Base Body Styles */
+
+      /* Base Styles */
       body {
-        font-family: 'JetBrains Mono', monospace;
-        background-color: #080b0d;
-        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-black);
+        color: #FFFFFF;
+        overflow-x: hidden;
       }
-      
-      /* Font Classes */
-      .font-display {
-        font-family: 'Syne', sans-serif;
+
+      h1, h2, h3, h4 {
+        font-family: 'Plus+Jakarta+Sans', 'Inter', sans-serif;
+        letter-spacing: -0.02em;
       }
-      
+
       .font-mono {
         font-family: 'JetBrains Mono', monospace;
       }
-      
-      /* Details/Summary for FAQ (legacy support) */
-      details > summary {
-        list-style: none;
-        cursor: pointer;
+
+      /* Glassmorphism */
+      .glass-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+      }
+
+      .glass-nav {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+
+      .border-beam-container {
+        position: relative;
+        border-radius: inherit;
+      }
+
+      .border-beam {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(to right, transparent, var(--accent), transparent);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .group:hover .border-beam {
+        opacity: 1;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
       }
       
-      details > summary::-webkit-details-marker {
-        display: none;
+      ::-webkit-scrollbar-track {
+        background: var(--bg-black);
       }
       
-      details[open] summary {
-        border-bottom: 1px solid rgba(0, 255, 136, 0.2);
-        margin-bottom: 0.5rem;
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+
+      /* Selection Color */
+      ::selection {
+        background: var(--accent-glow);
+        color: #FFFFFF;
+      }
+
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Text Gradient Utilities */
+      .text-gradient-silver {
+        background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .text-gradient-cyan {
+        background: linear-gradient(90deg, #00E5FF 0%, #2DD4BF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
     `}</style>
   );

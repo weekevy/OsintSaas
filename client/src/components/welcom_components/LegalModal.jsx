@@ -4,80 +4,100 @@ const LegalModal = ({ isOpen, content, onClose }) => {
   const modalRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-    const handleEsc = (event) => {
-      if (event.key === 'Escape') onClose();
-    };
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const getContent = () => {
     switch(content) {
       case 'privacy':
-        return { title: 'Privacy Policy', content: `Last Updated: February 2026\n\nPrivacy Policy content here...` };
+        return { 
+          title: 'Privacy Policy', 
+          content: `Last Updated: April 2026\n\nYour privacy is our priority. We employ industry-standard encryption and zero-knowledge architecture. This means your investigation data never leaves your secure enclave in a readable format. We do not sell or share your digital footprint with third parties.` 
+        };
       case 'terms':
-        return { title: 'Terms of Service', content: `Last Updated: February 2026\n\nTerms of Service content here...` };
+        return { 
+          title: 'Terms of Service', 
+          content: `Last Updated: April 2026\n\nBy accessing OsintSaas, you agree to use our intelligence tools for ethical, legal, and legitimate investigative purposes. Any misuse for harassment or illegal tracking is strictly prohibited and will result in immediate account termination.` 
+        };
       case 'contact':
         return {
-          title: 'Contact',
+          title: 'Global Support',
           contacts: [
-            { category: 'Support', email: 'support@osintweekeyv.com', desc: 'General inquiries' },
-            { category: 'Security', email: 'security@osintweekeyv.com', desc: 'Report vulnerabilities' },
-            { category: 'Legal', email: 'legal@osintweekeyv.com', desc: 'Legal matters' }
+            { category: 'Intelligence Support', email: 'intel@osintsaas.com', desc: 'Direct line for investigative assistance.' },
+            { category: 'Security Ops', email: 'secops@osintsaas.com', desc: 'Report vulnerabilities or data concerns.' },
+            { category: 'General Inquiries', email: 'hello@osintsaas.com', desc: 'Partner with us or learn more.' }
           ]
         };
-      default: return { title: 'Info', content: 'Content not found' };
+      default: return { title: 'Information', content: 'Data unavailable.' };
     }
   };
 
   const data = getContent();
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-      <div ref={modalRef} className="relative w-full max-w-lg bg-[#090c0e] border border-white/10 shadow-2xl shadow-[#00ff88]/10" onClick={(e) => e.stopPropagation()}>
-        <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[#00ff88]/40" />
-        <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-[#00ff88]/40" />
-        <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-[#00ff88]/40" />
-        <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[#00ff88]/40" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        onClick={onClose}
+      />
+      
+      <div 
+        ref={modalRef} 
+        className="relative w-full max-w-xl glass-card rounded-[2.5rem] overflow-hidden shadow-2xl"
+      >
+        <div className="border-beam" />
         
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="font-display text-xl font-bold text-white">{data.title}</h2>
-          <button onClick={onClose} className="p-1.5 text-white/40 hover:text-white hover:bg-white/5 transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+        <div className="flex items-center justify-between p-8 border-b border-white/5">
+          <h2 className="text-2xl font-bold text-white">{data.title}</h2>
+          <button 
+            onClick={onClose} 
+            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         
-        <div className="p-5 max-h-[60vh] overflow-y-auto">
+        <div className="p-8 max-h-[60vh] overflow-y-auto">
           {content === 'contact' ? (
-            <div className="space-y-3">
+            <div className="grid gap-4">
               {data.contacts.map((contact, i) => (
-                <div key={i} className="p-4 bg-[#0d1114] border border-white/10 hover:border-[#00ff88]/30 transition-all duration-300">
-                  <h3 className="font-display text-sm font-bold text-white mb-1">{contact.category}</h3>
-                  <p className="text-white/40 text-[10px] font-mono mb-2">{contact.desc}</p>
-                  <a href={`mailto:${contact.email}`} className="text-[#00ff88] text-xs font-mono hover:opacity-80 transition-opacity">{contact.email}</a>
+                <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-[#00E5FF]/30 transition-all group">
+                  <h3 className="text-sm font-bold text-white/50 uppercase tracking-widest mb-2">{contact.category}</h3>
+                  <p className="text-white font-bold mb-4">{contact.desc}</p>
+                  <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-2 text-[#00E5FF] font-bold group-hover:gap-3 transition-all">
+                    {contact.email}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </a>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-white/60 text-sm font-mono leading-relaxed whitespace-pre-line">{data.content}</p>
+            <p className="text-gray-400 text-lg leading-relaxed whitespace-pre-line">
+              {data.content}
+            </p>
           )}
         </div>
         
-        <div className="flex justify-end p-4 border-t border-white/10">
-          <button onClick={onClose} className="px-5 py-2 bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88] font-mono text-[10px] uppercase tracking-[0.08em] hover:bg-[#00ff88]/20 transition-all duration-300">Close</button>
+        <div className="p-8 bg-white/[0.02] flex justify-end">
+          <button 
+            onClick={onClose} 
+            className="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-all"
+          >
+            Acknowledge
+          </button>
         </div>
       </div>
     </div>

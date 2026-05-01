@@ -1,30 +1,34 @@
 import { forwardRef } from 'react';
 
-const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick }, ref) => {
-  // Tactical SVG icons with acid green
-  const getFeatureIcon = (type) => {
-    const iconColor = '#00ff88';
+const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
+  const FeatureIcon = ({ type, color }) => {
+    const iconColor = color;
     switch(type) {
-      case 'research':
+      case 'deep':
         return (
-          <svg className="w-8 h-8 mb-3" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.2">
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.5">
             <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M11 7V13M14 10H8" strokeLinecap="round"/>
+            <path d="M11 7V13M14 10H8" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
       case 'realtime':
         return (
-          <svg className="w-8 h-8 mb-3" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.2">
-            <path d="M3 12H5L7 8L9 16L11 10L13 14L15 12L17 12" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="19" cy="12" r="2" strokeLinecap="round"/>
-            <path d="M12 3V5M12 19V21" strokeLinecap="round"/>
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
-      case 'secure':
+      case 'shield':
         return (
-          <svg className="w-8 h-8 mb-3" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.2">
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.5">
             <path d="M12 3L5 6C5 6 4 10 4 12C4 16 12 21 12 21C12 21 20 16 20 12C20 10 19 6 19 6L12 3Z" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M9 12L11 14L15 10" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        );
+      case 'api':
+        return (
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.5">
+            <path d="M4 7v10c0 1.105 3.582 2 8 2s8-.895 8-2V7" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M4 12c0 1.105 3.582 2 8 2s8-.895 8-2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
       default:
@@ -32,107 +36,151 @@ const HomeSection = forwardRef(({ hasAnimated, onRegisterClick, onServicesClick 
     }
   };
 
+  const features = [
+    { iconType: 'deep', title: 'Deep Intelligence', value: 'Billion-scale', desc: 'Global multi-layered data ingestion across surface, deep, and dark web.', color: '#00E5FF' },
+    { iconType: 'realtime', title: 'Real-time Linkage', value: 'Instantaneous', desc: 'Cross-platform identity correlation with millisecond latency.', color: '#2DD4BF' },
+    { iconType: 'shield', title: 'SecOps Isolation', value: 'Zero-Knowledge', desc: 'Fully encrypted investigation enclaves with complete anonymity.', color: '#00E5FF' },
+    { iconType: 'api', title: 'Modular SDK', value: 'API-First', desc: 'Native enterprise-grade integration with REST and GraphQL.', color: '#2DD4BF' }
+  ];
+
   return (
-    <section ref={ref} id="home" className="relative min-h-screen flex items-center pt-20 px-4 sm:px-6 lg:px-8 bg-[#080b0d]">
-      <div className="relative w-full max-w-6xl mx-auto">
-        <div className="flex flex-col items-center text-center">
-          {/* Badge - Tactical */}
-          <div className={`inline-flex items-center gap-2 mb-6 transition-all duration-700 delay-100 ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ff88]"></span>
-            </span>
-            <span className="text-[10px] font-mono tracking-[0.2em] text-[#00ff88] uppercase">OSINT Platform</span>
-          </div>
-
-        <div className={`mb-6 max-w-6xl transition-all duration-700 delay-200 ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-  
-  <h1 
-    className="text-white relative"
-    style={{
-      fontFamily: "'Poppins', sans-serif", // 👈 ADD THIS
-      fontSize: 'clamp(3.5rem, 9vw, 7rem)',
-      fontWeight: 900,
-      lineHeight: 0.85,
-      letterSpacing: '-0.01em', // Poppins looks better with slightly less negative spacing
-    }}
-  >
-    <div className="relative mb-3 sm:mb-4">
-      <span className="relative z-10 inline-block">
-        Uncover the Truth
-      </span>
-      <span className="absolute inset-0 text-white translate-x-1 translate-y-1 opacity-10 select-none" aria-hidden="true">
-        Uncover the Truth
-      </span>
-    </div>
-    
-    <div className="relative">
-      <span className="relative z-10 inline-block text-[#00ff88]">
-        Break Down Scammers
-      </span>
-      <span className="absolute inset-0 text-[#00ff88] translate-x-1.5 translate-y-1.5 opacity-20 select-none" aria-hidden="true">
-        Break Down Scammers
-      </span>
-      <span className="absolute inset-0 text-[#00ff88] blur-xl opacity-30 select-none" aria-hidden="true">
-        Break Down Scammers
-      </span>
-    </div>
-  </h1>
-</div>
-          
-
-
-          {/* Subtitle */}
-          <p className={`text-white/40 text-sm sm:text-base max-w-2xl mb-10 font-mono transition-all duration-700 delay-300 ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            Professional OSINT tools to investigate, verify, and protect yourself from online fraud
-          </p>
-
-          {/* CTA Buttons - Tactical Style */}
-          <div className={`flex flex-wrap gap-4 justify-center mb-16 transition-all duration-700 delay-400 ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <button
-              onClick={onRegisterClick}
-              className="group px-6 py-3 bg-[#00ff88]/10 border border-[#00ff88]/40 text-[#00ff88] font-mono text-xs uppercase tracking-[0.08em] hover:bg-[#00ff88]/20 transition-all duration-300 flex items-center gap-2"
-            >
-              Start Investigation
-              <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
-            
-            <button
-              onClick={onServicesClick}
-              className="group px-6 py-3 border border-white/10 text-white/60 font-mono text-xs uppercase tracking-[0.08em] hover:border-[#00ff88]/40 hover:text-[#00ff88] transition-all duration-300"
-            >
-              View Services
-            </button>
-          </div>
-
-          {/* Feature Cards Grid - Tactical Cards */}
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl transition-all duration-700 delay-500 ${hasAnimated ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-            {[
-              { icon: 'research', title: 'Deep Research', desc: 'Advanced investigation tools' },
-              { icon: 'realtime', title: 'Real-time Data', desc: 'Live information gathering' },
-              { icon: 'secure', title: 'Secure & Private', desc: 'Your data stays protected' }
-            ].map((feature, i) => (
-              <div key={i} className="group relative bg-[#090c0e] border border-white/10 hover:border-[#00ff88]/30 transition-all duration-300 p-5">
-                {/* Left accent bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#00ff88]/0 group-hover:bg-[#00ff88]/50 transition-all duration-300" />
-                {/* Corner pip */}
-                <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-[#00ff88]/20 border-r-transparent" />
-                
-                <div className="opacity-70 group-hover:opacity-100 transition-opacity">
-                  {getFeatureIcon(feature.icon)}
-                </div>
-                <h3 className="font-display text-base font-bold text-white mb-1">{feature.title}</h3>
-                <p className="text-white/40 text-xs font-mono">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+    <section 
+      ref={ref} 
+      id="home" 
+      className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-black overflow-hidden"
+    >
+      {/* Premium Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Main glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full bg-gradient-to-r from-[#00E5FF]/8 via-[#2DD4BF]/5 to-transparent blur-[180px]" />
+        {/* Secondary accent */}
+        <div className="absolute bottom-0 right-0 w-[500px] h-[400px] rounded-full bg-[#007AFF]/5 blur-[120px]" />
+        {/* Grid texture */}
+        <div className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, #00E5FF 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}
+        />
       </div>
 
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00ff88]/20 to-transparent" />
+      <div className="relative w-full max-w-7xl mx-auto z-10 flex flex-col items-center">
+        {/* Premium Badge - Smaller gap to top */}
+        <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 backdrop-blur-sm">
+          {/* Active rings - Non-animated */}
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00E5FF]"></span>
+          </span>
+          <span className="text-[11px] font-bold tracking-[0.25em] text-white/60 uppercase">
+            Global Intelligence Terminal
+          </span>
+        </div>
+
+        {/* Hero Text - BIGGER & THICKER - Single line with smaller gap */}
+        <h1 className="text-center mb-8">
+          <div className="text-[10vw] sm:text-[4.5rem] md:text-[6rem] lg:text-[7.5rem] font-black tracking-[-0.03em] leading-[1.05]">
+            {/* First line - Silver gradient */}
+            <span className="block bg-gradient-to-b from-white via-white to-gray-400 bg-clip-text text-transparent pb-2">
+            <span 
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, #00E5FF, #2DD4BF, #007AFF, #00E5FF, #2DD4BF)',
+                backgroundSize: '300% 100%',
+              }}
+            >
+              Break Down Scammers.
+            </span>
+              Uncover Truth
+            </span>
+          </div>
+        </h1>
+
+        {/* Subtitle - Smaller gap */}
+        <p className="text-gray-400 text-lg md:text-xl text-center max-w-2xl mb-10 leading-relaxed font-medium">
+          The most sophisticated OSINT ecosystem ever engineered. 
+          Analyze digital footprints with absolute precision.
+        </p>
+
+        {/* Buttons - Smaller gap */}
+        <div className="flex flex-wrap gap-4 justify-center mb-20">
+          <button
+            onClick={onRegisterClick}
+            className="group relative px-12 py-5 bg-white text-black font-bold text-lg rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+          >
+            <span className="relative z-10">Start Investigation</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00E5FF]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </button>
+          
+          <button
+            onClick={onServicesClick}
+            className="px-12 py-5 bg-white/[0.03] text-white font-bold text-lg rounded-2xl border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/[0.15] transition-all duration-300"
+          >
+            See Capabilities
+          </button>
+        </div>
+
+        {/* Cards - Fancy AI-brand style */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          {features.map((feature, i) => (
+            <div 
+              key={i}
+              className="group relative"
+            >
+              <div className="relative bg-[#0a0a0a] rounded-2xl p-6 h-full transition-all duration-300"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                {/* Hover border glow */}
+                <div 
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: `linear-gradient(135deg, ${feature.color}10, transparent 60%)`,
+                    border: `1px solid ${feature.color}30`,
+                    margin: '-1px',
+                  }}
+                />
+                
+                {/* Icon container */}
+                <div 
+                  className="relative w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${feature.color}15, ${feature.color}05)`,
+                    border: `1px solid ${feature.color}25`
+                  }}
+                >
+                  <FeatureIcon type={feature.iconType} color={feature.color} />
+                </div>
+                
+                {/* Category */}
+                <span className="relative text-[8px] font-bold text-white/25 uppercase tracking-[0.2em] mb-2 block">
+                  {feature.title}
+                </span>
+                
+                {/* Value */}
+                <div 
+                  className="relative text-2xl font-black mb-2 tracking-[-0.02em]"
+                  style={{ color: feature.color }}
+                >
+                  {feature.value}
+                </div>
+                
+                {/* Description */}
+                <p className="relative text-gray-500 text-xs leading-relaxed font-medium">
+                  {feature.desc}
+                </p>
+                
+                {/* Subtle arrow on hover */}
+                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
+                  <svg className="w-4 h-4 text-[#00E5FF]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 });

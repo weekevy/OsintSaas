@@ -13,10 +13,6 @@
 }
 
 
-html {
-  font-size: 115%;  /* 18px base */
-  scroll-behavior: smooth;
-}
 
 body {
   line-height: 1.6;  /* Better readability */

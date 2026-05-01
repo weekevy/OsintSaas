@@ -66,24 +66,24 @@ const APITokens = () => {
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'active': return 'border-[#34d399]/30 text-[#34d399]';
-      case 'expiring': return 'border-[#fbbf24]/30 text-[#fbbf24]';
-      case 'expired': return 'border-[#f87171]/30 text-[#f87171]';
+      case 'active': return 'border-[#00E5FF]/30 text-[#00E5FF]';
+      case 'expiring': return 'border-yellow-500/30 text-yellow-500';
+      case 'expired': return 'border-red-500/30 text-red-500';
       default: return 'border-white/20 text-white/40';
     }
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 font-sans">
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-white/10">
         <div>
-          <h3 className="text-white font-mono text-[10px] font-bold uppercase tracking-[0.12em]">API TOKENS</h3>
-          <p className="text-white/30 text-[7px] font-mono uppercase tracking-[0.08em] mt-0.5">MANAGE AUTHENTICATION TOKENS FOR API ACCESS</p>
+          <h3 className="text-white font-sans text-[10px] font-bold uppercase tracking-[0.12em]">API TOKENS</h3>
+          <p className="text-white/30 text-[7px] font-sans uppercase tracking-[0.08em] mt-0.5">MANAGE AUTHENTICATION TOKENS FOR API ACCESS</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="px-3 py-1.5 border border-[#00ff88]/30 bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-all text-[8px] font-mono uppercase tracking-[0.08em] flex items-center gap-1.5"
+          className="px-3 py-1.5 border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-all text-[8px] font-sans uppercase tracking-[0.08em] flex items-center gap-1.5"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -94,29 +94,29 @@ const APITokens = () => {
 
       {/* Create Token Form */}
       {showCreateForm && (
-        <div className="bg-[#090c0e] border border-white/10 p-5 relative">
-          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00ff88]/30" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00ff88]/30" />
+        <div className="glass-card border border-white/10 p-5 relative">
+          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
+          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00E5FF]/30" />
           
-          <h4 className="text-white font-mono text-[9px] font-bold uppercase tracking-[0.12em] mb-4">GENERATE NEW API TOKEN</h4>
+          <h4 className="text-white font-sans text-[9px] font-bold uppercase tracking-[0.12em] mb-4">GENERATE NEW API TOKEN</h4>
           <div className="space-y-3">
             <div>
-              <label className="block text-white/40 text-[7px] font-mono uppercase tracking-[0.12em] mb-1">TOKEN NAME</label>
+              <label className="block text-white/40 text-[7px] font-sans uppercase tracking-[0.12em] mb-1">TOKEN NAME</label>
               <input
                 type="text"
                 value={newTokenName}
                 onChange={(e) => setNewTokenName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0d1114] border border-white/10 text-white text-[10px] font-mono focus:outline-none focus:border-[#00ff88]/50 transition-colors"
-                placeholder="e.g., PRODUCTION, DEVELOPMENT"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white text-[10px] font-mono focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                placeholder="E.G., PRODUCTION, DEVELOPMENT"
               />
             </div>
 
             <div>
-              <label className="block text-white/40 text-[7px] font-mono uppercase tracking-[0.12em] mb-1">EXPIRATION</label>
+              <label className="block text-white/40 text-[7px] font-sans uppercase tracking-[0.12em] mb-1">EXPIRATION</label>
               <select
                 value={newTokenExpiry}
                 onChange={(e) => setNewTokenExpiry(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0d1114] border border-white/10 text-white text-[9px] font-mono uppercase tracking-[0.08em] focus:outline-none focus:border-[#00ff88]/50 transition-colors"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white text-[9px] font-sans uppercase tracking-[0.08em] focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
               >
                 <option value="7">7 DAYS</option>
                 <option value="30">30 DAYS</option>
@@ -127,7 +127,7 @@ const APITokens = () => {
             </div>
 
             <div>
-              <label className="block text-white/40 text-[7px] font-mono uppercase tracking-[0.12em] mb-2">PERMISSIONS</label>
+              <label className="block text-white/40 text-[7px] font-sans uppercase tracking-[0.12em] mb-2">PERMISSIONS</label>
               <div className="flex flex-wrap gap-3">
                 {['read', 'write', 'delete', 'admin'].map((permission) => (
                   <label key={permission} className="flex items-center gap-1.5 cursor-pointer">
@@ -141,9 +141,9 @@ const APITokens = () => {
                           setNewTokenPermissions(newTokenPermissions.filter(p => p !== permission));
                         }
                       }}
-                      className="w-3 h-3 border border-white/20 bg-transparent text-[#00ff88] focus:ring-0"
+                      className="w-3 h-3 border border-white/20 bg-transparent text-[#00E5FF] focus:ring-0"
                     />
-                    <span className="text-white/60 text-[8px] font-mono uppercase tracking-[0.08em]">{permission}</span>
+                    <span className="text-white/60 text-[8px] font-sans uppercase tracking-[0.08em]">{permission}</span>
                   </label>
                 ))}
               </div>
@@ -152,14 +152,14 @@ const APITokens = () => {
             <div className="flex gap-2 pt-3">
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="flex-1 px-3 py-1.5 border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-all text-[8px] font-mono uppercase tracking-[0.08em]"
+                className="flex-1 px-3 py-1.5 border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-all text-[8px] font-sans uppercase tracking-[0.08em]"
               >
                 CANCEL
               </button>
               <button
                 onClick={createToken}
                 disabled={!newTokenName}
-                className="flex-1 px-3 py-1.5 border border-[#00ff88]/30 bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-all text-[8px] font-mono uppercase tracking-[0.08em] disabled:opacity-50"
+                className="flex-1 px-3 py-1.5 border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-all text-[8px] font-sans uppercase tracking-[0.08em] disabled:opacity-50"
               >
                 GENERATE
               </button>
@@ -173,28 +173,28 @@ const APITokens = () => {
         {tokens.map((token) => (
           <div
             key={token.id}
-            className="bg-[#090c0e] border border-white/10 p-4 hover:border-[#00ff88]/30 transition-all relative group"
+            className="glass-card border border-white/10 p-4 hover:border-[#00E5FF]/30 transition-all relative group"
           >
-            <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00ff88]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00ff88]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00E5FF]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00E5FF]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h4 className="text-white font-mono text-[9px] font-bold uppercase tracking-[0.08em]">{token.name}</h4>
-                  <span className={`px-1.5 py-0.5 text-[6px] font-mono uppercase tracking-[0.1em] border ${getStatusColor(token.status)}`}>
+                  <h4 className="text-white font-sans text-[9px] font-bold uppercase tracking-[0.08em]">{token.name}</h4>
+                  <span className={`px-1.5 py-0.5 text-[6px] font-sans uppercase tracking-[0.1em] border ${getStatusColor(token.status)}`}>
                     {token.status}
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5">
-                    <code className="bg-[#0d1114] px-2 py-1 text-white/60 font-mono text-[8px]">
+                    <code className="bg-white/5 px-2 py-1 text-white/60 font-mono text-[8px]">
                       {token.token.substring(0, 20)}...{token.token.substring(token.token.length - 10)}
                     </code>
                     <button
                       onClick={() => copyToClipboard(token.token)}
-                      className="p-1 text-white/30 hover:text-[#00ff88] transition-all"
+                      className="p-1 text-white/30 hover:text-[#00E5FF] transition-all"
                       title="Copy full token"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -203,14 +203,14 @@ const APITokens = () => {
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 text-[7px] font-mono uppercase tracking-[0.08em]">
+                  <div className="flex flex-wrap items-center gap-3 text-[7px] font-sans uppercase tracking-[0.08em]">
                     <span className="text-white/30">CREATED: <span className="text-white/50">{token.created}</span></span>
-                    <span className="text-white/30">EXPIRES: <span className={`${token.status === 'expiring' ? 'text-[#fbbf24]' : 'text-white/50'}`}>{token.expires}</span></span>
+                    <span className="text-white/30">EXPIRES: <span className={`${token.status === 'expiring' ? 'text-yellow-500' : 'text-white/50'}`}>{token.expires}</span></span>
                     <span className="text-white/30">LAST USED: <span className="text-white/50">{token.lastUsed}</span></span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-white/30">PERMISSIONS:</span>
                       {token.permissions.map((perm) => (
-                        <span key={perm} className="px-1 py-0.5 border border-[#00ff88]/30 text-[#00ff88] text-[6px] font-mono uppercase tracking-[0.08em]">
+                        <span key={perm} className="px-1 py-0.5 border border-[#00E5FF]/30 text-[#00E5FF] text-[6px] font-sans uppercase tracking-[0.08em]">
                           {perm}
                         </span>
                       ))}
@@ -220,14 +220,14 @@ const APITokens = () => {
               </div>
 
               <div className="flex items-center gap-1 ml-3">
-                <button className="p-1.5 text-white/30 hover:text-[#00ff88] transition-all">
+                <button className="p-1.5 text-white/30 hover:text-[#00E5FF] transition-all">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
                 <button
                   onClick={() => revokeToken(token.id)}
-                  className="p-1.5 text-white/30 hover:text-[#f87171] transition-all"
+                  className="p-1.5 text-white/30 hover:text-red-500 transition-all"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -240,23 +240,23 @@ const APITokens = () => {
       </div>
 
       {/* Security Best Practices */}
-      <div className="bg-[#090c0e] border border-white/10 p-4 relative">
-        <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00ff88]/30" />
-        <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00ff88]/30" />
+      <div className="glass-card border border-white/10 p-4 relative">
+        <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00E5FF]/30" />
+        <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00E5FF]/30" />
         
         <div className="flex items-start gap-2">
-          <div className="w-6 h-6 border border-[#00ff88]/30 flex items-center justify-center flex-shrink-0">
-            <svg className="w-3 h-3 text-[#00ff88]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+          <div className="w-6 h-6 border border-[#00E5FF]/30 flex items-center justify-center flex-shrink-0">
+            <svg className="w-3 h-3 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
           <div>
-            <h4 className="text-white font-mono text-[8px] font-bold uppercase tracking-[0.12em] mb-1">SECURITY BEST PRACTICES</h4>
-            <ul className="space-y-1 text-[7px] font-mono uppercase tracking-[0.08em]">
-              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00ff88]">•</span> NEVER SHARE YOUR API TOKENS OR COMMIT THEM TO VERSION CONTROL</li>
-              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00ff88]">•</span> USE DIFFERENT TOKENS FOR DIFFERENT APPLICATIONS AND ENVIRONMENTS</li>
-              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00ff88]">•</span> REGULARLY ROTATE TOKENS AND REVOKE UNUSED ONES</li>
-              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00ff88]">•</span> SET APPROPRIATE EXPIRATION DATES BASED ON USE CASE</li>
+            <h4 className="text-white font-sans text-[8px] font-bold uppercase tracking-[0.12em] mb-1">SECURITY BEST PRACTICES</h4>
+            <ul className="space-y-1 text-[7px] font-sans uppercase tracking-[0.08em]">
+              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00E5FF]">•</span> NEVER SHARE YOUR API TOKENS OR COMMIT THEM TO VERSION CONTROL</li>
+              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00E5FF]">•</span> USE DIFFERENT TOKENS FOR DIFFERENT APPLICATIONS AND ENVIRONMENTS</li>
+              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00E5FF]">•</span> REGULARLY ROTATE TOKENS AND REVOKE UNUSED ONES</li>
+              <li className="flex items-start gap-1.5 text-white/50"><span className="text-[#00E5FF]">•</span> SET APPROPRIATE EXPIRATION DATES BASED ON USE CASE</li>
             </ul>
           </div>
         </div>

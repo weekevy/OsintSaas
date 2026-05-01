@@ -1,58 +1,36 @@
-const ModalContainer = ({ isOpen, modalAnimation, onClose, children }) => {
-  const getBackdropAnimationClass = () => {
-    switch (modalAnimation) {
-      case 'open':
-        return 'opacity-100';
-      case 'closing':
-        return 'opacity-0';
-      case 'switching':
-        return 'opacity-50';
-      default:
-        return 'opacity-0';
-    }
-  };
-
-  const getModalAnimationClass = () => {
-    switch (modalAnimation) {
-      case 'opening':
-        return 'scale-95 opacity-0';
-      case 'open':
-        return 'scale-100 opacity-100';
-      case 'closing':
-        return 'scale-95 opacity-0';
-      case 'switching':
-        return 'scale-90 opacity-0';
-      default:
-        return 'scale-95 opacity-0';
-    }
-  };
-
+const ModalContainer = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      
+      {/* Backdrop with smooth fade */}
       <div 
-        className={`absolute inset-0 bg-black/80 backdrop-blur-xl transition-all duration-300 ease-out
-                  ${getBackdropAnimationClass()}`}
+        className="absolute inset-0 bg-black/85 backdrop-blur-md"
         onClick={onClose}
       />
       
+      {/* Modal with buttery smooth spring physics */}
       <div 
-        className={`relative w-full max-w-md bg-gradient-to-br from-gray-900/95 via-purple-900/10 to-black/95 rounded-3xl 
-                  border border-white/10 shadow-2xl shadow-purple-500/30 backdrop-blur-2xl
-                  transition-all duration-300 ease-out transform
-                  ${getModalAnimationClass()}`}
+        className="relative w-full max-w-md glass-card rounded-[2.5rem] overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.6)] border border-white/10"
       >
+        {/* Animated border beam */}
+        <div className="border-beam opacity-30" />
+        
+        {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-white/60 hover:text-white transition-colors duration-300 z-10 hover:rotate-90 transform transition-transform"
+          className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all z-10"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
         
-        {children}
+        {/* Content with fade-in delay */}
+        <div>
+          {children}
+        </div>
       </div>
     </div>
   );

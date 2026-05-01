@@ -12,16 +12,16 @@ const ALL_MODULES = [
     name: 'Company & Job Scam',
     api: '/api/modules/company-jobscam',
     icon: 'job',
-    color: 'from-[#00ff88] to-[#22d3ee]',
-    textColor: 'text-[#00ff88]',
+    color: 'from-[#00E5FF] to-[#2DD4BF]',
+    textColor: 'text-[#00E5FF]',
   },
   {
     id: 'linkedin',
     name: 'LinkedIn Investigation',
     api: '/api/modules/linkedin-investigation',
     icon: 'linkedin',
-    color: 'from-[#22d3ee] to-[#00ff88]',
-    textColor: 'text-[#22d3ee]',
+    color: 'from-[#2DD4BF] to-[#00E5FF]',
+    textColor: 'text-[#2DD4BF]',
   },
 ];
 
@@ -50,20 +50,20 @@ const LoadingSkeleton = () => (
     {[0, 1].map((i) => (
       <div
         key={i}
-        className="bg-[#090c0e] border-2 border-[#00ff88]/15 rounded-2xl p-6 animate-pulse"
-        style={{ animationDelay: `${i * 120}ms`, minHeight: '110px' }}
+        className="glass-card rounded-2xl p-6"
+        style={{ minHeight: '110px' }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-xl" />
+            <div className="w-14 h-14 bg-[#00E5FF]/5 border border-white/[0.08] rounded-xl" />
             <div className="space-y-2.5">
               <div className="h-5 w-44 bg-white/8 rounded-lg" />
               <div className="h-3.5 w-64 bg-white/5 rounded-lg" />
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="w-10 h-10 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-lg" />
-            <div className="w-10 h-10 bg-[#00ff88]/5 border-2 border-[#00ff88]/15 rounded-lg" />
+            <div className="w-10 h-10 bg-[#00E5FF]/5 border border-white/[0.08] rounded-lg" />
+            <div className="w-10 h-10 bg-[#00E5FF]/5 border border-white/[0.08] rounded-lg" />
           </div>
         </div>
       </div>
@@ -73,21 +73,21 @@ const LoadingSkeleton = () => (
 
 const EmptyState = () => (
   <div
-    className="bg-[#090c0e] border-2 border-[#00ff88]/20 rounded-2xl p-8 flex items-center justify-center"
+    className="glass-card rounded-2xl p-8 flex items-center justify-center"
     style={{ minHeight: '110px' }}
   >
     <div className="flex items-center gap-5">
-      <div className="w-14 h-14 border-2 border-[#00ff88]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-        <svg className="w-7 h-7 text-[#00ff88]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-14 h-14 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0">
+        <svg className="w-7 h-7 text-[#00E5FF]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
       <div>
-        <p className="font-mono text-sm font-bold text-white/60 uppercase tracking-widest">
+        <p className="font-sans text-sm font-bold text-white/60 uppercase tracking-widest">
           No Active Scans
         </p>
-        <p className="text-white/30 text-xs font-mono uppercase tracking-[0.1em] mt-1">
+        <p className="text-white/30 text-xs font-sans uppercase tracking-[0.1em] mt-1">
           Select a module below to begin
         </p>
       </div>
@@ -98,21 +98,17 @@ const EmptyState = () => (
 const StatBadge = ({ label, value, accent, pulse }) => (
   <div className="flex items-center gap-4">
     <div
-      className="w-12 h-12 border-2 rounded-xl flex items-center justify-center flex-shrink-0"
-      style={{ borderColor: `${accent}40`, background: `${accent}08` }}
+      className="w-12 h-12 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0 backdrop-blur-xl"
+      style={{ background: `${accent}08` }}
     >
-      {pulse ? (
-        <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: accent }} />
-      ) : (
-        <svg className="w-5 h-5" style={{ color: accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )}
+      <svg className="w-5 h-5" style={{ color: accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
     </div>
     <div>
-      <div className="text-white/35 text-[11px] font-mono uppercase tracking-[0.15em]">{label}</div>
-      <div className="text-3xl font-bold font-mono leading-tight" style={{ color: pulse ? accent : 'white' }}>
+      <div className="text-white/35 text-[11px] font-sans uppercase tracking-[0.15em]">{label}</div>
+      <div className="text-3xl font-bold font-sans leading-tight" style={{ color: pulse ? accent : 'white' }}>
         {value}
       </div>
     </div>
@@ -397,12 +393,12 @@ const ScanDashboard = ({
 
   // ─── JSX ──────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full bg-[#06080a] text-white">
+    <div className="w-full bg-black text-white font-sans">
       <div
         className="pointer-events-none fixed inset-0 z-0 opacity-[0.015]"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.06) 2px, rgba(0,255,136,0.06) 4px)',
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.06) 2px, rgba(0,229,255,0.06) 4px)',
         }}
       />
 
@@ -412,27 +408,21 @@ const ScanDashboard = ({
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-5">
             <div className="relative">
-              <div className="w-14 h-14 border-2 border-[#00ff88]/40 rounded-xl flex items-center justify-center bg-[#00ff88]/5">
-                <svg className="w-7 h-7 text-[#00ff88]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+              <div className="w-14 h-14 border border-white/[0.08] rounded-xl flex items-center justify-center bg-[#00E5FF]/5 backdrop-blur-xl">
+                <svg className="w-7 h-7 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round"
                     d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
                 </svg>
               </div>
-              {isRefreshing && (
-                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75 animate-ping" />
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#00ff88]" />
-                </span>
-              )}
             </div>
 
             <div>
-              <h1 className="font-mono text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.06em]">
+              <h1 className="font-sans text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.06em]">
                 Scan Dashboard
               </h1>
-              <p className="text-xs font-mono text-white/35 uppercase tracking-[0.14em] mt-1">
+              <p className="text-xs font-sans text-white/35 uppercase tracking-[0.14em] mt-1">
                 Filter:{' '}
-                <span className="text-[#00ff88]/80">{filterLabel}</span>
+                <span className="text-[#00E5FF]/80">{filterLabel}</span>
               </p>
             </div>
           </div>
@@ -441,10 +431,10 @@ const ScanDashboard = ({
             <button
               onClick={() => fetchAllScans({ silent: true })}
               disabled={isLoading || isRefreshing}
-              className="group flex items-center gap-2 px-5 py-2.5 border-2 border-[#00ff88]/25 rounded-xl bg-[#00ff88]/5 hover:bg-[#00ff88]/10 text-white/60 hover:text-[#00ff88] transition-all duration-200 text-xs font-mono uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-sans uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed backdrop-blur-xl"
             >
               <svg
-                className={`w-4 h-4 transition-transform duration-500 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`}
+                className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -456,7 +446,7 @@ const ScanDashboard = ({
             <div className="relative" ref={filterDropdownRef}>
               <button
                 onClick={() => setShowFilterDropdown((v) => !v)}
-                className="flex items-center gap-2 px-5 py-2.5 border-2 border-[#00ff88]/25 rounded-xl bg-[#00ff88]/5 hover:bg-[#00ff88]/10 text-white/60 hover:text-[#00ff88] transition-all duration-200 text-xs font-mono uppercase tracking-[0.1em]"
+                className="flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-sans uppercase tracking-[0.1em] backdrop-blur-xl"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -472,19 +462,19 @@ const ScanDashboard = ({
               </button>
 
               {showFilterDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-[#0a0d10] border-2 border-[#00ff88]/20 rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden animate-slideDown">
-                  <div className="px-4 py-3 border-b border-[#00ff88]/15">
-                    <span className="text-xs font-mono text-white/40 uppercase tracking-[0.14em]">Filter by module</span>
+                <div className="absolute right-0 mt-2 w-64 glass-card rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden backdrop-blur-xl">
+                  <div className="px-4 py-3 border-b border-white/[0.08]">
+                    <span className="text-xs font-sans text-white/40 uppercase tracking-[0.14em]">Filter by module</span>
                   </div>
                   <div className="p-2">
                     {[{ id: 'all', name: 'All Modules' }, ...ALL_MODULES].map((m) => (
                       <button
                         key={m.id}
                         onClick={() => { setFilterModule(m.id); setShowFilterDropdown(false); }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors text-xs font-mono uppercase tracking-[0.08em] rounded-lg ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors text-xs font-sans uppercase tracking-[0.08em] rounded-lg ${
                           filterModule === m.id
-                            ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30'
-                            : 'text-white/60 hover:bg-[#00ff88]/5 hover:text-white/90'
+                            ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30'
+                            : 'text-white/60 hover:bg-[#00E5FF]/5 hover:text-white/90'
                         }`}
                       >
                         {m.id !== 'all' && getIcon(m.icon, 'w-4 h-4 flex-shrink-0')}
@@ -504,7 +494,7 @@ const ScanDashboard = ({
         </header>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-[#00ff88]/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
 
         {/* ══ TABS ════════════════════════════════════════════════════════════ */}
         <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
@@ -516,10 +506,7 @@ const ScanDashboard = ({
           ) : annotatedRunningScans.length > 0 ? (
             <div className="space-y-3">
               {annotatedRunningScans.map((scan) => (
-                <div
-                  key={scan.id}
-                  className={scan._isNew ? 'animate-scanEntry' : ''}
-                >
+                <div key={scan.id}>
                   <RunningScans
                     runningScans={[scan]}
                     onEditScan={handleEditScan}
@@ -563,15 +550,15 @@ const ScanDashboard = ({
         <section>
           <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
 
-          <div className="border-2 border-t-0 border-[#00ff88]/20 rounded-b-2xl bg-[#090c0e] px-6 py-5">
+          <div className="glass-card border-t-0 rounded-b-2xl px-6 py-5 backdrop-blur-xl">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
               <div className="flex items-center gap-7">
-                <StatBadge label="Total Scans" value={stats.total}     accent="#00ff88" />
-                <div className="w-px h-10 bg-[#00ff88]/15" />
-                <StatBadge label="Active Now"  value={stats.activeNow} accent="#34d399" pulse />
+                <StatBadge label="Total Scans" value={stats.total}     accent="#00E5FF" />
+                <div className="w-px h-10 bg-white/10" />
+                <StatBadge label="Active Now"  value={stats.activeNow} accent="#2DD4BF" />
               </div>
 
-              <div className="flex items-center gap-2 text-white/25 text-[11px] font-mono uppercase tracking-[0.12em]">
+              <div className="flex items-center gap-2 text-white/25 text-[11px] font-sans uppercase tracking-[0.12em]">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -585,48 +572,6 @@ const ScanDashboard = ({
 
       {renderAddModal()}
       {renderEditModal()}
-
-      <style>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideDown { animation: slideDown 0.15s ease-out; }
-
-        @keyframes scanEntry {
-          0%   {
-            opacity: 0;
-            transform: translateY(-16px) scaleY(0.88);
-            filter: brightness(2) saturate(1.5);
-          }
-          35%  {
-            opacity: 1;
-            filter: brightness(1.5) saturate(1.2);
-          }
-          65%  {
-            transform: translateY(3px) scaleY(1.02);
-            filter: brightness(1.1);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scaleY(1);
-            filter: brightness(1) saturate(1);
-          }
-        }
-        .animate-scanEntry {
-          animation: scanEntry 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-          transform-origin: top center;
-        }
-
-        @keyframes scanGlow {
-          0%   { box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 0 0 1px rgba(0,255,136,0); }
-          25%  { box-shadow: 0 0 20px 4px rgba(0,255,136,0.18), inset 0 0 0 1px rgba(0,255,136,0.4); }
-          100% { box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 0 0 1px rgba(0,255,136,0); }
-        }
-        .animate-scanEntry > * {
-          animation: scanGlow 0.65s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };

@@ -67,10 +67,10 @@ const ProjectCard = ({ project, onEdit, onDelete, onView, onAddAsset }) => {
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'active': return 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/30';
       case 'review': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'planning': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'completed': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      case 'planning': return 'bg-[#2DD4BF]/20 text-[#2DD4BF] border-[#2DD4BF]/30';
+      case 'completed': return 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/30';
       case 'archived': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
       default: return 'bg-white/20 text-white/60 border-white/30';
     }
@@ -81,7 +81,7 @@ const ProjectCard = ({ project, onEdit, onDelete, onView, onAddAsset }) => {
       case 'critical': return 'text-red-400 bg-red-500/20';
       case 'high': return 'text-orange-400 bg-orange-500/20';
       case 'medium': return 'text-yellow-400 bg-yellow-500/20';
-      case 'low': return 'text-green-400 bg-green-500/20';
+      case 'low': return 'text-[#00E5FF] bg-[#00E5FF]/20';
       default: return 'text-white/40 bg-white/5';
     }
   };
