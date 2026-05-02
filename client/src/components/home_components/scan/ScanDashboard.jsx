@@ -44,50 +44,24 @@ const getTargetDisplay = (scan, moduleId) => {
   }
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-const LoadingSkeleton = () => (
-  <div className="space-y-3">
-    {[0, 1].map((i) => (
-      <div
-        key={i}
-        className="glass-card rounded-2xl p-6"
-        style={{ minHeight: '110px' }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#00E5FF]/5 border border-white/[0.08] rounded-xl" />
-            <div className="space-y-2.5">
-              <div className="h-5 w-44 bg-white/8 rounded-lg" />
-              <div className="h-3.5 w-64 bg-white/5 rounded-lg" />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="w-10 h-10 bg-[#00E5FF]/5 border border-white/[0.08] rounded-lg" />
-            <div className="w-10 h-10 bg-[#00E5FF]/5 border border-white/[0.08] rounded-lg" />
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
+// ─── Empty State (no skeleton) ───────────────────────────────────────────────
 const EmptyState = () => (
   <div
-    className="glass-card rounded-2xl p-8 flex items-center justify-center"
+    className="rounded-2xl p-8 flex items-center justify-center border border-white/10 bg-white/[0.02]"
     style={{ minHeight: '110px' }}
   >
     <div className="flex items-center gap-5">
-      <div className="w-14 h-14 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0">
+      <div className="w-14 h-14 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/5">
         <svg className="w-7 h-7 text-[#00E5FF]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
       <div>
-        <p className="font-sans text-sm font-bold text-white/60 uppercase tracking-widest">
+        <p className="font-['Poppins'] text-sm font-bold text-white/60 uppercase tracking-widest">
           No Active Scans
         </p>
-        <p className="text-white/30 text-xs font-sans uppercase tracking-[0.1em] mt-1">
+        <p className="text-white/30 text-xs font-['Poppins'] uppercase tracking-[0.1em] mt-1">
           Select a module below to begin
         </p>
       </div>
@@ -107,8 +81,8 @@ const StatBadge = ({ label, value, accent, pulse }) => (
       </svg>
     </div>
     <div>
-      <div className="text-white/35 text-[11px] font-sans uppercase tracking-[0.15em]">{label}</div>
-      <div className="text-3xl font-bold font-sans leading-tight" style={{ color: pulse ? accent : 'white' }}>
+      <div className="text-white/35 text-[11px] font-['Poppins'] uppercase tracking-[0.15em]">{label}</div>
+      <div className="text-3xl font-bold font-['Poppins'] leading-tight" style={{ color: pulse ? accent : 'white' }}>
         {value}
       </div>
     </div>
@@ -153,6 +127,7 @@ const ScanDashboard = ({
   const isSavingRef   = useRef(false);
   const isEditOpenRef = useRef(false);
   const isAddOpenRef  = useRef(false);
+  const refreshTimeoutRef = useRef(null);
 
   const stats = useMemo(() => {
     const all = [...runningScans, ...scanHistory];
@@ -162,14 +137,18 @@ const ScanDashboard = ({
     };
   }, [runningScans, scanHistory]);
 
-  // ─── Fetch ────────────────────────────────────────────────────────────────
+  // ─── Fetch with debounce to prevent lag ───────────────────────────────────
   const fetchAllScans = useCallback(
     async ({ silent = false } = {}) => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+
       if (fetchAbortRef.current) fetchAbortRef.current.abort();
       const controller = new AbortController();
       fetchAbortRef.current = controller;
 
-      setStatus(silent ? 'refreshing' : 'loading');
+      if (!silent) setStatus('loading');
 
       try {
         const modulesToFetch =
@@ -234,9 +213,21 @@ const ScanDashboard = ({
     [filterModule]
   );
 
+  const debouncedRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => {
+      fetchAllScans({ silent: true });
+    }, 500);
+  }, [fetchAllScans]);
+
   useEffect(() => {
     fetchAllScans();
-    return () => fetchAbortRef.current?.abort();
+    return () => {
+      if (fetchAbortRef.current) fetchAbortRef.current.abort();
+      if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+    };
   }, [fetchAllScans]);
 
   useEffect(() => {
@@ -291,14 +282,14 @@ const ScanDashboard = ({
 
       if (success) {
         handleCloseAdd();
-        setTimeout(() => fetchAllScans({ silent: true }), 300);
+        debouncedRefresh();
       }
     } catch (err) {
       console.error('Save error:', err);
     } finally {
       isSavingRef.current = false;
     }
-  }, [selectedProject, fetchAllScans, handleCloseAdd]);
+  }, [selectedProject, debouncedRefresh, handleCloseAdd]);
 
   const handleRemoveScan = useCallback(async (scanId, moduleId) => {
     const module  = getModuleById(moduleId);
@@ -310,12 +301,12 @@ const ScanDashboard = ({
     try {
       const res  = await fetch(`${apiBase}?id=${scanId}`, { method: 'DELETE' });
       const data = await res.json();
-      if (!data.success) fetchAllScans({ silent: true });
+      if (!data.success) debouncedRefresh();
     } catch (err) {
       console.error('Remove error:', err);
-      fetchAllScans({ silent: true });
+      debouncedRefresh();
     }
-  }, [fetchAllScans]);
+  }, [debouncedRefresh]);
 
   const handleEditScan = useCallback((scan) => {
     if (isEditOpenRef.current) return;
@@ -344,12 +335,12 @@ const ScanDashboard = ({
       const data = await res.json();
       if (data.success) {
         handleCloseEdit();
-        fetchAllScans({ silent: true });
+        debouncedRefresh();
       }
     } catch (err) {
       console.error('Update error:', err);
     }
-  }, [editingScan, fetchAllScans, handleCloseEdit]);
+  }, [editingScan, debouncedRefresh, handleCloseEdit]);
 
   // ─── Render helpers ───────────────────────────────────────────────────────
   const renderAddModal = () => {
@@ -391,9 +382,12 @@ const ScanDashboard = ({
     [runningScans, newScanIds]
   );
 
+  // No skeleton - just show content or empty state
+  const showEmpty = !isLoading && annotatedRunningScans.length === 0;
+
   // ─── JSX ──────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full bg-black text-white font-sans">
+    <div className="w-full bg-black text-white font-['Poppins']">
       <div
         className="pointer-events-none fixed inset-0 z-0 opacity-[0.015]"
         style={{
@@ -417,10 +411,10 @@ const ScanDashboard = ({
             </div>
 
             <div>
-              <h1 className="font-sans text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.06em]">
+              <h1 className="font-['Poppins'] text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.06em]">
                 Scan Dashboard
               </h1>
-              <p className="text-xs font-sans text-white/35 uppercase tracking-[0.14em] mt-1">
+              <p className="text-xs font-['Poppins'] text-white/35 uppercase tracking-[0.14em] mt-1">
                 Filter:{' '}
                 <span className="text-[#00E5FF]/80">{filterLabel}</span>
               </p>
@@ -431,10 +425,10 @@ const ScanDashboard = ({
             <button
               onClick={() => fetchAllScans({ silent: true })}
               disabled={isLoading || isRefreshing}
-              className="group flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-sans uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed backdrop-blur-xl"
+              className="group flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-['Poppins'] uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed backdrop-blur-xl"
             >
               <svg
-                className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180"
+                className={`w-4 h-4 transition-transform duration-500 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`}
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -446,7 +440,7 @@ const ScanDashboard = ({
             <div className="relative" ref={filterDropdownRef}>
               <button
                 onClick={() => setShowFilterDropdown((v) => !v)}
-                className="flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-sans uppercase tracking-[0.1em] backdrop-blur-xl"
+                className="flex items-center gap-2 px-5 py-2.5 border border-white/[0.08] rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-all duration-200 text-xs font-['Poppins'] uppercase tracking-[0.1em] backdrop-blur-xl"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -462,16 +456,16 @@ const ScanDashboard = ({
               </button>
 
               {showFilterDropdown && (
-                <div className="absolute right-0 mt-2 w-64 glass-card rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden backdrop-blur-xl">
+                <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden border border-white/10 bg-black/95 backdrop-blur-xl">
                   <div className="px-4 py-3 border-b border-white/[0.08]">
-                    <span className="text-xs font-sans text-white/40 uppercase tracking-[0.14em]">Filter by module</span>
+                    <span className="text-xs font-['Poppins'] text-white/40 uppercase tracking-[0.14em]">Filter by module</span>
                   </div>
                   <div className="p-2">
                     {[{ id: 'all', name: 'All Modules' }, ...ALL_MODULES].map((m) => (
                       <button
                         key={m.id}
                         onClick={() => { setFilterModule(m.id); setShowFilterDropdown(false); }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors text-xs font-sans uppercase tracking-[0.08em] rounded-lg ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors text-xs font-['Poppins'] uppercase tracking-[0.08em] rounded-lg ${
                           filterModule === m.id
                             ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30'
                             : 'text-white/60 hover:bg-[#00E5FF]/5 hover:text-white/90'
@@ -501,9 +495,9 @@ const ScanDashboard = ({
 
         {/* ══ RUNNING SCANS ════════════════════════════════════════════════════ */}
         <section style={{ minHeight: '110px' }}>
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : annotatedRunningScans.length > 0 ? (
+          {showEmpty ? (
+            <EmptyState />
+          ) : (
             <div className="space-y-3">
               {annotatedRunningScans.map((scan) => (
                 <div key={scan.id}>
@@ -520,8 +514,6 @@ const ScanDashboard = ({
                 </div>
               ))}
             </div>
-          ) : (
-            <EmptyState />
           )}
         </section>
 
@@ -550,7 +542,7 @@ const ScanDashboard = ({
         <section>
           <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
 
-          <div className="glass-card border-t-0 rounded-b-2xl px-6 py-5 backdrop-blur-xl">
+          <div className="border border-white/10 rounded-b-2xl px-6 py-5 backdrop-blur-xl bg-black/40">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
               <div className="flex items-center gap-7">
                 <StatBadge label="Total Scans" value={stats.total}     accent="#00E5FF" />
@@ -558,7 +550,7 @@ const ScanDashboard = ({
                 <StatBadge label="Active Now"  value={stats.activeNow} accent="#2DD4BF" />
               </div>
 
-              <div className="flex items-center gap-2 text-white/25 text-[11px] font-sans uppercase tracking-[0.12em]">
+              <div className="flex items-center gap-2 text-white/25 text-[11px] font-['Poppins'] uppercase tracking-[0.12em]">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

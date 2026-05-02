@@ -34,22 +34,22 @@ const UserMenu = ({ onLogout }) => {
 
   return (
     <div className="relative z-[9999]" ref={menuRef}>
-      {/* User Menu Button - Tactical Style */}
+      {/* User Menu Button - Glass-morphism style */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 pl-2 pr-3 border border-white/10 hover:border-[#00E5FF]/50 transition-all"
+        className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00E5FF]/50 hover:bg-white/[0.05] transition-all duration-300 group"
       >
-        {/* Avatar - Tactical square instead of circle */}
-        <div className="w-7 h-7 border border-[#00E5FF]/30 flex items-center justify-center">
-          <span className="text-[#00E5FF] font-mono text-xs font-bold uppercase tracking-[0.08em]">
+        {/* Avatar - Rounded with cyan glow */}
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#00E5FF]/20 to-[#2DD4BF]/20 border border-[#00E5FF]/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+          <span className="text-[#00E5FF] font-bold text-xs uppercase tracking-wider">
             {userInitial}
           </span>
         </div>
-        <span className="hidden lg:block text-white/70 text-[10px] font-sans uppercase tracking-[0.08em] max-w-[100px] truncate">
+        <span className="hidden lg:block text-white/70 text-xs font-medium max-w-[100px] truncate">
           {user?.firstName || user?.email?.split('@')[0]}
         </span>
         <svg 
-          className={`w-3 h-3 text-white/40 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-3 h-3 text-white/40 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -58,29 +58,35 @@ const UserMenu = ({ onLogout }) => {
         </svg>
       </button>
 
-      {/* Dropdown Menu - Tactical Style */}
+      {/* Dropdown Menu - Glass-morphism style */}
       {isOpen && (
         <>
           <div className="fixed inset-0 z-[9997]" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-64 glass-card rounded-xl shadow-2xl shadow-[#00E5FF]/10 z-[10000] overflow-hidden">
+          <div className="absolute right-0 mt-2 w-72 glass-card rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.6)] border border-white/10 z-[10000] overflow-hidden animate-scaleUp">
             
-            {/* Corner brackets */}
-            <div className="absolute top-1 left-1 w-4 h-4 border-t border-l border-[#00E5FF]/30" />
-            <div className="absolute top-1 right-1 w-4 h-4 border-t border-r border-[#00E5FF]/30" />
-            <div className="absolute bottom-1 left-1 w-4 h-4 border-b border-l border-[#00E5FF]/30" />
-            <div className="absolute bottom-1 right-1 w-4 h-4 border-b border-r border-[#00E5FF]/30" />
+            {/* Animated border beam */}
+            <div className="border-beam opacity-30" />
             
             {/* User Info Section */}
-            <div className="p-4 border-b border-white/10">
-              <p className="text-white font-sans text-xs font-bold uppercase tracking-[0.08em]">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-white/40 text-[9px] font-sans uppercase tracking-[0.08em] mt-0.5 truncate">
-                {user?.email}
-              </p>
-              <div className="mt-2 inline-block">
-                <span className="text-[#00E5FF] text-[8px] font-sans uppercase tracking-[0.12em] border border-[#00E5FF]/30 px-2 py-0.5">
-                  {user?.role || 'USER'}
+            <div className="p-4 border-b border-white/10 bg-white/[0.02]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#00E5FF]/20 to-[#2DD4BF]/20 border border-[#00E5FF]/30 flex items-center justify-center">
+                  <span className="text-[#00E5FF] font-bold text-base uppercase">
+                    {userInitial}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-white/40 text-xs truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+              <div className="inline-flex">
+                <span className="text-[#00E5FF] text-[9px] font-bold uppercase tracking-wider bg-[#00E5FF]/10 px-2 py-1 rounded-md border border-[#00E5FF]/20">
+                  {user?.role || 'OPERATOR'}
                 </span>
               </div>
             </div>
@@ -90,13 +96,15 @@ const UserMenu = ({ onLogout }) => {
               {/* Settings Button */}
               <button
                 onClick={openSettings}
-                className="w-full px-3 py-2 text-left text-white/50 hover:text-[#00E5FF] hover:bg-white/5 transition-all flex items-center gap-2 group"
+                className="w-full px-3 py-2.5 rounded-xl text-left text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center gap-3 group"
               >
-                <svg className="w-3.5 h-3.5 text-white/30 group-hover:text-[#00E5FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-[10px] font-sans uppercase tracking-[0.08em]">Settings</span>
+                <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-[#00E5FF]/10 transition-colors">
+                  <svg className="w-3.5 h-3.5 text-white/40 group-hover:text-[#00E5FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium">Settings</span>
               </button>
 
               {/* Divider */}
@@ -105,17 +113,58 @@ const UserMenu = ({ onLogout }) => {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="w-full px-3 py-2 text-left text-white/50 hover:text-[#f87171] hover:bg-[#f87171]/10 transition-all flex items-center gap-2 group"
+                className="w-full px-3 py-2.5 rounded-xl text-left text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 flex items-center gap-3 group"
               >
-                <svg className="w-3.5 h-3.5 text-white/30 group-hover:text-[#f87171] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="text-[10px] font-sans uppercase tracking-[0.08em]">Logout</span>
+                <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-red-500/10 transition-colors">
+                  <svg className="w-3.5 h-3.5 text-white/40 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium">Logout</span>
               </button>
             </div>
           </div>
         </>
       )}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes scaleUp {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        
+        .animate-scaleUp {
+          animation: scaleUp 0.2s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+        }
+        
+        .glass-card {
+          background: linear-gradient(135deg, rgba(10, 10, 10, 0.95), rgba(5, 5, 5, 0.98));
+          backdrop-filter: blur(10px);
+        }
+        
+        .border-beam {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.1), transparent);
+          animation: beam 3s infinite;
+          pointer-events: none;
+        }
+        
+        @keyframes beam {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      `}</style>
     </div>
   );
 };

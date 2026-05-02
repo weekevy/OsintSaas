@@ -41,35 +41,35 @@ const DashboardHome = ({
         <div className="lg:col-span-2 flex flex-col gap-6 min-w-0">
 
           {/* Quick Analysis card */}
-          <div className="glass-card rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 border-white/[0.08] hover:border-[#00E5FF]/30">
-            {/* Border Beam - static since no animation */}
-            <div className="border-beam" style={{ opacity: 0.5 }} />
+<div className="glass-card rounded-2xl p-4 sm:p-6 relative overflow-hidden group transition-all duration-300 border-white/[0.08] hover:border-[#00E5FF]/30">
+  {/* Border Beam - static since no animation */}
+  <div className="border-beam" style={{ opacity: 0.5 }} />
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#00E5FF] tracking-[0.15em] uppercase mb-1">
-                    Intelligence Engine
-                  </div>
-                  <div className="text-xl font-black text-white tracking-tight uppercase">
-                    New Investigation
-                  </div>
-                </div>
-              </div>
+  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
+    <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center flex-shrink-0">
+        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <div className="text-left">
+        <div className="text-[10px] sm:text-xs font-bold text-[#00E5FF] tracking-[0.15em] uppercase mb-0.5 sm:mb-1">
+          intelligence engine
+        </div>
+        <div className="text-base sm:text-xl font-black text-white tracking-tight uppercase">
+          new investigation
+        </div>
+      </div>
+    </div>
 
-              <button
-                onClick={onAnalyzeClick}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-black font-black text-xs tracking-[0.1em] rounded-xl hover:bg-[#00E5FF] hover:text-black transition-all duration-300 uppercase shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-              >
-                Launch Scanner
-              </button>
-            </div>
-          </div>
+    <button
+      onClick={onAnalyzeClick}
+      className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-black font-black text-[10px] sm:text-xs tracking-[0.1em] rounded-xl hover:bg-[#00E5FF] hover:text-black transition-all duration-300 uppercase shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+    >
+      launch scanner
+    </button>
+  </div>
+</div>
 
           {/* Current Projects */}
           <CurrentProjects

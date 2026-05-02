@@ -22,7 +22,6 @@ const Welcome = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
-  // REMOVED: const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -50,8 +49,6 @@ const Welcome = () => {
     setHasAnimated(true);
   }, []);
 
-  // REMOVED: mouse position tracker useEffect
-
   const scrollToSection = (sectionRef, path) => {
     navigate(path, { replace: true });
     setTimeout(() => {
@@ -68,14 +65,23 @@ const Welcome = () => {
     { name: "Answers", path: "/faq", ref: faqRef }
   ];
 
-  const switchToLogin = () => {
+  // FIXED: Correctly named functions
+  const handleSwitchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
     setIsRegisterModalOpen(false);
     setIsLoginModalOpen(true);
   };
 
-  const switchToRegister = () => {
+  const handleCloseLoginModal = () => {
     setIsLoginModalOpen(false);
-    setIsRegisterModalOpen(true);
+  };
+
+  const handleCloseRegisterModal = () => {
+    setIsRegisterModalOpen(false);
   };
 
   return (
@@ -120,16 +126,17 @@ const Welcome = () => {
       
       <Footer />
 
+      {/* FIXED: Correct props passed to modals */}
       <LoginModal
         isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSwitchToRegister={switchToLogin}
+        onClose={handleCloseLoginModal}
+        onSwitchToRegister={handleSwitchToRegister}
       />
 
       <RegisterModal
         isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-        onSwitchToLogin={switchToRegister}
+        onClose={handleCloseRegisterModal}
+        onSwitchToLogin={handleSwitchToLogin}
       />
 
       <ChatAssistant />
