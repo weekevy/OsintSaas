@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { investigationModules as defaultModules, openSourcePlatforms as defaultPlatforms } from '../utils/constants';
 import { getIcon } from '../utils/icons';
 
 // ==================== FancyCheckbox Component - Tactical ====================
-export const FancyCheckbox = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-3 p-3 bg-white/5 border border-white/[0.08] cursor-pointer hover:border-[#00E5FF]/30 transition-all group backdrop-blur-xl">
+export const FancyCheckbox = memo(({ label, checked, onChange }) => (
+  <label className="flex items-center gap-3 p-3 bg-white/5 border border-white/[0.08] cursor-pointer hover:border-[#00E5FF]/30 transition-colors group md:backdrop-blur-sm">
     <div className="relative">
       <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
       <div className={`w-4 h-4 border transition-all flex items-center justify-center ${
@@ -19,7 +19,9 @@ export const FancyCheckbox = ({ label, checked, onChange }) => (
     </div>
     <span className="text-white/70 text-[10px] font-sans uppercase tracking-[0.08em] group-hover:text-white transition-colors">{label}</span>
   </label>
-);
+));
+
+FancyCheckbox.displayName = 'FancyCheckbox';
 
 // ==================== Custom Module Icon Component - Larger & Clearer ====================
 const ModuleIcon = ({ type }) => {
@@ -142,12 +144,12 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
             <button
               key={module.id}
               onClick={() => handleModuleClick(module, selectedTarget)}
-              className="group relative glass-card hover:border-[#00E5FF]/30 transition-all duration-300 text-left overflow-hidden p-5"
+              className="group relative glass-card hover:border-[#00E5FF]/30 transition-colors duration-200 text-left overflow-hidden p-5"
             >
               <div className="absolute top-0 left-0 w-0 h-0 border-t-[4px] border-r-[4px] border-t-[#00E5FF]/30 border-r-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="relative flex items-start gap-4">
-                <div className="w-14 h-14 border border-[#00E5FF]/30 flex items-center justify-center transition-all duration-300 group-hover:border-[#00E5FF] group-hover:scale-110 bg-gradient-to-br from-[#00E5FF]/5 to-transparent rounded-md">
+                <div className="w-14 h-14 border border-[#00E5FF]/30 flex items-center justify-center transition-colors duration-200 group-hover:border-[#00E5FF] md:group-hover:scale-105 bg-gradient-to-br from-[#00E5FF]/5 to-transparent rounded-md">
                   <ModuleIcon type={module.id} />
                 </div>
                 <div className="flex-1">
@@ -180,9 +182,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
             <button
               key={platform.id}
               onClick={() => handleModuleClick(platform, selectedTarget)}
-              className="group relative glass-card hover:border-[#00E5FF]/30 transition-all duration-300 text-left flex items-center gap-3 p-3"
+              className="group relative glass-card hover:border-[#00E5FF]/30 transition-colors duration-200 text-left flex items-center gap-3 p-3"
             >
-              <div className="w-10 h-10 border border-[#00E5FF]/30 flex items-center justify-center transition-all duration-300 group-hover:border-[#00E5FF] group-hover:scale-110 bg-gradient-to-br from-[#00E5FF]/5 to-transparent rounded-md">
+              <div className="w-10 h-10 border border-[#00E5FF]/30 flex items-center justify-center transition-colors duration-200 group-hover:border-[#00E5FF] md:group-hover:scale-105 bg-gradient-to-br from-[#00E5FF]/5 to-transparent rounded-md">
                 {getIcon(platform.icon, "w-5 h-5 text-[#00E5FF]")}
               </div>
               <div>

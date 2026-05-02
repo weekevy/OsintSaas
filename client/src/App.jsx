@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoadingScreen from './components/LoadingScreen';
 import Welcom from './components/Welcom';
 import Home from './components/Home';
+import ToastContainer from './components/common/Toast';
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -13,27 +14,30 @@ const AppRoutes = () => {
   }
   
   return (
-    <Routes>
-      <Route 
-        path="/" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/home" replace /> : 
-            <Welcom />
-        } 
-      />
-      
-      <Route 
-        path="/home" 
-        element={
-          isAuthenticated ? 
-            <Home /> : 
-            <Navigate to="/" replace />
-        } 
-      />
-      
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <ToastContainer />
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? 
+              <Navigate to="/home" replace /> : 
+              <Welcom />
+          } 
+        />
+        
+        <Route 
+          path="/home" 
+          element={
+            isAuthenticated ? 
+              <Home /> : 
+              <Navigate to="/" replace />
+          } 
+        />
+        
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 };
 

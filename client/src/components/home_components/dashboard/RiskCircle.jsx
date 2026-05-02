@@ -75,10 +75,10 @@ const RiskCircle = ({
   return (
     <div className="relative">
       {/* Main card */}
-      <div className="relative rounded-2xl overflow-hidden font-['Poppins'] h-full min-h-[480px] flex flex-col border border-white/10">
+      <div className="relative rounded-3xl overflow-hidden font-['Poppins'] h-full min-h-[480px] flex flex-col border border-white/[0.09] shadow-xl shadow-black/40 ring-1 ring-white/[0.04]">
         {/* Glass background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#0a0a0a] to-[#050505] backdrop-blur-xl pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0c0e12]/95 via-[#080a0d] to-[#050608] pointer-events-none max-md:backdrop-blur-none md:backdrop-blur-md" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/6 via-transparent to-[#2DD4BF]/5 pointer-events-none" />
         
         {/* Grid texture */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.015]" 
@@ -103,7 +103,7 @@ const RiskCircle = ({
             </div>
             {hasData && (
               <div 
-                className="px-3 py-1.5 rounded-full border text-[10px] font-black tracking-widest uppercase shadow-sm transition-all duration-300 font-['Poppins']"
+                className="px-3 py-1.5 rounded-full border text-[10px] font-black tracking-widest uppercase shadow-sm font-['Poppins'] md:transition-colors md:duration-200"
                 style={{ 
                   color: cfg.color, 
                   borderColor: cfg.border, 
@@ -112,7 +112,7 @@ const RiskCircle = ({
                 }}
               >
                 <span className="relative flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: cfg.color }} />
+                  <span className="w-1.5 h-1.5 rounded-full md:animate-pulse" style={{ background: cfg.color }} />
                   {cfg.label}
                 </span>
               </div>
@@ -143,7 +143,7 @@ const RiskCircle = ({
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={hasData ? offset : circumference}
-                className="transition-all duration-700 ease-out"
+                className="max-md:transition-none md:transition-all md:duration-500"
                 style={{ filter: hasData ? `drop-shadow(0 0 8px ${cfg.color})` : 'none' }}
               />
             </svg>
@@ -153,7 +153,7 @@ const RiskCircle = ({
               {/* Inner glow ring */}
               {hasData && (
                 <div 
-                  className="absolute w-[100px] h-[100px] rounded-full blur-2xl opacity-20 -z-10"
+                  className="absolute w-[100px] h-[100px] rounded-full opacity-15 -z-10 max-md:blur-md md:blur-2xl md:opacity-20"
                   style={{ background: cfg.color }}
                 />
               )}
@@ -174,7 +174,7 @@ const RiskCircle = ({
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
               <div 
-                className="h-full rounded-full transition-all duration-700 ease-out"
+                className="h-full rounded-full max-md:transition-none md:transition-[width] md:duration-300"
                 style={{ 
                   width: hasData ? `${displayScore}%` : '0%',
                   background: hasData ? cfg.color : 'transparent'

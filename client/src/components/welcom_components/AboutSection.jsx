@@ -76,29 +76,29 @@ const AboutSection = forwardRef((props, ref) => {
       id="about" 
       className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-black"
     >
-      {/* Simplified background - removed heavy gradients */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-30">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-[#00E5FF]/5 blur-[150px]" />
+      {/* Simplified background - reduced blur */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-20">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[200px] sm:w-[600px] sm:h-[400px] rounded-full bg-[#00E5FF]/5 blur-[40px] sm:blur-[80px]" />
       </div>
 
       <div className="relative w-full max-w-7xl mx-auto z-10">
         <div className="text-center mb-16 sm:mb-24">
           <div 
-            className={`inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10 transition-all duration-700 ${
+            className={`inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10 transition-all duration-500 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
             }`}
           >
             <span className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Operational Reach</span>
           </div>
           <h2 
-            className={`text-3xl sm:text-5xl md:text-7xl font-black text-white mb-6 sm:mb-8 transition-all duration-700 delay-100 ${
+            className={`text-3xl sm:text-5xl md:text-7xl font-black text-white mb-6 sm:mb-8 transition-all duration-500 delay-100 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
             Built for <span className="bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] bg-clip-text text-transparent">The Global Era</span>
           </h2>
           <p 
-            className={`text-gray-400 text-base sm:text-xl max-w-2xl mx-auto font-medium transition-all duration-700 delay-200 ${
+            className={`text-gray-400 text-base sm:text-xl max-w-2xl mx-auto font-medium transition-all duration-500 delay-200 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
@@ -106,7 +106,7 @@ const AboutSection = forwardRef((props, ref) => {
           </p>
         </div>
 
-        {/* Stats Grid - Simplified cards */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-24">
           {[
             { value: '50K+', label: 'Active Operators' },
@@ -116,7 +116,7 @@ const AboutSection = forwardRef((props, ref) => {
           ].map((stat, i) => (
             <div 
               key={i} 
-              className={`group bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-center border border-white/10 transition-all duration-500 hover:border-[#00E5FF]/30 hover:scale-105 ${
+              className={`group bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-center border border-white/10 transition-all duration-500 hover:border-[#00E5FF]/20 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
               }`}
               style={{ transitionDelay: `${300 + i * 100}ms` }}
@@ -129,7 +129,7 @@ const AboutSection = forwardRef((props, ref) => {
           ))}
         </div>
 
-        {/* Feature Showcase - Simplified */}
+        {/* Feature Showcase */}
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           {[
             { 
@@ -155,12 +155,12 @@ const AboutSection = forwardRef((props, ref) => {
           ].map((feature, i) => (
             <div 
               key={i} 
-              className={`group bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-start text-left border border-white/10 transition-all duration-500 hover:border-[#00E5FF]/30 hover:scale-[1.02] ${
+              className={`group bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-start text-left border border-white/10 transition-all duration-500 hover:border-[#00E5FF]/20 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
               }`}
               style={{ transitionDelay: `${500 + i * 100}ms` }}
             >
-              <div className="mb-5 sm:mb-8 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#00E5FF] group-hover:scale-110 transition-all duration-300">
+              <div className="mb-5 sm:mb-8 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#00E5FF] transition-all duration-200">
                 <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {feature.icon}
                 </svg>

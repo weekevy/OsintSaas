@@ -72,7 +72,7 @@ const EmptyState = () => (
 const StatBadge = ({ label, value, accent, pulse }) => (
   <div className="flex items-center gap-4">
     <div
-      className="w-12 h-12 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0 backdrop-blur-xl"
+      className="w-12 h-12 border border-white/[0.08] rounded-xl flex items-center justify-center flex-shrink-0 md:backdrop-blur-md"
       style={{ background: `${accent}08` }}
     >
       <svg className="w-5 h-5" style={{ color: accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">

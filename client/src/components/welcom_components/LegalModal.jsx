@@ -44,15 +44,15 @@ const LegalModal = ({ isOpen, content, onClose }) => {
   const data = getContent();
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity duration-300 animate-fadeIn"
         onClick={onClose}
       />
       
       <div 
         ref={modalRef} 
-        className="relative w-full max-w-xl glass-card rounded-[2.5rem] overflow-hidden shadow-2xl"
+        className="relative w-full max-w-xl glass-card rounded-[2.5rem] overflow-hidden shadow-2xl animate-scaleIn"
       >
         <div className="border-beam" />
         

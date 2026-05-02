@@ -5,6 +5,82 @@
 
 @theme {
    --font-rubik: "Rubik", sans-serif;
+   --font-sans: "Poppins", "Inter", sans-serif;
+}
+
+/* ===== Phase 1: Visual Depth (Lightweight) ===== */
+.mesh-bg {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(0, 229, 255, 0.03) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, rgba(45, 212, 191, 0.03) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, rgba(0, 229, 255, 0.03) 0, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* App shell (/home): glass panels work without Welcome-only GlobalStyles */
+.glass-card {
+  background: rgba(12, 14, 18, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transform: translateZ(0);
+}
+
+@media (max-width: 768px) {
+  /* Backdrop blur is expensive on mobile GPUs — use solid panels */
+  .glass-card {
+    background: rgba(14, 16, 20, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dashboard page — solid background (no smoky / cloudy gradients) */
+.dashboard-ambient {
+  position: relative;
+  background-color: #050608;
+}
+
+.glass-reflective {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-reflective::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transition: left 0.7s ease-in-out;
+}
+
+.glass-reflective:hover::before {
+  left: 100%;
+}
+
+.btn-haptic {
+  transition: transform 0.1s ease;
+}
+
+.btn-haptic:active {
+  transform: scale(0.97);
 }
 /* View Transitions */
 ::view-transition-old(root),
@@ -233,16 +309,25 @@ details[open] summary {
 /* ===== Glass Morphism Helpers ===== */
 .glass {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateZ(0);
 }
 
 .glass-dark {
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transform: translateZ(0);
+}
+
+@media (max-width: 768px) {
+  .glass, .glass-dark {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
 }
 
 /* ===== Text Gradients ===== */

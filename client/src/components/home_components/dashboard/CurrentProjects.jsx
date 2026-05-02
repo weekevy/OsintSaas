@@ -222,7 +222,7 @@ const CurrentModules = ({
       crypto: <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 sm:w-4 sm:h-4"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>,
     };
     return (
-      <div className={`w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-lg ${tc.bg} border ${tc.border} flex items-center justify-center flex-shrink-0 ${tc.color} transition-all group-hover:scale-105`}>
+      <div className={`w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-lg ${tc.bg} border ${tc.border} flex items-center justify-center flex-shrink-0 ${tc.color} transition-colors md:transition-transform md:duration-200 md:group-hover:scale-105`}>
         {iconMap[type] || iconMap.job}
       </div>
     );
@@ -231,7 +231,7 @@ const CurrentModules = ({
   const StatusBadge = useCallback(({ status }) => {
     const cfg = getStatusConfig(status);
     const icons = {
-      running:   <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current animate-pulse inline-block flex-shrink-0" />,
+      running:   <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current md:animate-pulse inline-block flex-shrink-0" />,
       queued:    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current inline-block flex-shrink-0" />,
       pending:   <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current inline-block flex-shrink-0" />,
       completed: <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current inline-block flex-shrink-0" />,
@@ -285,26 +285,23 @@ const CurrentModules = ({
         onClick={handleClick}
         onMouseEnter={() => setHoveredModuleId(module.id)}
         onMouseLeave={() => setHoveredModuleId(null)}
-        className={`group rounded-xl border transition-all duration-300 cursor-pointer flex gap-2 sm:gap-3 items-start relative overflow-hidden p-2 sm:p-3 ${
+        className={`group rounded-xl border cursor-pointer flex gap-2 sm:gap-3 items-start relative overflow-hidden p-2 sm:p-3 md:transition-colors md:duration-200 ${
           isSelected 
-            ? 'border-[#00E5FF]/50 bg-gradient-to-br from-[#00E5FF]/15 via-[#00E5FF]/5 to-transparent shadow-[0_0_20px_rgba(0,229,255,0.1)]' 
+            ? 'border-[#00E5FF]/50 bg-gradient-to-br from-[#00E5FF]/15 via-[#00E5FF]/5 to-transparent md:shadow-[0_0_20px_rgba(0,229,255,0.08)]' 
             : isHovered ? 'border-white/20 bg-white/10' : 'border-white/5 bg-white/[0.02]'
         }`}
       >
-        {/* Animated border beam on hover */}
-        {isHovered && <div className="absolute inset-0 overflow-hidden pointer-events-none"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent -translate-x-full animate-beam" /></div>}
-        
         <ModuleIcon type={module.type} />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-1 sm:gap-2 mb-0.5 sm:mb-1">
-            <span className={`text-[11px] sm:text-sm font-bold tracking-wide truncate transition-colors font-['Poppins'] ${isSelected ? 'text-[#00E5FF]' : 'text-white'}`}>
+            <span className={`text-[11px] sm:text-sm font-bold tracking-wide truncate font-['Poppins'] ${isSelected ? 'text-[#00E5FF]' : 'text-white'}`}>
               {module.name}
             </span>
             <StatusBadge status={module.status} />
           </div>
 
-          <p className={`text-[8px] sm:text-[11px] truncate mb-1 sm:mb-2 transition-colors font-['Poppins'] ${isSelected ? tc.color : 'text-white/40'}`}>
+          <p className={`text-[8px] sm:text-[11px] truncate mb-1 sm:mb-2 font-['Poppins'] ${isSelected ? tc.color : 'text-white/40'}`}>
             {module.target}
           </p>
 
@@ -316,7 +313,7 @@ const CurrentModules = ({
               </div>
               <div className="h-[2px] sm:h-[3px] bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  className="h-full rounded-full md:transition-[width] md:duration-300"
                   style={{ 
                     width: `${module.progress}%`,
                     backgroundColor: getProgressColor(module.progress)
@@ -344,7 +341,7 @@ const CurrentModules = ({
         </div>
         
         {/* Arrow indicator */}
-        <div className={`absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 transition-all duration-300 ${isSelected ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}>
+        <div className={`absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 md:transition-opacity md:duration-200 ${isSelected ? 'opacity-100' : 'opacity-0 md:translate-x-1'}`}>
           <svg className="w-2 h-2 sm:w-3 sm:h-3 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -368,18 +365,18 @@ const CurrentModules = ({
   const hasActiveModules = modules.length > 0;
 
   return (
-    <div className={`relative rounded-xl font-['Poppins'] w-full transition-all duration-300 border border-white/10 shadow-[1px_1px_5px_-2px_rgba(0,229,255,0.04)]`}     
+    <div className={`relative rounded-2xl font-['Poppins'] w-full transition-all duration-300 border border-white/[0.09] shadow-xl shadow-black/30 ring-1 ring-white/[0.04]`}     
          style={{ height: '385px', display: 'flex', flexDirection: 'column' }}> 
       {/* Glass background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#0a0a0a] to-[#050505] backdrop-blur-xl pointer-events-none rounded-xl" />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/5 via-transparent to-transparent pointer-events-none rounded-xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0c0e12]/95 via-[#080a0d] to-[#050608] pointer-events-none rounded-2xl max-md:backdrop-blur-none md:backdrop-blur-md" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/6 via-transparent to-transparent pointer-events-none rounded-2xl" />
       
       {/* Grid texture */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.02] rounded-xl" 
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02] rounded-2xl" 
         style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #00E5FF 1px, transparent 0)', backgroundSize: '30px 30px' }} />
 
       {/* Animated border glow */}
-      <div className="absolute -inset-[1px] bg-gradient-to-r from-[#00E5FF]/20 via-[#2DD4BF]/20 to-[#00E5FF]/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute -inset-[1px] bg-gradient-to-r from-[#00E5FF]/20 via-[#2DD4BF]/20 to-[#00E5FF]/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
       <div className="relative z-10 flex flex-col" style={{ height: '100%', overflow: 'hidden' }}>
         {/* Header - Fixed */}
@@ -397,7 +394,7 @@ const CurrentModules = ({
           </div>
           <div className="flex gap-1 sm:gap-1.5 items-center">
             <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-[4px_10px] rounded bg-[#00E5FF]/15 border border-[#00E5FF]/30 mr-0.5 sm:mr-1">
-              <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+              <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#00E5FF] md:animate-pulse" />
               <span className="text-[6px] sm:text-[7px] text-[#00E5FF] tracking-[0.12em] font-bold font-['Poppins']">LIVE</span>
             </div>
             <button onClick={forceRefresh} disabled={loading} className="w-6 h-6 sm:w-[30px] sm:h-[30px] border border-white/15 rounded-lg bg-white/5 text-white/40 flex items-center justify-center transition-all hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10">
@@ -417,7 +414,7 @@ const CurrentModules = ({
         {/* Stats Grid - Fixed with responsive text */}
         <div className="grid grid-cols-4 p-2 sm:p-[10px_14px] gap-1 sm:gap-[7px] border-b border-white/10 flex-shrink-0 bg-white/[0.005]">
           {statCells.map(s => (
-            <div key={s.label} className={`rounded-lg p-1 sm:p-[8px_6px] text-center ${s.bg} border ${s.border} transition-all hover:scale-[1.02]`}>
+            <div key={s.label} className={`rounded-lg p-1 sm:p-[8px_6px] text-center ${s.bg} border ${s.border} md:transition-transform md:hover:scale-[1.02]`}>
               <div className={`text-base sm:text-2xl font-bold ${s.color} leading-none tabular-nums font-['Poppins']`}>{s.value}</div>
               <div className="text-[6px] sm:text-[8px] text-white/40 tracking-wider mt-0.5 sm:mt-1 font-bold font-['Poppins']">{s.label}</div>
             </div>
@@ -451,15 +448,7 @@ const CurrentModules = ({
         </div>
       </div>
 
-      {/* CSS Animations */}
       <style jsx>{`
-        @keyframes beam {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-beam {
-          animation: beam 1.5s ease-in-out infinite;
-        }
         .scrollbar-custom::-webkit-scrollbar {
           width: 3px;
         }

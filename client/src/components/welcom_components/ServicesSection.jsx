@@ -71,51 +71,50 @@ const ServicesSection = forwardRef((props, ref) => {
   ];
 
   return (
-    <section ref={ref} id="services" className="relative py-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-black">
+    <section ref={ref} id="services" className="relative py-24 sm:py-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-black">
       
-      {/* Subtle background accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[50vh] bg-[#00E5FF]/3 blur-[150px] rounded-full pointer-events-none" />
+      {/* Subtle background accent - reduced blur */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[50vh] bg-[#00E5FF]/3 blur-[40px] sm:blur-[80px] rounded-full pointer-events-none" style={{ transform: 'translate3d(-50%, -50%, 0)' }} />
       
       <div className="relative w-full max-w-7xl mx-auto z-10">
         
-        {/* Header */}
-        <div className="text-center mb-24">
+        {/* Header - removed ping animation */}
+        <div className="text-center mb-16 sm:mb-24">
           <div 
             className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="bg-[#00E5FF] absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"></span>
-              <span className="bg-[#00E5FF] relative inline-flex rounded-full h-2 w-2"></span>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="bg-[#00E5FF] relative inline-flex rounded-full h-1.5 w-1.5"></span>
             </span>
             <span className="text-[11px] font-black tracking-widest text-white/60 uppercase">Capabilities</span>
           </div>
           
           <h2 
-            className="text-5xl md:text-7xl font-black text-white mb-8"
+            className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6 sm:mb-8"
           >
-            Surgical <span className="text-wave">Precision</span>
+            Surgical <span className="bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] bg-clip-text text-transparent">Precision</span>
           </h2>
           
           <p 
-            className="text-gray-400 text-xl max-w-2xl mx-auto font-medium"
+            className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto font-medium"
           >
             Targeted intelligence gathering across every digital vector.
           </p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cards Grid - removed hover scale effect */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {services.map((service, i) => (
             <div 
               key={i}
               className="group relative"
             >
               {/* Card */}
-              <div className="relative bg-[#0a0a0a] border border-white/8 hover:border-[#00E5FF]/30 rounded-[2.5rem] p-8 transition-all duration-300 h-full">
+              <div className="relative bg-[#0a0a0a] border border-white/8 md:hover:border-[#00E5FF]/30 rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-8 transition-colors duration-300 h-full">
                 
                 {/* Icon */}
                 <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 transition-transform duration-300 md:group-hover:scale-105"
                   style={{ 
                     background: `linear-gradient(135deg, ${service.color}15, ${service.color}05)`,
                     border: `1px solid ${service.color}30`,
@@ -126,9 +125,9 @@ const ServicesSection = forwardRef((props, ref) => {
                 </div>
                 
                 {/* Tag */}
-                <div className="mb-3">
+                <div className="mb-2 sm:mb-3">
                   <span 
-                    className="text-[10px] font-black tracking-[0.2em] uppercase px-2 py-1 rounded-lg"
+                    className="text-[9px] sm:text-[10px] font-black tracking-[0.2em] uppercase px-2 py-1 rounded-lg"
                     style={{ 
                       background: `${service.color}10`,
                       color: service.color,
@@ -140,25 +139,25 @@ const ServicesSection = forwardRef((props, ref) => {
                 </div>
                 
                 {/* Title */}
-                <h3 className="text-xl font-black text-white mb-3 tracking-tight group-hover:text-[#00E5FF] transition-colors duration-300">
+                <h3 className="text-lg sm:text-xl font-black text-white mb-2 sm:mb-3 tracking-tight md:group-hover:text-[#00E5FF] transition-colors duration-300">
                   {service.title}
                 </h3>
                 
                 {/* Description */}
-                <p className="text-gray-500 text-sm leading-relaxed mb-6 font-medium">
+                <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mb-5 sm:mb-6 font-medium">
                   {service.desc}
                 </p>
                 
-                {/* Action */}
-                <div className="flex items-center gap-2 text-xs font-black text-white/30 group-hover:text-[#00E5FF] transition-all duration-300 uppercase tracking-widest">
+                {/* Action - removed hover translation */}
+                <div className="flex items-center gap-2 text-[11px] sm:text-xs font-black text-white/30 md:group-hover:text-[#00E5FF] transition-colors duration-300 uppercase tracking-widest">
                   Explore Module 
-                  <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </div>
                 
-                {/* Corner accent on hover */}
-                <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-[#00E5FF]/0 group-hover:border-[#00E5FF]/30 rounded-tr-xl transition-all duration-300" />
+                {/* Corner accent - simplified */}
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-[#00E5FF] opacity-0 md:group-hover:opacity-20 rounded-tr-xl transition-opacity duration-300" />
               </div>
             </div>
           ))}

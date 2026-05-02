@@ -67,6 +67,18 @@ const GlobalStyles = () => {
         background-color: var(--bg-black);
         color: #FFFFFF;
         overflow-x: hidden;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      section {
+        content-visibility: auto;
+        contain-intrinsic-size: 800px;
+      }
+
+      /* Disable content-visibility for critical sections */
+      #home, #navbar, #footer {
+        content-visibility: visible;
       }
 
       h1, h2, h3, h4 {
@@ -81,16 +93,25 @@ const GlobalStyles = () => {
       /* Glassmorphism */
       .glass-card {
         background: var(--card-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         border: 1px solid var(--border-color);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        transform: translateZ(0);
       }
 
       .glass-nav {
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transform: translateZ(0);
+      }
+
+      @media (max-width: 768px) {
+        .glass-card, .glass-nav {
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+        }
       }
 
       .border-beam-container {
@@ -139,11 +160,6 @@ const GlobalStyles = () => {
       ::selection {
         background: var(--accent-glow);
         color: #FFFFFF;
-      }
-
-      /* Smooth scrolling */
-      html {
-        scroll-behavior: smooth;
       }
 
       /* Text Gradient Utilities */

@@ -132,19 +132,10 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
       id="home"
       className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-black overflow-x-hidden"
     >
-      {/* Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full bg-gradient-to-r from-[#00E5FF]/8 via-[#2DD4BF]/5 to-transparent blur-[180px]" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[400px] rounded-full bg-[#007AFF]/5 blur-[120px]" />
-        <div className="absolute inset-0 opacity-[0.015]"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #00E5FF 1px, transparent 0)', backgroundSize: '40px 40px' }}
-        />
-      </div>
-
       <div className="relative w-full max-w-[1400px] mx-auto z-10 flex flex-col items-center">
 
         {/* Badge */}
-        <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 backdrop-blur-sm transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
+        <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.08] mb-3 mt-3 backdrop-blur-sm transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
           <span className="relative flex h-2.5 w-2.5">
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00E5FF]" style={{ animation: 'blink 2s cubic-bezier(.4,0,.6,1) infinite' }} />
           </span>
@@ -156,7 +147,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           <h1 className={`font-black tracking-tight leading-[1.02] transition-all duration-700 delay-100 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}`}>
             <span
               className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent"
-              style={{ fontSize: 'clamp(2.4rem, 9.5vw, 6.5rem)' }}
+              style={{ fontSize: 'clamp(3.3rem, 9.5vw, 6.5rem)' }}
             >
               Break Down Scammers.
             </span>
@@ -223,9 +214,9 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
               </div>
 
               {/* Center orb */}
-              <div className="relative flex items-center justify-center shrink-0" style={{ width: '310px', height: '310px' }}>
+              <div className="relative flex items-center justify-center shrink-0 scale-75 sm:scale-100 transition-transform duration-700" style={{ width: '310px', height: '310px' }}>
                 {tags.map((t, i) => (
-                  <div key={i} className="absolute flex flex-col items-start px-2.5 py-1.5 rounded-lg"
+                  <div key={i} className="absolute flex flex-col items-start px-2.5 py-1.5 rounded-lg pointer-events-none"
                     style={{
                       top: t.top, left: t.left, right: t.right,
                       border: `0.5px solid ${t.color}22`,
@@ -240,7 +231,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 ))}
                 <div className="absolute flex items-center justify-center" style={{ width: '120px', height: '120px' }}>
                   {[0,1,2,3].map(i => (
-                    <div key={i} className="absolute rounded-full" style={{
+                    <div key={i} className={`absolute rounded-full ${i > 1 ? 'hidden sm:block' : ''}`} style={{
                       width: `${120 + i * 50}px`, height: `${120 + i * 50}px`,
                       border: `0.5px solid ${i % 2 === 0 ? 'rgba(0,229,255,0.22)' : 'rgba(45,212,191,0.14)'}`,
                       animation: 'ringPulse 3.2s ease-out infinite',
@@ -259,7 +250,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                     </svg>
                   </div>
                 </div>
-                <div className="absolute left-0 right-0" style={{
+                <div className="absolute left-0 right-0 pointer-events-none" style={{
                   top: '50%', height: '1px',
                   background: 'linear-gradient(to right, transparent, rgba(0,229,255,0.12), rgba(0,229,255,0.30), rgba(0,229,255,0.12), transparent)',
                   animation: 'scanLine 2.8s ease-in-out infinite',
@@ -404,31 +395,31 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
 
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes ringPulse {
-          0%   { opacity: 0;   transform: scale(0.88); }
+          0%   { opacity: 0;   transform: scale(0.88) translate3d(0,0,0); }
           25%  { opacity: 1; }
-          100% { opacity: 0;   transform: scale(1.12); }
+          100% { opacity: 0;   transform: scale(1.12) translate3d(0,0,0); }
         }
         @keyframes corePulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); }
-          50%       { box-shadow: 0 0 14px 3px rgba(0,229,255,0.13); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); transform: translate3d(0,0,0); }
+          50%       { box-shadow: 0 0 14px 3px rgba(0,229,255,0.13); transform: translate3d(0,0,0); }
         }
         @keyframes tagFloat {
-          0%, 100% { transform: translateY(0px);  opacity: 0.65; }
-          50%       { transform: translateY(-6px); opacity: 1; }
+          0%, 100% { transform: translateY(0px) translate3d(0,0,0);  opacity: 0.65; }
+          50%       { transform: translateY(-6px) translate3d(0,0,0); opacity: 1; }
         }
         @keyframes scanLine {
-          0%, 100% { opacity: 0.35; transform: scaleX(0.55); }
-          50%       { opacity: 1;   transform: scaleX(1); }
+          0%, 100% { opacity: 0.35; transform: scaleX(0.55) translate3d(0,0,0); }
+          50%       { opacity: 1;   transform: scaleX(1) translate3d(0,0,0); }
         }
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.4; }
         }
         @keyframes scrollUp {
-          0%   { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
+          0%   { transform: translateY(0) translate3d(0,0,0); }
+          100% { transform: translateY(-50%) translate3d(0,0,0); }
         }
       `}</style>
     </section>

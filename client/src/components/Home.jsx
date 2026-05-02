@@ -12,7 +12,6 @@ import {
   AnalyticsDashboard
 } from "./home_components";
 import { AccountSettings } from "./home_components/settings";
-import ProgressBar from "./home_components/common/ProgressBar";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -35,7 +34,6 @@ const Home = () => {
   const [alerts, setAlerts] = useState([]);
   const [timeRange, setTimeRange] = useState("week");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectRiskScore, setProjectRiskScore] = useState(0);
   const [projectAlerts, setProjectAlerts] = useState([]);
@@ -70,12 +68,6 @@ const Home = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [location]);
-
-  useEffect(() => {
-    setIsPageLoading(true);
-    const timer = setTimeout(() => setIsPageLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (activeTab === 'dashboard') setDashboardRefreshTrigger(prev => prev + 1);
@@ -236,11 +228,12 @@ const navItems = [
 
   return (
     <>
-      <ProgressBar isLoading={isPageLoading} />
       <div className="flex h-screen bg-[#080b0d] text-white overflow-hidden font-mono">
         <main className="flex-1 flex flex-col overflow-hidden bg-[#080b0d] w-full">
           <TopBar onMenuClick={() => setIsSidebarOpen(true)} searchInput={searchInput} onSearchChange={setSearchInput} searchType={searchType} onSearchTypeChange={setSearchType} onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} onLogout={handleLogout} alertsCount={projectAlerts.length} activeTab={activeTab} onTabChange={handleTabChange} isMobileMenuOpen={isSidebarOpen} navItems={navItems} />
-          <div className="flex-1 overflow-y-auto">{renderDashboard()}</div>
+          <div className="flex-1 overflow-y-auto scrollbar-thin max-md:pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))]">
+            {renderDashboard()}
+          </div>
         </main>
         <AccountSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </div>

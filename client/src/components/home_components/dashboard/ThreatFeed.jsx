@@ -72,21 +72,18 @@ const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
   };
 
   return (
-    <div className="glass-card p-5 flex flex-col h-full relative">
-      {/* Corner brackets */}
-      <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-[#00E5FF]/30" />
-      <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-[#00E5FF]/30" />
-      <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-[#00E5FF]/30" />
-      <div className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-[#00E5FF]/30" />
-      
+    <div className="glass-card rounded-2xl p-5 flex flex-col h-full relative border border-white/[0.07]">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="font-sans text-[11px] font-bold text-white uppercase tracking-[0.08em] flex items-center gap-2">
-          <svg className="w-3.5 h-3.5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          THREAT INTELLIGENCE
-        </h4>
-        <button onClick={handleRefresh} className="text-white/40 hover:text-[#00E5FF] transition-colors" title="Refresh feed">
+        <div>
+          <p className="text-[10px] font-semibold text-[#00E5FF]/80 tracking-[0.18em] uppercase">Signals</p>
+          <h4 className="font-sans text-sm font-semibold text-white mt-1 flex items-center gap-2">
+            <svg className="w-4 h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Threat intelligence
+          </h4>
+        </div>
+        <button type="button" onClick={handleRefresh} className="text-white/40 hover:text-[#00E5FF] transition-colors p-1 rounded-lg hover:bg-white/[0.05]" title="Refresh feed">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
@@ -96,40 +93,40 @@ const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
       <div className="space-y-2 min-h-[200px]">
         {threatFeeds.length > 0 ? (
           threatFeeds.map((feed) => (
-            <div key={feed.id} className="flex items-start gap-2 p-2 border border-white/5 hover:border-[#00E5FF]/20 transition-all group">
-              <div className={`w-1.5 h-1.5 mt-1.5 flex-shrink-0 ${getSeverityColor(feed.severity)}`} />
+            <div key={feed.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#00E5FF]/20 transition-colors group">
+              <div className={`w-2 h-2 mt-1 rounded-full flex-shrink-0 ${getSeverityColor(feed.severity)}`} />
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                  <span className="text-white text-[9px] font-sans font-bold uppercase tracking-[0.08em] group-hover:text-[#00E5FF] transition-colors">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="text-white text-xs font-semibold group-hover:text-[#00E5FF] transition-colors">
                     {feed.source}
                   </span>
-                  <span className={`text-[7px] font-sans uppercase tracking-[0.08em] ${getSeverityTextColor(feed.severity)}`}>
+                  <span className={`text-[10px] font-medium uppercase tracking-wide ${getSeverityTextColor(feed.severity)}`}>
                     {feed.severity}
                   </span>
-                  <span className="text-white/30 text-[7px] font-sans uppercase tracking-[0.08em]">• {feed.time}</span>
+                  <span className="text-white/35 text-[11px]">· {feed.time}</span>
                 </div>
-                <p className="text-white/50 text-[8px] font-sans leading-relaxed group-hover:text-white/70 transition-colors">
+                <p className="text-white/55 text-sm leading-snug group-hover:text-white/75 transition-colors">
                   {feed.threat}
                 </p>
               </div>
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center h-[200px] text-center">
-            <div className="w-12 h-12 mb-3 border border-white/10 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center justify-center h-[200px] text-center rounded-xl bg-white/[0.02] border border-white/[0.05]">
+            <div className="w-12 h-12 mb-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-white/40 text-[9px] font-sans uppercase tracking-[0.08em]">NO THREAT DATA</p>
-            <p className="text-white/20 text-[7px] font-sans uppercase tracking-[0.08em] mt-1">FEED WILL APPEAR HERE</p>
+            <p className="text-white/50 text-sm font-medium">No threat data</p>
+            <p className="text-white/35 text-xs mt-1">The feed will populate as signals arrive.</p>
           </div>
         )}
       </div>
 
       {threatFeeds.length > 0 && (
-        <button className="w-full mt-4 p-2 border border-white/10 text-white/40 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 text-[9px] font-sans uppercase tracking-[0.08em] transition-all">
-          VIEW FULL FEED
+        <button type="button" className="w-full mt-4 p-2.5 rounded-xl border border-white/[0.12] text-white/70 hover:text-[#00E5FF] hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 text-xs font-medium transition-all">
+          View full feed
         </button>
       )}
     </div>

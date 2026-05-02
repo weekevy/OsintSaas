@@ -44,11 +44,11 @@ const ModalContainer = ({ isOpen, onClose, children, customWidth = "max-w-md" })
   if (!shouldRender) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       
       {/* Backdrop with smooth fade */}
       <div 
-        className={`absolute inset-0 bg-black/85 backdrop-blur-md transition-all duration-300 ease-out ${
+        className={`absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity duration-200 ease-out ${
           isAnimating ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
@@ -56,32 +56,32 @@ const ModalContainer = ({ isOpen, onClose, children, customWidth = "max-w-md" })
       
       {/* Modal with standard website width (448px / 28rem) */}
       <div 
-        className={`relative w-full max-w-[28rem] transition-all duration-400 ease-out ${
+        className={`relative w-full max-w-[28rem] transition-all duration-300 ease-out ${
           isAnimating 
             ? 'opacity-100 translate-y-0 scale-100' 
-            : 'opacity-0 translate-y-8 scale-95'
+            : 'opacity-0 translate-y-4 scale-[0.98]'
         }`}
         style={{
-          transitionTimingFunction: 'cubic-bezier(0.34, 1.2, 0.64, 1)'
+          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="glass-card rounded-2xl overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.6)] border border-white/10">
+        <div className="glass-card rounded-2xl overflow-hidden shadow-[0_20px_100px_rgba(0,0,0,0.8)] border border-white/10">
           {/* Animated border beam */}
-          <div className="border-beam opacity-30" />
+          <div className="border-beam opacity-40" />
           
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-110 active:scale-95 z-10"
+            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 hover:scale-110 active:scale-95 z-10"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           
-          {/* Content with staggered fade-in */}
+          {/* Content with smooth fade-in */}
           <div 
-            className={`transition-all duration-500 delay-100 ${
+            className={`transition-opacity duration-300 ${
               isAnimating ? 'opacity-100' : 'opacity-0'
             }`}
           >

@@ -13,13 +13,13 @@ const MobileMenu = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] md:hidden"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
         onClick={onClose}
       />
 
       {/* Menu Panel - Border removed */}
       <div 
-        className="fixed top-0 right-0 h-screen w-80 bg-black/95 backdrop-blur-2xl z-[70] md:hidden shadow-2xl"
+        className="fixed top-0 right-0 h-screen w-80 bg-black z-[70] md:hidden shadow-2xl"
       >
         <div className="flex flex-col h-full p-8 pt-24">
           <button 

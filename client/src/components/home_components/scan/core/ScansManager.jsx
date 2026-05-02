@@ -51,7 +51,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = fal
 };
 
 // ScanProgressModal Component - Tactical
-const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) => {
+export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) => {
   const [scanStage, setScanStage] = useState(1);
   const [isScanning, setIsScanning] = useState(false);
 
