@@ -1,11 +1,5 @@
 # Professional OSINT Investigation Framework v1
-
-<p align="center">
-  <img src="./client/src/assets/images/second.png" alt="OSINTSaaS Platform" width="300"/>
-</p>
-
 ## Overview
-
 OSINTSaaS is a comprehensive OSINT investigation framework designed for security professionals, 
 researchers, and investigators. The platform streamlines threat detection and digital forensics 
 through an integrated modular architecture, providing a unified workspace for managing complex 
@@ -18,8 +12,8 @@ investigations across multiple data sources.
 3. **Add Assets** - Input the assets (URLs, emails, phone numbers, etc.) you want to investigate
 4. **Initiate Scan** - Click on the target module to start the scanning process
 5. **Review Results** - View and analyze findings in the interactive dashboard
-
 ## Run the web app locally
+
 ```bash
   git clone git@github.com:weekevy/osintSaas.git && cd osintSaas
   npm run install-all
