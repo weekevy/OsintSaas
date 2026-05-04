@@ -405,7 +405,7 @@ const TopBar = ({
                   className={[
                     'flex snap-center flex-col items-center justify-center rounded-2xl md:rounded-lg',
                     'min-w-[2.85rem] shrink-0 px-1.5 py-1 md:min-w-0 md:rounded-lg md:flex-row md:gap-2 md:px-3 md:py-2',
-                    'text-[10px] font-semibold uppercase tracking-wide md:text-[11px]',
+                    'text-[10px] font-semibold tracking-wide md:text-[16px]',
                     'transition-colors duration-150',
                     isActive
                       ? 'bg-[#00E5FF]/18 text-[#00E5FF] md:bg-[#00E5FF]/14'

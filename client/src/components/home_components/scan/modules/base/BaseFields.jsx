@@ -1,6 +1,6 @@
 import React from 'react';
 
-// Icon mapping function - Tactical icons with acid green
+// Icon mapping function - Cyan theme
 const getSectionIcon = (iconName, colorClass) => {
   const icons = {
     briefcase: (
@@ -62,95 +62,99 @@ const getSectionIcon = (iconName, colorClass) => {
   return icons[iconName] || null;
 };
 
-// Input Field - Tactical
+// Input Field - Clean Poppins
 export const InputField = ({ id, label, value, onChange, placeholder, type = 'text', required, help, error }) => (
-  <div>
-    <label className="block text-white/50 text-[9px] font-mono uppercase tracking-[0.12em] mb-1">
+  <div className="space-y-1.5">
+    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
-      {required && <span className="text-[#f87171] ml-1">*</span>}
+      {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
     <input
       type={type}
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-3 py-2 bg-[#0d1114] border text-white text-[12px] font-mono focus:outline-none transition-colors ${
-        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00ff88]/50'
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 ${
+        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       placeholder={placeholder}
     />
-    {help && <p className="text-white/30 text-[8px] font-mono mt-1 uppercase tracking-[0.08em]">{help}</p>}
-    {error && <p className="text-[#f87171] text-[8px] font-mono mt-1">{error}</p>}
+    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
-// Textarea Field - Tactical
+// Textarea Field - Clean Poppins
 export const TextareaField = ({ id, label, value, onChange, placeholder, rows = 3, required, help, error }) => (
-  <div>
-    <label className="block text-white/50 text-[9px] font-mono uppercase tracking-[0.12em] mb-1">
+  <div className="space-y-1.5">
+    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
-      {required && <span className="text-[#f87171] ml-1">*</span>}
+      {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
     <textarea
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-3 py-2 bg-[#0d1114] border text-white text-[12px] font-mono focus:outline-none transition-colors resize-y ${
-        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00ff88]/50'
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 resize-vertical ${
+        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       placeholder={placeholder}
       rows={rows}
     />
-    {help && <p className="text-white/30 text-[8px] font-mono mt-1 uppercase tracking-[0.08em]">{help}</p>}
-    {error && <p className="text-[#f87171] text-[8px] font-mono mt-1">{error}</p>}
+    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
-// Select Field - Tactical
+// Select Field - Clean Poppins
 export const SelectField = ({ id, label, value, onChange, options, required, help, error }) => (
-  <div>
-    <label className="block text-white/50 text-[9px] font-mono uppercase tracking-[0.12em] mb-1">
+  <div className="space-y-1.5">
+    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
-      {required && <span className="text-[#f87171] ml-1">*</span>}
+      {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
     <select
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-3 py-2 bg-[#0d1114] border text-white text-[12px] font-mono focus:outline-none transition-colors appearance-none cursor-pointer ${
-        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00ff88]/50'
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm focus:outline-none transition-colors duration-150 appearance-none cursor-pointer ${
+        error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 8px center',
+        backgroundPosition: 'right 12px center',
         backgroundSize: '14px'
       }}
     >
-      <option value="" className="bg-[#0d1114]">SELECT {label?.toUpperCase()}</option>
-      {options?.map(opt => <option key={opt} value={opt} className="bg-[#0d1114]">{opt}</option>)}
+      <option value="" className="bg-[#0a0a0a]">Select {label}</option>
+      {options?.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0a]">{opt}</option>)}
     </select>
-    {help && <p className="text-white/30 text-[8px] font-mono mt-1 uppercase tracking-[0.08em]">{help}</p>}
-    {error && <p className="text-[#f87171] text-[8px] font-mono mt-1">{error}</p>}
+    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
-// File Upload Field - Tactical
+// File Upload Field - Clean Poppins
 export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, isDragging, onDragEvents, help, error }) => (
-  <div>
-    <label className="block text-white/50 text-[9px] font-mono uppercase tracking-[0.12em] mb-1">{label}</label>
+  <div className="space-y-1.5">
+    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">{label}</label>
     <div 
       onClick={() => onDragEvents.fileInputRef.current?.click()}
       onDragEnter={onDragEvents.handleDragEnter}
       onDragLeave={onDragEvents.handleDragLeave}
       onDragOver={onDragEvents.handleDragOver}
       onDrop={onDragEvents.handleDrop}
-      className={`w-full px-4 py-6 bg-[#0d1114] border-2 border-dashed cursor-pointer transition-all text-center ${
-        isDragging ? 'border-[#00ff88] bg-[#00ff88]/5' : 'border-white/20 hover:border-[#00ff88]/50 hover:bg-white/5'
+      className={`w-full px-4 py-6 bg-white/5 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-150 text-center ${
+        isDragging ? 'border-[#00E5FF] bg-[#00E5FF]/5' : 'border-white/20 hover:border-[#00E5FF]/50 hover:bg-white/5'
       }`}
     >
       <svg className="w-8 h-8 mx-auto text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
-      <p className="text-white/50 text-[9px] font-mono uppercase tracking-[0.08em] mb-1">{isDragging ? 'DROP FILES HERE' : 'CLICK OR DRAG FILES TO UPLOAD'}</p>
-      <p className="text-white/25 text-[7px] font-mono uppercase tracking-[0.08em]">SUPPORTED: JPEG, PNG, GIF, PDF, DOC, TXT, EML, MSG (MAX 10MB)</p>
+      <p className="font-['Poppins'] text-white/50 text-[10px] font-semibold uppercase tracking-[0.1em] mb-1">
+        {isDragging ? 'DROP FILES HERE' : 'CLICK OR DRAG FILES TO UPLOAD'}
+      </p>
+      <p className="font-['Poppins'] text-white/25 text-[8px] uppercase tracking-[0.08em]">
+        SUPPORTED: JPEG, PNG, GIF, PDF, DOC, TXT, EML, MSG (MAX 10MB)
+      </p>
       <input
         ref={onDragEvents.fileInputRef}
         type="file"
@@ -159,15 +163,15 @@ export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, 
         className="hidden"
       />
     </div>
-    {help && <p className="text-white/30 text-[8px] font-mono mt-1 uppercase tracking-[0.08em]">{help}</p>}
-    {error && <p className="text-[#f87171] text-[8px] font-mono mt-1">{error}</p>}
+    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
     
     {files.length > 0 && (
-      <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+      <div className="mt-3 space-y-1 max-h-32 overflow-y-auto custom-scroll">
         {files.map((file, idx) => (
-          <div key={idx} className="flex items-center justify-between bg-[#0d1114] border border-white/10 px-3 py-1.5">
-            <span className="text-white/60 text-[9px] font-mono truncate flex-1 uppercase tracking-[0.08em]">{file.name}</span>
-            <button onClick={() => onFileRemove(idx)} className="text-[#f87171] hover:text-[#f87171]/80 text-[9px] font-mono ml-2">✕</button>
+          <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+            <span className="font-['Poppins'] text-white/60 text-[11px] truncate flex-1">{file.name}</span>
+            <button onClick={() => onFileRemove(idx)} className="text-[#f87171] hover:text-[#f87171]/80 transition-colors duration-150 text-[12px] ml-2">✕</button>
           </div>
         ))}
       </div>
@@ -175,22 +179,38 @@ export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, 
   </div>
 );
 
-// Section Component - Tactical
+// Section Component - Clean headers
 export const Section = ({ title, description, iconName, iconColor, children }) => (
-  <div className="bg-[#090c0e] border border-white/10 overflow-hidden mb-5 relative">
-    {/* Corner brackets */}
-    <div className="absolute top-1 left-1 w-3 h-3 border-t border-l border-[#00ff88]/30" />
-    <div className="absolute top-1 right-1 w-3 h-3 border-t border-r border-[#00ff88]/30" />
-    
-    <div className="px-4 py-2 border-b border-white/10 bg-gradient-to-r from-[#00ff88]/5 to-transparent">
+  <div className="border border-white/10 rounded-xl overflow-hidden bg-[#0a0a0a] mb-5">
+    <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
       <div className="flex items-center gap-2">
-        {iconName && getSectionIcon(iconName, iconColor || 'text-[#00ff88]')}
-        <h3 className="text-white font-mono text-[10px] font-bold uppercase tracking-[0.12em]">{title}</h3>
-        {description && <p className="text-white/30 text-[7px] font-mono uppercase tracking-[0.08em] ml-2">{description}</p>}
+        {iconName && getSectionIcon(iconName, iconColor || 'text-[#00E5FF]')}
+        <h3 className="font-['Poppins'] text-[13px] font-bold text-white uppercase tracking-[0.08em]">{title}</h3>
       </div>
+      {description && (
+        <p className="font-['Poppins'] text-[10px] text-white/40 mt-1">{description}</p>
+      )}
     </div>
     <div className="p-4 space-y-4">
       {children}
     </div>
   </div>
 );
+
+// Custom scrollbar styles
+export const scrollbarStyles = `
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 255, 0.3);
+    border-radius: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.5);
+  }
+`;

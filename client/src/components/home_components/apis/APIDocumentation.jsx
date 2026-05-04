@@ -7,7 +7,7 @@ const APIDocumentation = () => {
   const endpoints = [
     {
       id: 'analyze',
-      name: 'ANALYZE URL',
+      name: 'Analyze URL',
       method: 'POST',
       path: '/api/v1/analyze/url',
       description: 'Submit a URL for threat analysis',
@@ -25,7 +25,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'email',
-      name: 'ANALYZE EMAIL',
+      name: 'Analyze Email',
       method: 'POST',
       path: '/api/v1/analyze/email',
       description: 'Analyze email address for threats and breaches',
@@ -41,7 +41,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'file',
-      name: 'SCAN FILE',
+      name: 'Scan File',
       method: 'POST',
       path: '/api/v1/analyze/file',
       description: 'Upload and scan a file for malware',
@@ -57,7 +57,7 @@ const APIDocumentation = () => {
     },
     {
       id: 'report',
-      name: 'GET REPORT',
+      name: 'Get Report',
       method: 'GET',
       path: '/api/v1/reports/{id}',
       description: 'Retrieve analysis report by ID',
@@ -202,36 +202,32 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
   const selectedEndpointData = endpoints.find(e => e.id === selectedEndpoint);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 font-sans">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 font-['Poppins']">
       {/* Sidebar */}
       <div className="lg:col-span-1">
-        <div className="glass-card border border-white/10 p-5 relative">
-          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00E5FF]/30" />
-          
-          <h3 className="text-white font-sans text-[10px] font-bold uppercase tracking-[0.12em] mb-4">API ENDPOINTS</h3>
-          <div className="space-y-1.5">
+        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
+          <h3 className="text-white font-['Poppins'] text-xs font-bold mb-4">API Endpoints</h3>
+          <div className="space-y-2">
             {endpoints.map((endpoint) => (
               <button
                 key={endpoint.id}
                 onClick={() => setSelectedEndpoint(endpoint.id)}
-                className={`w-full p-2 transition-all text-left border
+                className={`w-full p-3 rounded-lg transition-colors duration-150 text-left
                   ${selectedEndpoint === endpoint.id
-                    ? 'border-[#00E5FF] bg-[#00E5FF]/5'
-                    : 'border-transparent hover:border-white/10'
+                    ? 'bg-[#00E5FF]/10 border border-[#00E5FF]/30'
+                    : 'hover:bg-white/5'
                   }`}
               >
-                <div className="flex items-center gap-2">
-                  <span className={`px-1.5 py-0.5 text-[6px] font-mono border ${
-                    endpoint.method === 'GET' ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
-                    endpoint.method === 'POST' ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-['Poppins'] font-bold border ${
+                    endpoint.method === 'GET' ? 'border-[#2DD4BF]/30 text-[#2DD4BF]' :
                     'border-[#00E5FF]/30 text-[#00E5FF]'
                   }`}>
                     {endpoint.method}
                   </span>
-                  <span className="text-white text-[8px] font-mono uppercase tracking-[0.08em]">{endpoint.name}</span>
+                  <span className="text-white text-xs font-['Poppins'] font-semibold">{endpoint.name}</span>
                 </div>
-                <code className="text-white/30 text-[6px] font-mono block mt-0.5 truncate">
+                <code className="text-white/40 text-[9px] block truncate">
                   {endpoint.path}
                 </code>
               </button>
@@ -239,10 +235,10 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
           </div>
 
           <div className="mt-5 pt-4 border-t border-white/10">
-            <h4 className="text-white font-sans text-[8px] font-bold uppercase tracking-[0.12em] mb-2">AUTHENTICATION</h4>
-            <div className="glass-card border border-white/10 p-3">
-              <p className="text-white/40 text-[7px] font-sans mb-1 uppercase tracking-[0.08em]">ALL API REQUESTS REQUIRE AN API KEY:</p>
-              <code className="text-[#00E5FF] text-[7px] font-mono break-all">Authorization: Bearer YOUR_API_KEY</code>
+            <h4 className="text-white font-['Poppins'] text-[10px] font-bold mb-2">Authentication</h4>
+            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+              <p className="text-white/40 text-[9px] mb-1">All API requests require an API key:</p>
+              <code className="text-[#00E5FF] text-[9px] font-mono break-all">Authorization: Bearer YOUR_API_KEY</code>
             </div>
           </div>
         </div>
@@ -251,43 +247,39 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
       {/* Documentation */}
       <div className="lg:col-span-2 space-y-5">
         {/* Endpoint Details */}
-        <div className="glass-card border border-white/10 p-5 relative">
-          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00E5FF]/30" />
-          
+        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className={`px-2 py-0.5 text-[8px] font-mono border ${
-              selectedEndpointData.method === 'GET' ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
-              selectedEndpointData.method === 'POST' ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
+            <span className={`px-2 py-1 rounded text-[10px] font-['Poppins'] font-bold border ${
+              selectedEndpointData.method === 'GET' ? 'border-[#2DD4BF]/30 text-[#2DD4BF]' :
               'border-[#00E5FF]/30 text-[#00E5FF]'
             }`}>
               {selectedEndpointData.method}
             </span>
-            <code className="text-white font-mono text-[10px]">{selectedEndpointData.path}</code>
+            <code className="text-white text-xs font-mono">{selectedEndpointData.path}</code>
           </div>
           
-          <p className="text-white/60 text-[8px] font-sans mb-4 uppercase tracking-[0.05em]">{selectedEndpointData.description}</p>
+          <p className="text-white/60 text-sm mb-5">{selectedEndpointData.description}</p>
 
           {/* Parameters */}
-          <div className="mb-4">
-            <h4 className="text-white font-sans text-[8px] font-bold uppercase tracking-[0.12em] mb-2">PARAMETERS</h4>
-            <div className="glass-card border border-white/10 overflow-x-auto">
-              <table className="w-full text-[7px]">
+          <div className="mb-5">
+            <h4 className="text-white font-['Poppins'] text-[11px] font-bold mb-3">Parameters</h4>
+            <div className="rounded-lg border border-white/10 overflow-x-auto">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-2 text-white/30 font-sans uppercase tracking-[0.08em]">PARAMETER</th>
-                    <th className="text-left py-2 px-2 text-white/30 font-sans uppercase tracking-[0.08em]">TYPE</th>
-                    <th className="text-left py-2 px-2 text-white/30 font-sans uppercase tracking-[0.08em]">REQUIRED</th>
-                    <th className="text-left py-2 px-2 text-white/30 font-sans uppercase tracking-[0.08em]">DESCRIPTION</th>
+                    <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Parameter</th>
+                    <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Type</th>
+                    <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Required</th>
+                    <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedEndpointData.parameters.map((param, i) => (
                     <tr key={i} className="border-b border-white/5 last:border-0">
-                      <td className="py-2 px-2"><code className="text-[#00E5FF]">{param.name}</code></td>
-                      <td className="py-2 px-2 text-white/50 font-sans uppercase tracking-[0.05em]">{param.type}</td>
-                      <td className="py-2 px-2">{param.required ? <span className="text-[#00E5FF]">YES</span> : <span className="text-white/30 font-sans">NO</span>}</td>
-                      <td className="py-2 px-2 text-white/50 font-sans uppercase tracking-[0.05em]">{param.description}</td>
+                      <td className="py-2 px-3"><code className="text-[#00E5FF] text-xs">{param.name}</code></td>
+                      <td className="py-2 px-3 text-white/60 text-xs">{param.type}</td>
+                      <td className="py-2 px-3">{param.required ? <span className="text-[#00E5FF] text-xs">YES</span> : <span className="text-white/40 text-xs">NO</span>}</td>
+                      <td className="py-2 px-3 text-white/60 text-xs">{param.description}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -296,20 +288,19 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
           </div>
 
           {/* Responses */}
-          <div className="mb-4">
-            <h4 className="text-white font-sans text-[8px] font-bold uppercase tracking-[0.12em] mb-2">RESPONSES</h4>
-            <div className="space-y-1.5">
+          <div className="mb-5">
+            <h4 className="text-white font-['Poppins'] text-[11px] font-bold mb-3">Responses</h4>
+            <div className="space-y-2">
               {selectedEndpointData.responses.map((response, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 glass-card border border-white/10">
-                  <span className={`px-1.5 py-0.5 text-[7px] font-mono border ${
-                    response.code === 200 ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
-                    response.code === 202 ? 'border-[#00E5FF]/30 text-[#00E5FF]' :
+                <div key={i} className="flex items-center gap-3 p-2 rounded-lg border border-white/10 bg-white/5">
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-mono border ${
+                    response.code === 200 ? 'border-[#2DD4BF]/30 text-[#2DD4BF]' :
                     response.code >= 400 ? 'border-red-500/30 text-red-500' :
                     'border-[#00E5FF]/30 text-[#00E5FF]'
                   }`}>
                     {response.code}
                   </span>
-                  <span className="text-white/50 text-[7px] font-sans uppercase tracking-[0.08em]">{response.description}</span>
+                  <span className="text-white/60 text-xs">{response.description}</span>
                 </div>
               ))}
             </div>
@@ -317,21 +308,18 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
         </div>
 
         {/* Code Examples */}
-        <div className="glass-card border border-white/10 p-5 relative">
-          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#00E5FF]/30" />
-          
+        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-white font-sans text-[9px] font-bold uppercase tracking-[0.12em]">CODE EXAMPLES</h4>
+            <h4 className="text-white font-['Poppins'] text-[11px] font-bold">Code Examples</h4>
             <div className="flex gap-1">
               {['curl', 'python', 'javascript'].map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
-                  className={`px-2 py-1 text-[7px] font-mono uppercase tracking-[0.08em] transition-all border
+                  className={`px-3 py-1 rounded-lg text-[10px] font-['Poppins'] font-semibold transition-colors duration-150
                     ${language === lang
-                      ? 'border-[#00E5FF] text-[#00E5FF]'
-                      : 'border-white/10 text-white/40 hover:text-white'
+                      ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30'
+                      : 'text-white/40 hover:text-white'
                     }`}
                 >
                   {lang}
@@ -340,48 +328,45 @@ fetch('https://api.osintweekeyv.com/v1/analyze/file', {
             </div>
           </div>
 
-          <div className="glass-card border border-white/10 p-3 overflow-x-auto">
-            <pre className="text-white/60 text-[7px] font-mono whitespace-pre-wrap">
+          <div className="rounded-lg border border-white/10 bg-black/30 p-4 overflow-x-auto">
+            <pre className="text-white/70 text-xs font-mono whitespace-pre-wrap">
               {codeExamples[language]?.[selectedEndpoint] || codeExamples.curl.analyze}
             </pre>
           </div>
 
-          <div className="mt-3 flex items-center gap-3">
-            <button className="text-[#00E5FF] hover:text-[#00E5FF]/80 text-[7px] font-sans uppercase tracking-[0.08em] flex items-center gap-1 transition-colors">
-              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+          <div className="mt-3 flex gap-3">
+            <button className="text-[#00E5FF] hover:text-[#2DD4BF] transition-colors duration-150 text-xs font-['Poppins'] font-semibold flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
-              COPY CODE
+              Copy Code
             </button>
-            <button className="text-[#00E5FF] hover:text-[#00E5FF]/80 text-[7px] font-sans uppercase tracking-[0.08em] flex items-center gap-1 transition-colors">
-              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+            <button className="text-[#00E5FF] hover:text-[#2DD4BF] transition-colors duration-150 text-xs font-['Poppins'] font-semibold flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
-              TRY IT NOW
+              Try It Now
             </button>
           </div>
         </div>
 
         {/* Rate Limits Info */}
-        <div className="glass-card border border-white/10 p-4 relative">
-          <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-[#00E5FF]/30" />
-          <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-[#00E5FF]/30" />
-          
-          <div className="flex items-start gap-2">
-            <div className="w-6 h-6 border border-[#00E5FF]/30 flex items-center justify-center flex-shrink-0">
-              <svg className="w-3 h-3 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg border border-[#00E5FF]/30 flex items-center justify-center bg-[#00E5FF]/5">
+              <svg className="w-4 h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h4 className="text-white font-sans text-[8px] font-bold uppercase tracking-[0.12em] mb-1">RATE LIMITS</h4>
-              <p className="text-white/50 text-[7px] font-sans uppercase tracking-[0.08em]">
-                FREE TIER: <span className="text-white">1,000 REQUESTS/HOUR</span> • 
-                PRO TIER: <span className="text-white">10,000 REQUESTS/HOUR</span> • 
-                ENTERPRISE: <span className="text-white">CUSTOM LIMITS</span>
+              <h4 className="text-white font-['Poppins'] text-xs font-bold mb-1">Rate Limits</h4>
+              <p className="text-white/50 text-xs">
+                Free: <span className="text-white">1,000 requests/hour</span> • 
+                Pro: <span className="text-white">10,000 requests/hour</span> • 
+                Enterprise: <span className="text-white">Custom limits</span>
               </p>
-              <p className="text-white/30 text-[6px] font-sans uppercase tracking-[0.08em] mt-1">
-                RATE LIMIT HEADERS ARE INCLUDED IN ALL API RESPONSES. UPGRADE YOUR PLAN FOR HIGHER LIMITS.
+              <p className="text-white/30 text-[10px] mt-1">
+                Rate limit headers are included in all API responses. Upgrade your plan for higher limits.
               </p>
             </div>
           </div>

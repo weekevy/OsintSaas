@@ -16,13 +16,7 @@ const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#2DD4BF] p-[1px]">
-                  <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#00E5FF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                  </div>
-                </div>
+                  
                 <span className="text-white font-black tracking-tight text-2xl">Weekey<span className="text-[#00E5FF]">Osint</span></span>
               </div>
               <p className="text-gray-500 max-w-sm text-lg leading-relaxed font-medium">

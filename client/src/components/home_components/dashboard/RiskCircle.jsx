@@ -62,7 +62,7 @@ const RiskCircle = ({
     };
   };
 
-  const size = 220;
+  const size = 254;
   const radius = 92;
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;

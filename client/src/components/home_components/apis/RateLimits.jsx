@@ -30,36 +30,36 @@ const RateLimits = () => {
   const currentLimits = limits[plan];
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-['Poppins']">
       {/* Plan Selector */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {['free', 'pro', 'enterprise'].map((planType) => (
           <button
             key={planType}
             onClick={() => setPlan(planType)}
-            className={`p-6 glass-card border-2 transition-all text-left relative overflow-hidden
+            className={`p-5 rounded-xl border-2 transition-colors duration-150 text-left
               ${plan === planType
-                ? 'border-[#00E5FF] bg-[#00E5FF]/5'
-                : 'border-white/10 hover:border-white/20'
+                ? 'border-[#00E5FF] bg-[#00E5FF]/10'
+                : 'border-white/10 hover:border-white/20 bg-[#0a0a0a]'
               }`}
           >
             {plan === planType && (
-              <div className="absolute top-0 right-0 p-1">
-                <div className="bg-[#00E5FF] text-black text-[6px] font-bold px-1.5 py-0.5 uppercase tracking-tighter">CURRENT</div>
+              <div className="inline-block mb-2 px-2 py-0.5 rounded bg-[#00E5FF] text-black text-[9px] font-bold uppercase">
+                Current
               </div>
             )}
-            <h3 className="text-xl font-bold text-white capitalize mb-2 tracking-tight">{planType}</h3>
-            <div className="text-2xl font-black text-[#00E5FF] mb-4">{limits[planType].cost}</div>
+            <h3 className="text-xl font-bold text-white capitalize mb-2">{planType}</h3>
+            <div className="text-2xl font-bold text-[#00E5FF] mb-4">{limits[planType].cost}</div>
             <div className="space-y-2">
-              <div className="flex justify-between text-[10px] uppercase tracking-wider">
+              <div className="flex justify-between text-xs">
                 <span className="text-white/40">Requests</span>
                 <span className="text-white font-mono">{limits[planType].requests}/{limits[planType].period}</span>
               </div>
-              <div className="flex justify-between text-[10px] uppercase tracking-wider">
+              <div className="flex justify-between text-xs">
                 <span className="text-white/40">Concurrent</span>
                 <span className="text-white font-mono">{limits[planType].concurrent}</span>
               </div>
-              <div className="flex justify-between text-[10px] uppercase tracking-wider">
+              <div className="flex justify-between text-xs">
                 <span className="text-white/40">Burst</span>
                 <span className="text-white font-mono">{limits[planType].burst}</span>
               </div>
@@ -69,48 +69,47 @@ const RateLimits = () => {
       </div>
 
       {/* Current Usage */}
-      <div className="glass-card border border-white/10 p-6 relative">
-        <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#00E5FF]/30" />
-        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6">CURRENT USAGE</h3>
+      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-6">
+        <h3 className="text-white font-['Poppins'] text-base font-bold mb-6">Current Usage</h3>
         
         <div className="space-y-6">
           <div>
-            <div className="flex justify-between text-[10px] uppercase tracking-widest mb-2">
-              <span className="text-white/40">API CALLS (THIS HOUR)</span>
+            <div className="flex justify-between text-xs mb-2">
+              <span className="text-white/40">API Calls (This Hour)</span>
               <span className="text-[#00E5FF] font-bold">3,421 / 10,000</span>
             </div>
-            <div className="h-1.5 bg-white/5 border border-white/10 overflow-hidden">
-              <div className="h-full w-[34%] bg-[#00E5FF]" />
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-[34%] bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] rounded-full" />
             </div>
-            <p className="text-white/20 text-[8px] uppercase tracking-widest mt-2">RESETS IN 23 MINUTES</p>
+            <p className="text-white/30 text-[10px] mt-2">Resets in 23 minutes</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div className="p-4 glass-card border border-white/10">
-              <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">CONCURRENT REQUESTS</div>
-              <div className="text-2xl font-bold text-white font-mono">3</div>
-              <div className="text-white/20 text-[8px] uppercase tracking-widest">OF 20 ALLOWED</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+              <div className="text-white/40 text-[10px] mb-1">Concurrent Requests</div>
+              <div className="text-2xl font-bold text-white">3</div>
+              <div className="text-white/30 text-[9px]">of 20 allowed</div>
             </div>
-            <div className="p-4 glass-card border border-white/10">
-              <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">BURST USAGE</div>
-              <div className="text-2xl font-bold text-white font-mono">12</div>
-              <div className="text-white/20 text-[8px] uppercase tracking-widest">OF 50 ALLOWED</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+              <div className="text-white/40 text-[10px] mb-1">Burst Usage</div>
+              <div className="text-2xl font-bold text-white">12</div>
+              <div className="text-white/30 text-[9px]">of 50 allowed</div>
             </div>
-            <div className="p-4 glass-card border border-white/10">
-              <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">ERROR RATE</div>
-              <div className="text-2xl font-bold text-[#00E5FF] font-mono">0.23%</div>
-              <div className="text-white/20 text-[8px] uppercase tracking-widest">BELOW THRESHOLD</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+              <div className="text-white/40 text-[10px] mb-1">Error Rate</div>
+              <div className="text-2xl font-bold text-[#00E5FF]">0.23%</div>
+              <div className="text-white/30 text-[9px]">Below threshold</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Rate Limit Headers */}
-      <div className="glass-card border border-white/10 p-6">
-        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">RATE LIMIT HEADERS</h3>
+      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-6">
+        <h3 className="text-white font-['Poppins'] text-base font-bold mb-4">Rate Limit Headers</h3>
         
-        <div className="glass-card border border-white/10 p-4 mb-6">
-          <pre className="text-white/60 text-[9px] font-mono overflow-x-auto">
+        <div className="rounded-lg border border-white/10 bg-black/30 p-4 mb-6">
+          <pre className="text-white/60 text-xs font-mono overflow-x-auto">
 {`X-RateLimit-Limit: 10000
 X-RateLimit-Remaining: 6579
 X-RateLimit-Reset: 1702950000
@@ -120,14 +119,14 @@ Retry-After: 45`}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
-            { header: 'X-RateLimit-Limit', description: 'MAX REQUESTS ALLOWED IN THE CURRENT PERIOD' },
-            { header: 'X-RateLimit-Remaining', description: 'NUMBER OF REQUESTS REMAINING IN THE CURRENT PERIOD' },
-            { header: 'X-RateLimit-Reset', description: 'UNIX TIMESTAMP WHEN THE RATE LIMIT RESETS' },
-            { header: 'Retry-After', description: 'SECONDS TO WAIT BEFORE RETRYING (WHEN RATE LIMITED)' }
+            { header: 'X-RateLimit-Limit', description: 'Max requests allowed in the current period' },
+            { header: 'X-RateLimit-Remaining', description: 'Number of requests remaining in the current period' },
+            { header: 'X-RateLimit-Reset', description: 'Unix timestamp when the rate limit resets' },
+            { header: 'Retry-After', description: 'Seconds to wait before retrying (when rate limited)' }
           ].map((item, i) => (
-            <div key={i} className="flex items-start gap-3 p-3 border border-white/5 bg-white/[0.02]">
-              <code className="text-[#00E5FF] text-[9px] font-mono whitespace-nowrap">{item.header}</code>
-              <span className="text-white/40 text-[8px] uppercase tracking-widest leading-tight">{item.description}</span>
+            <div key={i} className="rounded-lg border border-white/10 bg-white/5 p-3">
+              <code className="text-[#00E5FF] text-xs font-mono block mb-1">{item.header}</code>
+              <span className="text-white/40 text-[10px]">{item.description}</span>
             </div>
           ))}
         </div>
@@ -135,15 +134,14 @@ Retry-After: 45`}
 
       {/* Upgrade Prompt */}
       {plan === 'free' && (
-        <div className="glass-card border border-[#00E5FF]/30 p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#00E5FF]/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-          <div className="flex items-center justify-between relative z-10">
+        <div className="rounded-xl border border-[#00E5FF]/30 bg-[#00E5FF]/5 p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h4 className="text-white font-bold uppercase tracking-widest mb-1">NEED HIGHER LIMITS?</h4>
-              <p className="text-white/40 text-[10px] uppercase tracking-wider">UPGRADE TO PRO FOR 10X MORE REQUESTS AND PRIORITY SUPPORT</p>
+              <h4 className="text-white font-['Poppins'] text-sm font-bold mb-1">Need higher limits?</h4>
+              <p className="text-white/40 text-xs">Upgrade to Pro for 10x more requests and priority support</p>
             </div>
-            <button className="px-6 py-3 bg-[#00E5FF] text-black font-bold text-xs uppercase tracking-widest hover:bg-white transition-colors">
-              UPGRADE NOW
+            <button className="px-6 py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs">
+              Upgrade Now
             </button>
           </div>
         </div>

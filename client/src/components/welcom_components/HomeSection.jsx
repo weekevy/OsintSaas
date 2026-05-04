@@ -146,16 +146,16 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
         <div className="w-full text-center px-4">
           <h1 className={`font-black tracking-tight leading-[1.02] transition-all duration-700 delay-100 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}`}>
             <span
-              className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent"
-              style={{ fontSize: 'clamp(3.3rem, 9.5vw, 6.5rem)' }}
-            >
-              Break Down Scammers.
-            </span>
-            <span
               className="block text-white mt-1"
               style={{ fontSize: 'clamp(2rem, 8vw, 5.5rem)' }}
             >
               Uncover the Truth
+            </span>
+            <span
+              className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent"
+              style={{ fontSize: 'clamp(3.3rem, 9.5vw, 6.5rem)' }}
+            >
+              Break Down Scammers.
             </span>
           </h1>
         </div>

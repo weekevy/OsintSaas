@@ -123,6 +123,7 @@ const CurrentModules = ({
               error: scan.error || null,
               assets: scan.assets || {},
               riskScore: calculateRiskScore(scan),
+              createdAt: scan.created_at || new Date().toISOString(),
             }));
           }
           return [];
@@ -132,21 +133,42 @@ const CurrentModules = ({
         }
       });
       const allScans = (await Promise.all(allScansPromises)).flat();
+      
+      // Sort by status priority first
       const statusOrder = { running: 0, queued: 1, paused: 2, pending: 3, completed: 4, stopped: 5, failed: 6 };
-      const sortedScans = allScans.sort((a, b) => {
+      const sortedScans = [...allScans].sort((a, b) => {
         const diff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
         return diff !== 0 ? diff : new Date(b.startTime) - new Date(a.startTime);
       });
+      
+      // Find the OLDEST created scan (by createdAt date)
+      const scansWithDates = [...allScans].filter(s => s.createdAt);
+      const oldestScan = scansWithDates.length > 0 
+        ? scansWithDates.reduce((oldest, current) => {
+            return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+          }, scansWithDates[0])
+        : null;
+      
       globalModules = sortedScans;
       globalInitialLoadDone = true;
       setModules(sortedScans);
       setInitialLoad(false);
-      if (sortedScans.length > 0 && !selectedModuleId && onSelectModule) {
-        const first = sortedScans[0];
-        setInternalSelectedModuleId(first.id);
-        onSelectModule(first);
-        if (onRiskDataChange) onRiskDataChange(extractRiskData(first), first.target, first.name);
+      
+      // Auto-select the oldest scan if available and no external selection
+      if (sortedScans.length > 0 && !externalSelectedModuleId && onSelectModule) {
+        // Try to find the oldest scan in the sorted list
+        let scanToSelect = null;
+        if (oldestScan) {
+          scanToSelect = sortedScans.find(s => s.id === oldestScan.id) || sortedScans[0];
+        } else {
+          scanToSelect = sortedScans[0];
+        }
+        
+        setInternalSelectedModuleId(scanToSelect.id);
+        onSelectModule(scanToSelect);
+        if (onRiskDataChange) onRiskDataChange(extractRiskData(scanToSelect), scanToSelect.target, scanToSelect.name);
       }
+      
       if (sortedScans.length === 0) {
         setInternalSelectedModuleId(null);
         if (onSelectModule) onSelectModule(null);
@@ -158,7 +180,7 @@ const CurrentModules = ({
       setLoading(false);
       isFetchingGlobal = false;
     }
-  }, [onSelectModule, selectedModuleId, onRiskDataChange, extractRiskData]);
+  }, [onSelectModule, externalSelectedModuleId, onRiskDataChange, extractRiskData]);
 
   const forceRefresh = useCallback(async () => { await fetchScans(true); }, [fetchScans]);
 

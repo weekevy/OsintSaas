@@ -24,11 +24,6 @@ UI: changes
         [] - [fix the z-index window, in the profile popup options, with fixing design]
         [] - [make the box of the active module in dashboard as hidden over flow fixed]
 
-    
-
-
-
-
 Server: changes
 
     []1 - [try make python code that fetch some  data to check the connection between the databse, and api]

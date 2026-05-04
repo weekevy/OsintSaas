@@ -1,129 +1,111 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 const BaseModal = ({ 
   isOpen, 
   onClose, 
   title, 
-  description,
-  children,
-  onSave,
+  description, 
+  children, 
+  onSave, 
   saving = false,
-  saveButtonText = "START INVESTIGATION",
-  cancelButtonText = "CANCEL",
+  saveButtonText = "Save Changes",
   showRevert = false,
-  onRevert = null
+  onRevert,
+  // maxWidth = "max-w-3xl"  // Wider modal
+  maxWidth = "max-w-6xl"  // 1152px
 }) => {
-  const modalRef = useRef(null);
-
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    const handleEsc = (event) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-fadeIn">
-      <div ref={modalRef} className="relative w-full max-w-5xl md:max-w-6xl bg-[#090c0e] border border-white/10 shadow-2xl shadow-[#00ff88]/10 overflow-hidden my-8 mx-auto animate-slideUp">
-        
-        {/* Corner brackets */}
-        <div className="absolute top-3 left-3 w-6 h-6 border-t border-l border-[#00ff88]/40" />
-        <div className="absolute top-3 right-3 w-6 h-6 border-t border-r border-[#00ff88]/40" />
-        <div className="absolute bottom-3 left-3 w-6 h-6 border-b border-l border-[#00ff88]/40" />
-        <div className="absolute bottom-3 right-3 w-6 h-6 border-b border-r border-[#00ff88]/40" />
-        
-        {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00ff88]/40 to-transparent" />
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80">
+      <div className={`relative w-full ${maxWidth} max-h-[85vh] border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden`}>
         
         {/* Header */}
-        <div className="relative sticky top-0 z-10 bg-[#090c0e]">
-          <div className="relative px-6 py-5 border-b border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 border border-[#00ff88]/30 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-[#00ff88]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="font-display text-xl md:text-2xl font-bold text-white uppercase tracking-[-0.02em]">{title}</h2>
-                  <p className="text-white/40 text-[10px] font-mono uppercase tracking-[0.08em] mt-0.5 max-w-2xl">{description}</p>
-                </div>
-              </div>
-              <button onClick={onClose} className="p-2 text-white/40 hover:text-[#00ff88] transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="relative px-6 py-4 border-b border-white/[0.08]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-['Poppins'] text-xl font-bold text-white">{title}</h2>
+              {description && (
+                <p className="font-['Poppins'] text-[11px] text-white/40 uppercase tracking-[0.1em] mt-1">{description}</p>
+              )}
             </div>
+            <button 
+              onClick={onClose} 
+              className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-150"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-thin">
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)] custom-scroll">
           {children}
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 px-6 py-4 border-t border-white/10 bg-[#080b0d]/90 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-white/[0.08] bg-black/20 flex justify-end gap-3">
           {showRevert && onRevert && (
-            <button 
-              onClick={onRevert} 
+            <button
+              onClick={onRevert}
               disabled={saving}
-              className="px-5 py-2 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all text-[10px] font-mono uppercase tracking-[0.08em] disabled:opacity-50"
+              className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50"
             >
-              REVERT
+              Revert
             </button>
           )}
-          <button 
-            onClick={onClose} 
-            disabled={saving}
-            className="px-5 py-2 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all text-[10px] font-mono uppercase tracking-[0.08em] disabled:opacity-50"
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em]"
           >
-            {cancelButtonText}
+            Cancel
           </button>
-          <button 
-            onClick={onSave} 
+          <button
+            onClick={onSave}
             disabled={saving}
-            className="px-6 py-2 border border-[#00ff88]/30 bg-[#00ff88]/10 text-[#00ff88] hover:bg-[#00ff88]/20 transition-all text-[10px] font-mono uppercase tracking-[0.08em] font-medium flex items-center gap-2 disabled:opacity-50"
+            className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-xl hover:opacity-90 transition-all duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50 flex items-center gap-2"
           >
             {saving ? (
               <>
-                <div className="w-3 h-3 border-2 border-[#00ff88]/30 border-t-[#00ff88] rounded-full animate-spin" />
-                SAVING...
+                <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Saving...
               </>
             ) : (
-              <>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                {saveButtonText}
-              </>
+              saveButtonText
             )}
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .custom-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 229, 255, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

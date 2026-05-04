@@ -29,7 +29,6 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
     console.log('🔵 UI MODE - Would update scan:', scan.id, formData);
     
     // UI ONLY MODE - No API call
-    // Simulate network delay
     setTimeout(() => {
       console.log('✅ UI MODE - Update successful (simulated)');
       
@@ -86,15 +85,36 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
     >
       {error && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm text-center">{error}</p>
+          <p className="text-red-400 text-sm font-['Poppins'] text-center">{error}</p>
         </div>
       )}
       
-      {Object.entries(config.fields).map(([sectionId, section]) => (
-        <Section key={sectionId} title={section.title} description={section.description}>
-          {renderFields(sectionId, section)}
-        </Section>
-      ))}
+      <div className="space-y-5 max-h-[50vh] overflow-y-auto pr-1 custom-scroll">
+        {Object.entries(config.fields).map(([sectionId, section]) => (
+          <Section key={sectionId} title={section.title} description={section.description}>
+            <div className="space-y-3">
+              {renderFields(sectionId, section)}
+            </div>
+          </Section>
+        ))}
+      </div>
+
+      <style jsx>{`
+        .custom-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 229, 255, 0.5);
+        }
+      `}</style>
     </BaseModal>
   );
 };

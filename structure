@@ -33,3 +33,102 @@ DATA BASE STRUCTURE
     Billing/Subscriptions	    subscriptions, usage_quotas
     Integrations	            integrations
     Saved Searches	            saved_searches   
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              USER BROWSER                                    │
+│                          (React Frontend on port 5173)                        │
+│                                   │                                          │
+│                          User clicks "Scan URL"                              │
+│                                   ↓                                          │
+│                      POST /api/scan/analyze                                  │
+│                    { url: "https://example.com" }                            │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           NEXT.JS BACKEND                                    │
+│                          (Server on port 4000)                               │
+│                                                                              │
+│   /api/scan/analyze route receives request                                   │
+│                    │                                                         │
+│                    ↓                                                         │
+│   Which Docker container to call?                                            │
+│                    │                                                         │
+│         ┌──────────┼──────────┐                                              │
+│         ↓          ↓          ↓                                              │
+│    job module  linkedin    scam-website                                      │
+│    (port 8000)  (8001)      (8003)                                           │
+│                    │                                                         │
+│                    ↓                                                         │
+│   Wait for response from Docker                                              │
+│                    │                                                         │
+│                    ↓                                                         │
+│   Process & return to frontend                                               │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           DOCKER CONTAINER                                   │
+│                      job-recruitment-tool                                    │
+│                      (Internal API on port 8000)                             │
+│                                                                              │
+│   1. Receives HTTP request from Next.js                                      │
+│   2. Runs analysis tools (Python scripts)                                    │
+│   3. Queries database / external APIs                                        │
+│   4. Returns JSON response                                                   │
+│                                                                              │
+│   Example response:                                                          │
+│   {                                                                          │
+│     "success": true,                                                         │
+│     "data": {                                                                │
+│       "risk_score": 85,                                                      │
+│       "findings": ["Suspicious domain", "Fake company"]                      │
+│     }                                                                        │
+│   }                                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+┌──────────┐    ┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────┐
+│  User    │───▶│  React   │───▶│  Next.js API │───▶│   Docker    │───▶│ Database │
+│ Browser  │    │  Frontend│    │   (Backend)  │    │  Container  │    │  (MariaDB)│
+└──────────┘    └──────────┘    └──────────────┘    └─────────────┘    └──────────┘
+     │               │                  │                  │                 │
+     │  1. Click     │                  │                  │                 │
+     │  "Analyze"    │                  │                  │                 │
+     │──────────────▶│                  │                  │                 │
+     │               │                  │                  │                 │
+     │               │  2. POST Request │                  │                 │
+     │               │  /api/analyze    │                  │                 │
+     │               │─────────────────▶│                  │                 │
+     │               │                  │                  │                 │
+     │               │                  │  3. HTTP Call    │                 │
+     │               │                  │  to Docker       │                 │
+     │               │                  │  (port 8000)     │                 │
+     │               │                  │─────────────────▶│                 │
+     │               │                  │                  │                 │
+     │               │                  │                  │  4. Query DB    │
+     │               │                  │                  │────────────────▶│
+     │               │                  │                  │                 │
+     │               │                  │                  │  5. Return data │
+     │               │                  │                  │◀────────────────│
+     │               │                  │                  │                 │
+     │               │                  │  6. Process &    │                 │
+     │               │                  │     Analyze      │                 │
+     │               │                  │                  │                 │
+     │               │                  │  7. JSON Response│                 │
+     │               │                  │◀─────────────────│                 │
+     │               │                  │                  │                 │
+     │               │  8. Return JSON  │                  │                 │
+     │               │◀─────────────────│                  │                 │
+     │               │                  │                  │                 │
+     │  9. Update UI │                  │                  │                 │
+     │◀──────────────│                  │                  │                 │
+     │               │                  │                  │                 │
+
+
+
+
+
