@@ -99,7 +99,7 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .custom-scroll::-webkit-scrollbar {
           width: 4px;
         }

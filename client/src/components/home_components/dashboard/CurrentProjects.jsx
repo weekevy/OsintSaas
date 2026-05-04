@@ -470,7 +470,7 @@ const CurrentModules = ({
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-custom::-webkit-scrollbar {
           width: 3px;
         }

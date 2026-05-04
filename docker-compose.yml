@@ -74,11 +74,14 @@ services:
       - ./docker/job-recruitment/logs:/app/logs
       - ./docker/job-recruitment/config:/app/config
       - ./docker/job-recruitment/tools:/app/tools
+      - ./docker/job-recruitment/events:/app/events
     environment:
       - MARIADB_HOST=mariadb
       - MARIADB_DATABASE=${MYSQL_DATABASE}
       - MARIADB_USER=${MYSQL_USER}
       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+      - DOCKER_API_KEY=${DOCKER_API_KEY}
+      - ALLOWED_IP_RANGE=172.0.0.0/8
     ports:
       - "8000:8000"
     depends_on:

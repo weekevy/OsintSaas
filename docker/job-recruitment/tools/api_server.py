@@ -1,449 +1,196 @@
-# ~/Desktop/OsintSaas/docker/job-recruitment/tools/api_server.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, Literal
+from fastapi.security import APIKeyHeader
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
 import json
 import os
-from datetime import datetime
 import uuid
+import logging
+from datetime import datetime
+import ipaddress
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from dotenv import load_dotenv
 
-app = FastAPI()
+# Load environment variables
+load_dotenv()
 
-# ==================== CORS Configuration (FIX) ====================
+# Configuration
+DOCKER_API_KEY = os.getenv("DOCKER_API_KEY", "your-super-secret-api-key-change-this")
+ALLOWED_IP_RANGE = os.getenv("ALLOWED_IP_RANGE", "172.0.0.0/8")
+EVENTS_DIR = "/app/events"
+LOGS_DIR = "/app/logs"
+OUTPUT_DIR = "/app/output"
+
+# Ensure directories exist
+for d in [EVENTS_DIR, LOGS_DIR, OUTPUT_DIR]:
+    os.makedirs(d, exist_ok=True)
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(f"{LOGS_DIR}/api_server.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("api_server")
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(title="Job Recruitment Event API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (for development)
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# ==================== Data Models ====================
+# API Key Security
+api_key_header = APIKeyHeader(name="X-API-Key")
 
-class ScanEvent(BaseModel):
-    """Model for all scan events"""
-    event_id: str
-    event_type: Literal['create', 'start', 'pause', 'resume', 'delete', 'update', 'complete', 'failed']
-    scan_id: Optional[int] = None
-    scan_name: Optional[str] = None
-    target: Optional[str] = None
-    timestamp: str
-    data: Optional[dict] = None
-    previous_state: Optional[str] = None
+async def verify_api_key(api_key: str = Depends(api_key_header)):
+    if api_key != DOCKER_API_KEY:
+        logger.warning(f"Invalid API Key attempt: {api_key}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials"
+        )
+    return api_key
+
+async def verify_ip_whitelist(request: Request):
+    client_ip = request.client.host
+    # In Docker, the client IP might be the gateway or the other container's IP
+    try:
+        allowed_network = ipaddress.ip_network(ALLOWED_IP_RANGE)
+        is_localhost = client_ip in ["127.0.0.1", "localhost", "::1", "testclient"]
+        
+        if not is_localhost and ipaddress.ip_address(client_ip) not in allowed_network:
+            logger.warning(f"IP Blocked: {client_ip}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail=f"IP {client_ip} not authorized"
+            )
+    except ValueError:
+        logger.error(f"Invalid ALLOWED_IP_RANGE: {ALLOWED_IP_RANGE}")
+        # If range is invalid, we might want to fail safe or fail fast. 
+        # For now, we'll log it and let it pass if it's localhost.
+        if client_ip not in ["127.0.0.1", "localhost", "::1"]:
+            raise HTTPException(status_code=500, detail="Internal IP validation error")
+
+# Data Models
+class EventRequest(BaseModel):
+    scan_id: int
+    scan_name: str
+    target: str
+    user_id: int
+    event_type: Optional[str] = None
+    data: Dict[str, Any] = Field(default_factory=dict)
+    previous_state: Optional[str] = "pending"
     new_state: Optional[str] = None
 
-class JobScanData(BaseModel):
-    """Job recruitment scan data model"""
-    scan_id: Optional[int] = None
-    company_name: Optional[str] = None
-    job_title: Optional[str] = None
-    job_url: Optional[str] = None
-    job_description: Optional[str] = None
-    salary_offered: Optional[str] = None
-    company_website: Optional[str] = None
-    company_linkedin: Optional[str] = None
-    company_email_domain: Optional[str] = None
-    company_phone: Optional[str] = None
-    company_address: Optional[str] = None
-    company_email: Optional[str] = None
-    recruiter_name: Optional[str] = None
-    recruiter_email: Optional[str] = None
-    recruiter_phone: Optional[str] = None
-    recruiter_linkedin: Optional[str] = None
-    recruiter_title: Optional[str] = None
-    suspicious_message: Optional[str] = None
-    communication_channel: Optional[str] = None
-    red_flags_noticed: Optional[str] = None
-    notes: Optional[str] = None
+class EventResponse(BaseModel):
+    event_id: str
+    event_type: str
+    scan_id: int
+    timestamp: str
+    status: str = "recorded"
 
-# ==================== Helper Functions ====================
+# Helper to save events
+def save_event(event_data: Dict[str, Any]):
+    event_id = str(uuid.uuid4())
+    event_data["event_id"] = event_id
+    event_data["timestamp"] = datetime.now().isoformat()
+    
+    # Save individual JSON
+    filename = f"event_{event_id}_{int(datetime.now().timestamp())}.json"
+    filepath = os.path.join(EVENTS_DIR, filename)
+    with open(filepath, "w") as f:
+        json.dump(event_data, f, indent=2)
+    
+    # Append to .jsonl
+    master_log = os.path.join(EVENTS_DIR, "all_events.jsonl")
+    with open(master_log, "a") as f:
+        f.write(json.dumps(event_data) + "\n")
+    
+    return event_id
 
-def ensure_directories():
-    """Create necessary directories if they don't exist"""
-    dirs = ['/app/output', '/app/logs', '/app/data', '/app/events']
-    for d in dirs:
-        os.makedirs(d, exist_ok=True)
-
-def save_event_to_json(event: ScanEvent):
-    """Save a single event as a JSON file"""
-    ensure_directories()
+# Endpoints
+@app.post("/event/{event_type}", response_model=EventResponse, dependencies=[Depends(verify_api_key), Depends(verify_ip_whitelist)])
+@limiter.limit("10/minute")
+async def handle_event(event_type: str, request: Request, event: EventRequest):
+    logger.info(f"Received {event_type} event for scan {event.scan_id} from {request.client.host}")
     
-    events_dir = '/app/events'
-    os.makedirs(events_dir, exist_ok=True)
+    valid_types = ["start", "pause", "resume", "delete", "update"]
+    if event_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid event type. Must be one of {valid_types}")
     
-    # Save individual event file
-    event_filename = f"{events_dir}/event_{event.event_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(event_filename, 'w') as f:
-        json.dump(event.dict(), f, indent=2)
+    event_dict = event.dict()
+    event_dict["event_type"] = event_type
     
-    # Also append to master log file
-    master_log = f"{events_dir}/all_events.jsonl"
-    with open(master_log, 'a') as f:
-        f.write(json.dumps(event.dict()) + '\n')
+    # Set new_state based on event_type
+    state_map = {
+        "start": "running",
+        "pause": "paused",
+        "resume": "running",
+        "delete": "deleted",
+        "update": "updated"
+    }
+    event_dict["new_state"] = state_map.get(event_type, "unknown")
     
-    return event_filename
-
-def save_scan_data_to_json(scan_data: JobScanData, event_type: str):
-    """Save scan data to JSON file"""
-    ensure_directories()
-    
-    output_dir = '/app/output'
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    
-    scan_filename = f"{output_dir}/scan_{scan_data.scan_id}_{timestamp}_{event_type}.json"
-    with open(scan_filename, 'w') as f:
-        json.dump({
-            'event_type': event_type,
-            'timestamp': datetime.now().isoformat(),
-            'scan_data': scan_data.dict()
-        }, f, indent=2)
-    
-    return scan_filename
-
-# ==================== OPTIONS Handlers (CORS preflight) ====================
-
-@app.options("/event/{event_type}")
-async def options_handler(event_type: str):
-    """Handle OPTIONS requests for CORS preflight"""
-    return {"message": "OK"}
-
-@app.options("/scan")
-async def options_scan_handler():
-    """Handle OPTIONS requests for /scan endpoint"""
-    return {"message": "OK"}
-
-@app.options("/events")
-async def options_events_handler():
-    """Handle OPTIONS requests for /events endpoint"""
-    return {"message": "OK"}
-
-# ==================== Event Handlers ====================
-
-@app.post("/event/create")
-async def handle_create_event(scan_data: JobScanData):
-    """Handle scan creation event"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='create',
-        scan_id=scan_data.scan_id,
-        scan_name=scan_data.job_title,
-        target=scan_data.company_name,
-        timestamp=datetime.now().isoformat(),
-        data=scan_data.dict(),
-        new_state='created'
-    )
-    
-    filepath = save_event_to_json(event)
-    scan_filepath = save_scan_data_to_json(scan_data, 'create')
-    
-    print(f"\n📝 EVENT: CREATE")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {scan_data.scan_id}")
-    print(f"   Company: {scan_data.company_name}")
-    print(f"   Job: {scan_data.job_title}")
-    print(f"   Saved to: {filepath}")
+    event_id = save_event(event_dict)
     
     return {
-        "success": True,
         "event_id": event_id,
-        "event_type": "create",
-        "message": "Scan creation event recorded",
-        "files": {"event": filepath, "scan_data": scan_filepath}
+        "event_type": event_type,
+        "scan_id": event.scan_id,
+        "timestamp": event_dict["timestamp"]
     }
 
-@app.post("/event/start")
-async def handle_start_event(event_data: dict):
-    """Handle scan start event"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='start',
-        scan_id=event_data.get('scan_id'),
-        scan_name=event_data.get('scan_name'),
-        target=event_data.get('target'),
-        timestamp=datetime.now().isoformat(),
-        data=event_data.get('data', {}),
-        previous_state=event_data.get('previous_state', 'pending'),
-        new_state='running'
-    )
-    
-    filepath = save_event_to_json(event)
-    
-    print(f"\n▶️ EVENT: START")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {event_data.get('scan_id')}")
-    print(f"   Scan Name: {event_data.get('scan_name')}")
-    print(f"   Target: {event_data.get('target')}")
-    print(f"   Saved to: {filepath}")
-    
-    return {
-        "success": True,
-        "event_id": event_id,
-        "event_type": "start",
-        "message": "Scan start event recorded"
-    }
-
-@app.post("/event/pause")
-async def handle_pause_event(event_data: dict):
-    """Handle scan pause event"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='pause',
-        scan_id=event_data.get('scan_id'),
-        scan_name=event_data.get('scan_name'),
-        target=event_data.get('target'),
-        timestamp=datetime.now().isoformat(),
-        data=event_data.get('data', {}),
-        previous_state='running',
-        new_state='paused'
-    )
-    
-    filepath = save_event_to_json(event)
-    
-    print(f"\n⏸️ EVENT: PAUSE")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {event_data.get('scan_id')}")
-    print(f"   Saved to: {filepath}")
-    
-    return {
-        "success": True,
-        "event_id": event_id,
-        "event_type": "pause",
-        "message": "Scan pause event recorded"
-    }
-
-@app.post("/event/resume")
-async def handle_resume_event(event_data: dict):
-    """Handle scan resume event"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='resume',
-        scan_id=event_data.get('scan_id'),
-        scan_name=event_data.get('scan_name'),
-        target=event_data.get('target'),
-        timestamp=datetime.now().isoformat(),
-        data=event_data.get('data', {}),
-        previous_state='paused',
-        new_state='running'
-    )
-    
-    filepath = save_event_to_json(event)
-    
-    print(f"\n🔄 EVENT: RESUME")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {event_data.get('scan_id')}")
-    print(f"   Saved to: {filepath}")
-    
-    return {
-        "success": True,
-        "event_id": event_id,
-        "event_type": "resume",
-        "message": "Scan resume event recorded"
-    }
-
-@app.post("/event/delete")
-async def handle_delete_event(event_data: dict):
-    """Handle scan delete event"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='delete',
-        scan_id=event_data.get('scan_id'),
-        scan_name=event_data.get('scan_name'),
-        target=event_data.get('target'),
-        timestamp=datetime.now().isoformat(),
-        data=event_data.get('data', {}),
-        previous_state=event_data.get('previous_state', 'any'),
-        new_state='deleted'
-    )
-    
-    filepath = save_event_to_json(event)
-    
-    print(f"\n🗑️ EVENT: DELETE")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {event_data.get('scan_id')}")
-    print(f"   Scan Name: {event_data.get('scan_name')}")
-    print(f"   Saved to: {filepath}")
-    
-    return {
-        "success": True,
-        "event_id": event_id,
-        "event_type": "delete",
-        "message": "Scan delete event recorded"
-    }
-
-@app.post("/event/update")
-async def handle_update_event(event_data: dict):
-    """Handle scan update event (assets edited)"""
-    event_id = str(uuid.uuid4())[:8]
-    
-    event = ScanEvent(
-        event_id=event_id,
-        event_type='update',
-        scan_id=event_data.get('scan_id'),
-        scan_name=event_data.get('scan_name'),
-        target=event_data.get('target'),
-        timestamp=datetime.now().isoformat(),
-        data=event_data.get('data', {}),
-        new_state='updated'
-    )
-    
-    filepath = save_event_to_json(event)
-    
-    print(f"\n✏️ EVENT: UPDATE")
-    print(f"   Event ID: {event_id}")
-    print(f"   Scan ID: {event_data.get('scan_id')}")
-    print(f"   Scan Name: {event_data.get('scan_name')}")
-    print(f"   Saved to: {filepath}")
-    
-    return {
-        "success": True,
-        "event_id": event_id,
-        "event_type": "update",
-        "message": "Scan update event recorded"
-    }
-
-# ==================== Backward Compatible /scan endpoint ====================
-
-@app.post("/scan")
-async def scan_backward_compatible(scan_data: JobScanData):
-    """Backward compatible endpoint - calls create event"""
-    print(f"\n⚠️ /scan endpoint called (backward compatible)")
-    return await handle_create_event(scan_data)
-
-# ==================== Query Endpoints ====================
-
-@app.get("/events")
-async def get_all_events():
-    """Retrieve all events from the master log"""
-    events_dir = '/app/events'
-    master_log = f"{events_dir}/all_events.jsonl"
-    
+@app.get("/events", response_model=List[Dict[str, Any]], dependencies=[Depends(verify_api_key)])
+async def get_events():
+    master_log = os.path.join(EVENTS_DIR, "all_events.jsonl")
     events = []
     if os.path.exists(master_log):
-        with open(master_log, 'r') as f:
+        with open(master_log, "r") as f:
             for line in f:
                 if line.strip():
                     events.append(json.loads(line))
-    
-    return {
-        "success": True,
-        "total_events": len(events),
-        "events": events[-100:]
-    }
+    return events
 
-@app.get("/events/{scan_id}")
+@app.get("/events/{scan_id}", response_model=List[Dict[str, Any]], dependencies=[Depends(verify_api_key)])
 async def get_scan_events(scan_id: int):
-    """Get all events for a specific scan"""
-    events_dir = '/app/events'
-    master_log = f"{events_dir}/all_events.jsonl"
-    
+    master_log = os.path.join(EVENTS_DIR, "all_events.jsonl")
     events = []
     if os.path.exists(master_log):
-        with open(master_log, 'r') as f:
+        with open(master_log, "r") as f:
             for line in f:
                 if line.strip():
                     event = json.loads(line)
-                    if event.get('scan_id') == scan_id:
+                    if event.get("scan_id") == scan_id:
                         events.append(event)
-    
-    return {
-        "success": True,
-        "scan_id": scan_id,
-        "total_events": len(events),
-        "events": events
-    }
-
-@app.get("/output")
-async def list_output_files():
-    """List all stored JSON output files"""
-    output_dir = '/app/output'
-    files = []
-    
-    if os.path.exists(output_dir):
-        for f in os.listdir(output_dir):
-            if f.endswith('.json'):
-                files.append(f)
-    
-    return {
-        "success": True,
-        "output_directory": output_dir,
-        "files": sorted(files, reverse=True)
-    }
-
-@app.get("/output/{filename}")
-async def get_output_file(filename: str):
-    """Retrieve a specific output JSON file"""
-    output_dir = '/app/output'
-    filepath = os.path.join(output_dir, filename)
-    
-    if not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    with open(filepath, 'r') as f:
-        data = json.load(f)
-    
-    return data
+    return events
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    ensure_directories()
     return {
         "status": "healthy",
-        "container": "job-recruitment-tool",
+        "timestamp": datetime.now().isoformat(),
         "directories": {
-            "output": "/app/output",
-            "events": "/app/events",
-            "logs": "/app/logs",
-            "data": "/app/data"
-        }
-    }
-
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "service": "Job Recruitment Scanner",
-        "status": "running",
-        "endpoints": {
-            "POST /event/create": "Record scan creation",
-            "POST /event/start": "Record scan start",
-            "POST /event/pause": "Record scan pause",
-            "POST /event/resume": "Record scan resume",
-            "POST /event/delete": "Record scan deletion",
-            "POST /event/update": "Record scan update",
-            "GET /events": "Get all events",
-            "GET /events/{scan_id}": "Get events for a scan",
-            "GET /output": "List output files",
-            "GET /output/{filename}": "Get output file",
-            "GET /health": "Health check"
+            "events": os.path.exists(EVENTS_DIR),
+            "logs": os.path.exists(LOGS_DIR),
+            "output": os.path.exists(OUTPUT_DIR)
         }
     }
 
 if __name__ == "__main__":
     import uvicorn
-    
-    ensure_directories()
-    
-    print("\n" + "="*70)
-    print("🐳 JOB RECRUITMENT DOCKER CONTAINER (Event Logger)")
-    print("="*70)
-    print("CORS enabled - Accepting requests from any origin")
-    print("Directories:")
-    print("  - /app/output     : Scan data files")
-    print("  - /app/events     : Event log files")
-    print("  - /app/logs       : General logs")
-    print("  - /app/data       : Data storage")
-    print("="*70 + "\n")
-    
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8000)

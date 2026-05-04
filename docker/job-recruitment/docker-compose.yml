@@ -12,6 +12,8 @@ services:
       - ./logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
+      - DOCKER_API_KEY=${DOCKER_API_KEY}
+      - ALLOWED_IP_RANGE=172.0.0.0/8
     restart: unless-stopped
     networks:
       - scanner-network

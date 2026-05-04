@@ -234,6 +234,7 @@ const ScanDashboard = ({
               moduleTextColor: module.textColor,
               toolIcon: module.icon,
               target: getTargetDisplay(scan, module.id),
+              api: module.api,
               status: scan.status,
               progress: scan.progress || 0,
               assets: scan.assets,

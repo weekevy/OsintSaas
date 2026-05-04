@@ -32,9 +32,11 @@ const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
   const [threatFeeds, setThreatFeeds] = useState([]);
 
   useEffect(() => {
-    console.log('Project changed, generating new threat feeds for project:', selectedProjectId);
-    const newFeeds = generateRandomFeeds(selectedProjectId);
-    setThreatFeeds(newFeeds);
+    if (selectedProjectId) {
+      console.log('Project changed, generating new threat feeds for project:', selectedProjectId);
+      const newFeeds = generateRandomFeeds(selectedProjectId);
+      setThreatFeeds(newFeeds);
+    }
   }, [selectedProjectId]);
 
   useEffect(() => {

@@ -163,7 +163,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .custom-scroll::-webkit-scrollbar {
           width: 4px;
         }

@@ -7,11 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-sidefiles
-dist-ssr
-*.local
+# Secrets
+.env
+client/.env
+server/.env
+docker/job-recruitment/.env
+
+# Docker runtime data
+docker/*/events/
+docker/*/output/
+docker/*/data/
+**/__pycache__/
+
 
 # Editor directories and files
 .vscode/*

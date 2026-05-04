@@ -64,7 +64,7 @@ const ToastItem = ({ message, type, duration, onRemove }) => {
         animation: `toast-progress ${duration}ms linear forwards`
       }} />
       
-      <style jsx>{`
+      <style>{`
         @keyframes toast-progress { from { width: 100%; } to { width: 0%; } }
       `}</style>
     </div>

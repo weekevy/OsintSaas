@@ -464,7 +464,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
       
       console.log('📦 Sending START event to Next.js API:', eventData);
       
-      const response = await fetch('/api/modules/company-jobscam/event', {
+      const response = await fetch(`${scan.api}/event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData),
@@ -498,7 +498,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         data: { reason: 'user_paused' }
       };
       
-      await fetch('/api/modules/company-jobscam/event', {
+      await fetch(`${scan.api}/event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData),
@@ -525,7 +525,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         data: { action: 'resumed' }
       };
       
-      await fetch('/api/modules/company-jobscam/event', {
+      await fetch(`${scan.api}/event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData),
@@ -565,7 +565,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
           data: { reason: 'user_deleted' }
         };
         
-        await fetch('/api/modules/company-jobscam/event', {
+        await fetch(`${confirmModal.scan.api}/event`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
@@ -602,7 +602,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         data: { action: 'edit_opened' }
       };
       
-      await fetch('/api/modules/company-jobscam/event', {
+      await fetch(`${scan.api}/event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData),
