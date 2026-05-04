@@ -5,7 +5,6 @@ const shellMax = 'max-w-[1680px] mx-auto w-full';
 
 const TopBar = ({
   onMenuClick,
-  searchInput,
   onSearchChange,
   searchType,
   onSearchTypeChange,
@@ -113,9 +112,9 @@ const TopBar = ({
   return (
     <header className="sticky top-0 z-[9998] flex flex-col font-sans border-b border-white/[0.08] bg-[#080a0d] max-md:backdrop-blur-none md:bg-[#080a0d]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
       {/* Top row */}
-      <div className={`${shellMax} flex flex-wrap items-center gap-x-2 gap-y-3 px-3 sm:px-5 lg:px-8 py-3 sm:py-3.5`}>
-        {/* Brand + project */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4 md:gap-5 md:flex-none md:max-w-[min(100%,28rem)] lg:max-w-none lg:flex-1">
+      <div className={`${shellMax} flex flex-wrap items-center justify-between gap-x-2 gap-y-3 px-3 sm:px-5 lg:px-8 py-3 sm:py-3.5`}>
+        {/* Brand + project - LEFT SIDE (always on left) */}
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4 md:gap-5">
           <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
             <span className="relative flex h-2 w-2 shrink-0 sm:h-2.5 sm:w-2.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full rounded-full bg-[#00E5FF] opacity-50" />
@@ -150,85 +149,10 @@ const TopBar = ({
           )}
         </div>
 
-        {/* Desktop / tablet search */}
-        <div className="order-last hidden w-full min-w-0 md:order-none md:flex md:max-w-xl md:flex-1 lg:max-w-2xl">
-          <div className="flex w-full items-center overflow-hidden rounded-2xl border border-white/[0.1] bg-white/[0.04] shadow-inner shadow-black/20 ring-1 ring-white/[0.04] transition-colors focus-within:border-[#00E5FF]/35 focus-within:bg-white/[0.06] focus-within:ring-[#00E5FF]/15">
-            <div className="relative shrink-0" ref={searchTypeRef}>
-              <button
-                type="button"
-                onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
-                className="flex items-center gap-2 border-r border-white/[0.08] px-3 py-2.5 text-white/55 transition-colors hover:bg-white/[0.04] hover:text-[#00E5FF] lg:gap-2.5 lg:px-4 lg:py-3"
-                aria-expanded={searchTypeDropdownOpen}
-                aria-haspopup="listbox"
-              >
-                <span className="shrink-0">{getSearchTypeIcon(searchType, true)}</span>
-                <span className="hidden text-xs font-semibold uppercase tracking-wide sm:inline">{searchType}</span>
-                <svg className="h-3.5 w-3.5 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+        {/* Center space - empty, pushing actions to the right */}
+        <div className="flex-1"></div>
 
-              {searchTypeDropdownOpen && (
-                <div
-                  className="absolute left-0 top-full z-[10000] mt-1.5 w-44 overflow-hidden rounded-xl border border-white/[0.1] bg-[#0c0e12] shadow-xl md:bg-[#0c0e12]/98 md:backdrop-blur-sm"
-                  role="listbox"
-                >
-                  {['url', 'email', 'file'].map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        onSearchTypeChange(type);
-                        setSearchTypeDropdownOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-white/55 transition-colors hover:bg-white/[0.06] hover:text-[#00E5FF]"
-                      role="option"
-                    >
-                      {getSearchTypeIcon(type, true)}
-                      <span>{type}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={`${searchType} to analyze…`}
-              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none lg:px-4 lg:py-3"
-              onKeyDown={onSearchKeyDown}
-              aria-label="Search or analyze target"
-            />
-
-            <button
-              type="button"
-              onClick={runAnalyze}
-              disabled={isAnalyzing || credits <= 0}
-              className="shrink-0 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#050608] transition-colors enabled:bg-white enabled:hover:bg-[#00E5FF] disabled:opacity-40 sm:px-5 sm:py-3 lg:px-6"
-            >
-              {isAnalyzing ? (
-                <span className="flex items-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  <span className="hidden sm:inline">Scanning</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Scan</span>
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Actions */}
+        {/* Actions - RIGHT SIDE (credits, notifications, profile) - ALWAYS on right side */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
@@ -283,93 +207,9 @@ const TopBar = ({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={toggleSearch}
-            className="rounded-xl border border-white/[0.1] bg-white/[0.04] p-2.5 text-white/55 transition-colors hover:border-[#00E5FF]/25 hover:text-[#00E5FF] md:hidden"
-            aria-label="Open search"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-
           <UserMenu onLogout={onLogout} />
         </div>
       </div>
-
-      {/* Mobile search sheet */}
-      {mobileSearchOpen && (
-        <div
-          className="fixed inset-0 z-[10000] bg-[#050608] md:hidden"
-          ref={mobileSearchRef}
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
-        >
-          <div className="flex h-full flex-col p-4">
-            <div className="mb-4 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={toggleSearch}
-                className="rounded-lg p-2 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-[#00E5FF]"
-                aria-label="Close search"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <h3 className="text-sm font-semibold tracking-tight text-white">Analyze target</h3>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex items-stretch overflow-hidden rounded-2xl border border-white/[0.1] bg-white/[0.04] ring-1 ring-white/[0.05]">
-                <div className="relative shrink-0" ref={searchTypeRef}>
-                  <button
-                    type="button"
-                    onClick={() => setSearchTypeDropdownOpen(!searchTypeDropdownOpen)}
-                    className="flex h-full items-center gap-2 border-r border-white/[0.08] px-3 py-3 text-white/55"
-                  >
-                    {getSearchTypeIcon(searchType)}
-                    <span className="text-xs font-semibold uppercase">{searchType}</span>
-                  </button>
-                </div>
-                <input
-                  id="mobile-search-input"
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder={`Enter ${searchType}…`}
-                  className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none"
-                  onKeyDown={onSearchKeyDown}
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={runAnalyze}
-                disabled={isAnalyzing || credits <= 0}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold uppercase tracking-wide text-[#050608] transition-colors enabled:bg-white enabled:hover:bg-[#00E5FF] disabled:opacity-40"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Scanning…
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    Run scan
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tab nav: mobile = floating curved bar; md+ = segmented pills */}
       <div

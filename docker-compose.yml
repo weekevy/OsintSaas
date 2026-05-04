@@ -31,22 +31,22 @@ services:
       - osint_network
 
   # n8n - Internal Automation Engine
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: n8n-automation
-    restart: unless-stopped
-    ports:
-      - "7000:7000"  # n8n web UI (internal use only)
-    environment:
-      - N8N_SECURE_COOKIE=false
-      - N8N_HOST=localhost
-      - N8N_PORT=7000
-      - WEBHOOK_URL=http://localhost:7000/
-      - EXECUTIONS_DATA_PRUNE=true
-      - EXECUTIONS_DATA_MAX_AGE=168
-      - N8N_METRICS=true
-      - N8N_METRICS_INCLUDE_DEFAULT_METRICS=true
-
+  # n8n:
+  #   image: n8nio/n8n:latest
+  #   container_name: n8n-automation
+  #   restart: unless-stopped
+  #   ports:
+  #     - "7000:7000"  # n8n web UI (internal use only)
+  #   environment:
+  #     - N8N_SECURE_COOKIE=false
+  #     - N8N_HOST=localhost
+  #     - N8N_PORT=7000
+  #     - WEBHOOK_URL=http://localhost:7000/
+  #     - EXECUTIONS_DATA_PRUNE=true
+  #     - EXECUTIONS_DATA_MAX_AGE=168
+  #     - N8N_METRICS=true
+  #     - N8N_METRICS_INCLUDE_DEFAULT_METRICS=true
+  #
       # Database connection for n8n (optional, uses SQLite by default)
       # - DB_TYPE=mariadb
       # - DB_MYSQLDB_HOST=mariadb
@@ -55,15 +55,15 @@ services:
       # - DB_MYSQLDB_USER=${MYSQL_USER}
       # - DB_MYSQLDB_PASSWORD=${MYSQL_PASSWORD}
       #
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - mariadb
-    networks:
-      - osint_network
-
+    # volumes:
+    #   - n8n_data:/home/node/.n8n
+    #   - ./:/workspace
+    #   - /var/run/docker.sock:/var/run/docker.sock
+    # depends_on:
+    #   - mariadb
+    # networks:
+    #   - osint_network
+    #
   job-recruitment:
     build: ./docker/job-recruitment
     container_name: job-recruitment-tool
@@ -97,30 +97,30 @@ services:
       "
 
   # LinkedIn Investigation Tool
-  linkedin-investigation:
-    build: ./docker/linkedin-investigation
-    container_name: linkedin-investigation-tool
-    restart: unless-stopped
-    volumes:
-      - ./docker/linkedin-investigation/data:/app/data
-      - ./docker/linkedin-investigation/output:/app/output
-      - ./docker/linkedin-investigation/logs:/app/logs
-      - ./docker/linkedin-investigation/config:/app/config
-      - ./docker/linkedin-investigation/tools:/app/tools
-    environment:
-      - MARIADB_HOST=mariadb
-      - MARIADB_DATABASE=${MYSQL_DATABASE}
-      - MARIADB_USER=${MYSQL_USER}
-      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
-    ports:
-      - "8001:8001"
-    depends_on:
-      - mariadb
-    networks:
-      - osint_network
-    stdin_open: true
-    tty: true
-
+  # linkedin-investigation:
+  #   build: ./docker/linkedin-investigation
+  #   container_name: linkedin-investigation-tool
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./docker/linkedin-investigation/data:/app/data
+  #     - ./docker/linkedin-investigation/output:/app/output
+  #     - ./docker/linkedin-investigation/logs:/app/logs
+  #     - ./docker/linkedin-investigation/config:/app/config
+  #     - ./docker/linkedin-investigation/tools:/app/tools
+  #   environment:
+  #     - MARIADB_HOST=mariadb
+  #     - MARIADB_DATABASE=${MYSQL_DATABASE}
+  #     - MARIADB_USER=${MYSQL_USER}
+  #     - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+  #   ports:
+  #     - "8001:8001"
+  #   depends_on:
+  #     - mariadb
+  #   networks:
+  #     - osint_network
+  #   stdin_open: true
+  #   tty: true
+  #
 #   # Social Media OSINT Tool
 #   social-media:
 #     build: ./docker/social-media
@@ -273,7 +273,7 @@ services:
 
 volumes:
   mariadb_data:
-  n8n_data:
+  # n8n_data:
 
 networks:
   osint_network:

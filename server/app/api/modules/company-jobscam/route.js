@@ -136,9 +136,15 @@ export async function GET(request) {
   }
 }
 
-// POST /api/modules/company-jobscam - Create new job scam scan with duplicate prevention
+// POST /api/modules/company-jobscam - Create new job scam scan
 export async function POST(request) {
   let connection;
+  
+  // Check if this is an event request (URL ends with /event)
+  const url = new URL(request.url);
+  if (url.pathname.endsWith('/event')) {
+    return handleEvent(request);
+  }
   
   // Generate unique request ID to prevent duplicates
   const requestId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -357,6 +363,93 @@ export async function POST(request) {
       success: false, 
       error: '❌ Failed to create scan. Please check your input and try again.',
       details: error.message 
+    }, { status: 500 });
+  }
+}
+
+// ============================================================
+// HANDLE EVENT REQUESTS (Start, Pause, Resume, Delete, Update)
+// ============================================================
+async function handleEvent(request) {
+  try {
+    const user = await verifyToken(request);
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized - Please login first' 
+      }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { event_type, scan_id, scan_name, target, previous_state, data } = body;
+    
+    console.log(`📡 Received event: ${event_type} for scan ${scan_id} from user ${user.id}`);
+    
+    const DOCKER_URL = process.env.JOB_RECRUITMENT_DOCKER_URL || 'http://localhost:8000';
+    
+    // Forward the event to Docker container
+    const dockerResponse = await fetch(`${DOCKER_URL}/event/${event_type}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        scan_id,
+        scan_name,
+        target,
+        previous_state,
+        data,
+        user_id: user.id,
+        timestamp: new Date().toISOString()
+      }),
+    }).catch(err => {
+      console.log(`⚠️ Docker connection error: ${err.message}`);
+      return null;
+    });
+    
+    let dockerResult = {};
+    if (dockerResponse && dockerResponse.ok) {
+      dockerResult = await dockerResponse.json();
+      console.log(`✅ Event ${event_type} forwarded to Docker:`, dockerResult);
+    } else if (dockerResponse) {
+      console.log(`⚠️ Docker responded with status: ${dockerResponse.status}`);
+    } else {
+      console.log(`⚠️ Docker container not reachable, event logged only`);
+    }
+    
+    // Update the scan status in the database
+    if (event_type === 'start') {
+      await pool.execute(
+        `UPDATE scans SET status = 'running', started_at = NOW() WHERE id = ?`,
+        [scan_id]
+      );
+      console.log(`📊 Database updated: scan ${scan_id} status = running`);
+    } else if (event_type === 'pause') {
+      await pool.execute(
+        `UPDATE scans SET status = 'paused' WHERE id = ?`,
+        [scan_id]
+      );
+      console.log(`📊 Database updated: scan ${scan_id} status = paused`);
+    } else if (event_type === 'resume') {
+      await pool.execute(
+        `UPDATE scans SET status = 'running' WHERE id = ?`,
+        [scan_id]
+      );
+      console.log(`📊 Database updated: scan ${scan_id} status = running`);
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      event_type,
+      message: `Event '${event_type}' processed successfully`,
+      docker_response: dockerResult
+    });
+    
+  } catch (error) {
+    console.error('❌ Error processing event:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
     }, { status: 500 });
   }
 }
@@ -744,4 +837,4 @@ function getRiskLevel(score) {
   if (score >= 50) return 'high';
   if (score >= 30) return 'medium';
   return 'low';
-} 
+}

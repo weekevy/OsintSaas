@@ -5,6 +5,9 @@ import { getModuleAddModal, getModuleEditModal } from '../modules';
 // Local storage key for persisting scan states
 const SCAN_STATES_KEY = 'osint_scan_states';
 
+// REMOVED direct Docker URL - UI should NOT call Docker directly
+// const DOCKER_URL = 'http://localhost:8000'; // DELETED - WRONG APPROACH
+
 // ──────────────────────────────────────────────────────────────
 // InvestigationPopup Component
 // ──────────────────────────────────────────────────────────────
@@ -432,9 +435,106 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     }));
   };
 
-  const handleStartScan = (scan, e) => {
+  // ============================================================
+  // EVENT HANDLERS - Send events to Next.js API (NOT directly to Docker)
+  // ============================================================
+
+  // START EVENT - Calls Next.js API
+  const handleStartScan = async (scan, e) => {
     e.stopPropagation();
+    
+    console.log('🚀 START button clicked for scan:', scan);
+    
+    // Update local UI state first
     updateScanState(scan.id, { status: 'running', isPaused: false, progress: 0 });
+    
+    // Send START event to Next.js API (which will forward to Docker)
+    try {
+      const eventData = {
+        scan_id: scan.originalId || scan.id,
+        scan_name: scan.assets?.job_title || scan.moduleName || 'Job Investigation',
+        target: scan.target || scan.assets?.company_name || 'Unknown',
+        event_type: 'start',
+        previous_state: 'pending',
+        data: {
+          module: scan.moduleName,
+          assets: scan.assets
+        }
+      };
+      
+      console.log('📦 Sending START event to Next.js API:', eventData);
+      
+      const response = await fetch('/api/modules/company-jobscam/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ START event sent to Next.js API:', result);
+      } else {
+        console.error('❌ Failed to send START event:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error sending START event:', error);
+    }
+  };
+
+  // PAUSE EVENT - Calls Next.js API
+  const handlePauseClick = async (scan, e) => {
+    e.stopPropagation();
+    const currentState = getScanState(scan.id);
+    updateScanState(scan.id, { isPaused: !currentState.isPaused });
+    
+    try {
+      const eventData = {
+        scan_id: scan.originalId || scan.id,
+        scan_name: scan.assets?.job_title || scan.moduleName,
+        target: scan.target || scan.assets?.company_name,
+        event_type: 'pause',
+        previous_state: 'running',
+        data: { reason: 'user_paused' }
+      };
+      
+      await fetch('/api/modules/company-jobscam/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+      
+      console.log('⏸️ PAUSE event sent to Next.js API');
+    } catch (error) {
+      console.error('Error sending PAUSE event:', error);
+    }
+  };
+
+  // RESUME EVENT - Calls Next.js API
+  const handleResumeClick = async (scan, e) => {
+    e.stopPropagation();
+    updateScanState(scan.id, { isPaused: false });
+    
+    try {
+      const eventData = {
+        scan_id: scan.originalId || scan.id,
+        scan_name: scan.assets?.job_title || scan.moduleName,
+        target: scan.target || scan.assets?.company_name,
+        event_type: 'resume',
+        previous_state: 'paused',
+        data: { action: 'resumed' }
+      };
+      
+      await fetch('/api/modules/company-jobscam/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+      
+      console.log('🔄 RESUME event sent to Next.js API');
+    } catch (error) {
+      console.error('Error sending RESUME event:', error);
+    }
   };
 
   const handleRemoveClick = (scan, e) => { 
@@ -452,15 +552,31 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     setInvestigationModal({ isOpen: true, scan });
   };
 
-  const handlePauseClick = (scan, e) => {
-    e.stopPropagation();
-    const currentState = getScanState(scan.id);
-    updateScanState(scan.id, { isPaused: !currentState.isPaused });
-  };
-
-  const handleConfirmRemove = () => {
+  // DELETE EVENT - Calls Next.js API
+  const handleConfirmRemove = async () => {
     if (confirmModal.scan) {
-      // Remove from scan statuses as well
+      try {
+        const eventData = {
+          scan_id: confirmModal.scan.originalId || confirmModal.scan.id,
+          scan_name: confirmModal.scan.assets?.job_title || confirmModal.scan.moduleName,
+          target: confirmModal.scan.target || confirmModal.scan.assets?.company_name,
+          event_type: 'delete',
+          previous_state: getScanState(confirmModal.scan.id).status,
+          data: { reason: 'user_deleted' }
+        };
+        
+        await fetch('/api/modules/company-jobscam/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+        
+        console.log('🗑️ DELETE event sent to Next.js API');
+      } catch (error) {
+        console.error('Error sending DELETE event:', error);
+      }
+      
+      // Remove from scan statuses
       setScanStatuses(prev => {
         const newState = { ...prev };
         delete newState[confirmModal.scan.id];
@@ -471,6 +587,33 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
       }
     }
     setConfirmModal({ isOpen: false, scan: null });
+  };
+
+  // UPDATE EVENT - Calls Next.js API
+  const handleEditClick = async (scan, e) => {
+    e?.stopPropagation();
+    
+    try {
+      const eventData = {
+        scan_id: scan.originalId || scan.id,
+        scan_name: scan.assets?.job_title || scan.moduleName,
+        target: scan.target || scan.assets?.company_name,
+        event_type: 'update',
+        data: { action: 'edit_opened' }
+      };
+      
+      await fetch('/api/modules/company-jobscam/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+      
+      console.log('✏️ EDIT event sent to Next.js API');
+    } catch (error) {
+      console.error('Error sending EDIT event:', error);
+    }
+    
+    onEditScan(scan);
   };
 
   const getStatusBadge = (scanId, originalStatus) => {
@@ -604,7 +747,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                       {/* Resume button */}
                       {isPaused && (
                         <button
-                          onClick={(e) => handlePauseClick(scan, e)}
+                          onClick={(e) => handleResumeClick(scan, e)}
                           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-150 text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
                         >
                           <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -617,7 +760,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                       
                       {/* Edit Assets button */}
                       <button
-                        onClick={() => onEditScan(scan)}
+                        onClick={() => handleEditClick(scan)}
                         className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 border border-white/20 rounded-lg text-white/70 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-150 text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.08em]"
                       >
                         <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
