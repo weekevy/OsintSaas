@@ -130,23 +130,6 @@ const TopBar = ({
               </span>
             </h1>
           </div>
-
-          {selectedProject && (
-            <div
-              className="hidden min-w-0 md:flex md:max-w-[140px] lg:max-w-[200px] xl:max-w-[240px] items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-2.5 py-1.5 lg:gap-2.5 lg:px-3 lg:py-2"
-              title={selectedProject.name}
-            >
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00E5FF] shadow-[0_0_8px_rgba(0,229,255,0.6)]" />
-              <div className="min-w-0 flex-1">
-                <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-[#00E5FF]/75 lg:text-[10px]">
-                  Project
-                </span>
-                <span className="block truncate text-[11px] font-medium text-white/90 lg:text-xs">
-                  {selectedProject.name}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Center space - empty, pushing actions to the right */}

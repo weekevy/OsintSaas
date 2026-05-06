@@ -58,15 +58,40 @@ export async function GET(request) {
 
     const [scans] = await query(`
       SELECT 
-        s.id,
+        s.id as scan_id,
         s.scan_type,
         s.status,
+        s.progress,
         s.priority,
         s.findings_count,
         s.started_at,
         s.completed_at,
         s.created_at,
-        j.*,
+        j.id as job_recruitment_id,
+        j.job_url,
+        j.job_title,
+        j.job_description,
+        j.salary_offered,
+        j.company_name,
+        j.company_website,
+        j.company_linkedin,
+        j.company_email_domain,
+        j.company_phone,
+        j.company_address,
+        j.company_email,
+        j.recruiter_name,
+        j.recruiter_email,
+        j.recruiter_phone,
+        j.recruiter_linkedin,
+        j.recruiter_title,
+        j.suspicious_message,
+        j.communication_channel,
+        j.red_flags_noticed,
+        j.notes,
+        j.risk_score,
+        j.risk_level,
+        j.analysis_status,
+        j.findings_summary,
         t.value as target_value,
         t.type as target_type,
         t.label as target_label
@@ -80,10 +105,11 @@ export async function GET(request) {
     `, [user.id]);
 
     const formattedScans = scans.map(scan => ({
-      id: scan.id,
+      id: scan.scan_id,  // THIS IS NOW THE SCANS TABLE ID (correct one for PATCH)
+      originalId: scan.job_recruitment_id,  // Store job_recruitment ID separately if needed
       scan_type: scan.scan_type,
       status: scan.status,
-      progress: calculateProgress(scan),
+      progress: scan.progress || 0,
       started_at: scan.started_at,
       completed_at: scan.completed_at,
       created_at: scan.created_at,
@@ -93,7 +119,8 @@ export async function GET(request) {
         label: scan.target_label
       },
       assets: {
-        id: scan.id,
+        id: scan.scan_id,
+        job_recruitment_id: scan.job_recruitment_id,
         job_url: scan.job_url,
         job_title: scan.job_title,
         job_description: scan.job_description,
@@ -124,7 +151,8 @@ export async function GET(request) {
 
     return NextResponse.json({ 
       success: true, 
-      scans: formattedScans 
+      scans: formattedScans,
+      last_updated: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error fetching job scans:', error);
@@ -243,8 +271,8 @@ export async function POST(request) {
       // Create scan
       const [scanResult] = await connection.execute(
         `INSERT INTO scans (
-          target_id, scan_type, status, priority, created_at
-        ) VALUES (?, 'job-recruitment', 'queued', 1, NOW())`,
+          target_id, scan_type, status, priority, progress, created_at
+        ) VALUES (?, 'job-recruitment', 'queued', 1, 0, NOW())`,
         [targetId]
       );
 
@@ -331,6 +359,7 @@ export async function POST(request) {
         message: '✅ Scan created successfully! Your investigation has been saved.',
         scan: {
           id: scanId,
+          job_recruitment_id: scanId,  // For backward compatibility
           status: 'queued',
           company_name: body.company_name,
           job_title: body.job_title,
@@ -357,6 +386,141 @@ export async function POST(request) {
       success: false, 
       error: '❌ Failed to create scan. Please check your input and try again.',
       details: error.message 
+    }, { status: 500 });
+  }
+}
+
+// ============================================================
+// PATCH /api/modules/company-jobscam - Update scan status
+// ============================================================
+export async function PATCH(request) {
+  let connection;
+  
+  try {
+    const user = await verifyToken(request);
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const scanId = parseInt(searchParams.get('id'));
+
+    if (!scanId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid scan ID' 
+      }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { status, progress, findings_count } = body;
+
+    // Validate status
+    const validStatuses = ['queued', 'pending', 'running', 'paused', 'completed', 'stopped', 'failed'];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid status value' 
+      }, { status: 400 });
+    }
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Verify scan belongs to user
+    const [scanCheck] = await connection.execute(`
+      SELECT s.id 
+      FROM scans s
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE s.id = ? AND p.user_id = ?
+    `, [scanId, user.id]);
+
+    if (scanCheck.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Scan not found or unauthorized' 
+      }, { status: 404 });
+    }
+
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
+
+    if (status) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+    if (progress !== undefined) {
+      updates.push('progress = ?');
+      values.push(progress);
+    }
+    if (findings_count !== undefined) {
+      updates.push('findings_count = ?');
+      values.push(findings_count);
+    }
+
+    // Auto-set started_at when status becomes 'running'
+    if (status === 'running') {
+      updates.push('started_at = COALESCE(started_at, NOW())');
+    }
+
+    // Auto-set completed_at when status is completed/failed/stopped
+    if (status === 'completed' || status === 'failed' || status === 'stopped') {
+      updates.push('completed_at = NOW()');
+    }
+
+    updates.push('updated_at = NOW()');
+
+    if (updates.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No fields to update' 
+      }, { status: 400 });
+    }
+
+    // Execute update
+    const query = `UPDATE scans SET ${updates.join(', ')} WHERE id = ?`;
+    values.push(scanId);
+    
+    await connection.execute(query, values);
+    await connection.commit();
+    connection.release();
+
+    // Get updated scan data
+    const [updatedScan] = await pool.execute(`
+      SELECT 
+        s.id, s.status, s.progress, s.findings_count, s.started_at, s.completed_at,
+        j.company_name, j.job_title, j.risk_score, j.risk_level
+      FROM scans s
+      LEFT JOIN job_recruitment_scans j ON s.id = j.scan_id
+      WHERE s.id = ?
+    `, [scanId]);
+
+    console.log(`✅ Scan ${scanId} status updated to ${status || 'unchanged'}, progress: ${progress || 'unchanged'}`);
+
+    return NextResponse.json({ 
+      success: true, 
+      scan: updatedScan[0],
+      message: status ? `Scan status updated to ${status}` : 'Scan updated successfully'
+    });
+
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    console.error('Error updating scan status:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
     }, { status: 500 });
   }
 }

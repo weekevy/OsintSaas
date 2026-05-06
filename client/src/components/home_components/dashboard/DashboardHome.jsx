@@ -21,6 +21,8 @@ const DashboardHome = ({
   selectedRiskData,
   selectedProjectName,
   selectedProjectTarget,
+  selectedProjectStatus,     // NEW: status of selected project (running, paused, completed, etc.)
+  selectedProjectFindings,   // NEW: findings count of selected project
   onRiskDataChange,
   refreshTrigger
 }) => {
@@ -36,7 +38,7 @@ const DashboardHome = ({
     <div className="dashboard-ambient min-h-screen font-sans text-white">
       <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-10 pb-14 md:pb-12">
 
-        <header className="mb-8 md:mb-10 max-w-3xl">
+        {/* <header className="mb-8 md:mb-10 max-w-3xl">
           <p className="text-[11px] font-semibold tracking-[0.22em] text-[#00E5FF]/85 uppercase mb-2">
             Intelligence overview
           </p>
@@ -46,7 +48,7 @@ const DashboardHome = ({
           <p className="mt-2 text-sm md:text-[15px] text-white/50 leading-relaxed">
             Live risk posture, investigations, and signals—organized like a modern control room.
           </p>
-        </header>
+        </header> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-10 items-start">
           <div className="lg:col-span-1 min-w-0">
@@ -54,6 +56,8 @@ const DashboardHome = ({
               riskData={selectedRiskData}
               projectName={selectedProjectName}
               projectTarget={selectedProjectTarget}
+              projectStatus={selectedProjectStatus}        // NEW: pass status
+              projectFindings={selectedProjectFindings}    // NEW: pass findings
               getRiskColor={getRiskColor}
               getRiskBgColor={getRiskBgColor}
             />

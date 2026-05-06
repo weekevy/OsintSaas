@@ -18,7 +18,7 @@ docker/*/events/
 docker/*/output/
 docker/*/data/
 **/__pycache__/
-
+node_modules/
 
 # Editor directories and files
 .vscode/*
