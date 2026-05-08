@@ -110,30 +110,6 @@ const ModuleIcon = ({ type, size = 36 }) => {
         </defs>
       </svg>
     ),
-    'email-leak': (
-      <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* envelope */}
-        <rect x="5" y="12" width="38" height="26" rx="4" fill="url(#el-bg)" stroke="#22d3ee" strokeWidth="1.2"/>
-        {/* fold lines */}
-        <path d="M5 15L24 27L43 15" stroke="#22d3ee" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <line x1="5" y1="38" x2="19" y2="27" stroke="#22d3ee" strokeWidth="0.8" opacity="0.4"/>
-        <line x1="43" y1="38" x2="29" y2="27" stroke="#22d3ee" strokeWidth="0.8" opacity="0.4"/>
-        {/* leak drop */}
-        <path d="M24 30C24 30 30 36 30 39.5C30 42.5 27.3 44 24 44C20.7 44 18 42.5 18 39.5C18 36 24 30 24 30Z" fill="url(#el-drop)" stroke="#22d3ee" strokeWidth="1"/>
-        {/* shine */}
-        <rect x="7" y="14" width="12" height="3" rx="1" fill="white" opacity="0.05"/>
-        <defs>
-          <linearGradient id="el-bg" x1="5" y1="12" x2="43" y2="38" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#0d2d35"/>
-            <stop offset="100%" stopColor="#061418"/>
-          </linearGradient>
-          <linearGradient id="el-drop" x1="24" y1="30" x2="24" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8"/>
-            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.4"/>
-          </linearGradient>
-        </defs>
-      </svg>
-    ),
     'scam-email': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
         {/* envelope - red tint */}
@@ -257,13 +233,6 @@ const MODULE_META = {
     tags: ['Phishing', 'Domain Intel', 'SSL Check'],
     stats: [{ label: 'Avg Scan', value: '20s' }, { label: 'Detection', value: '97%' }],
     risk: 'CRITICAL',
-  },
-  'email-leak': {
-    accent: '#22d3ee', accentBg: 'rgba(34,211,238,0.07)', border: 'rgba(34,211,238,0.18)',
-    hoverBorder: 'rgba(34,211,238,0.45)', glow: 'rgba(34,211,238,0.12)',
-    tags: ['Breach Check', 'Dark Web', 'Credentials'],
-    stats: [{ label: 'DB Sources', value: '800+' }, { label: 'Coverage', value: '99%' }],
-    risk: 'HIGH',
   },
   'scam-email': {
     accent: '#fb7185', accentBg: 'rgba(251,113,133,0.07)', border: 'rgba(251,113,133,0.18)',
