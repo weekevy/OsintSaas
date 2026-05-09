@@ -382,14 +382,13 @@ const extractScanId = (compositeId) => {
 
 // ──────────────────────────────────────────────────────────────
 // RunningScans
-// NOTE: The "Active Scans" section header is rendered once in
-// ScanDashboard, NOT here. This component only renders the
-// individual scan card(s) passed in via props.
 // ──────────────────────────────────────────────────────────────
 export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
   const [progressModal, setProgressModal] = useState({ isOpen: false, scan: null });
   const [investigationModal, setInvestigationModal] = useState({ isOpen: false, scan: null });
+  // Controls per-card enter animation
+  const [visibleCards, setVisibleCards] = useState(new Set());
 
   const [scanStatuses, setScanStatuses] = useState(() => {
     try {
@@ -401,6 +400,17 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
   useEffect(() => {
     try { localStorage.setItem(SCAN_STATES_KEY, JSON.stringify(scanStatuses)); } catch {}
   }, [scanStatuses]);
+
+  // Stagger each card's fade-in when the list first appears
+  useEffect(() => {
+    if (!runningScans || runningScans.length === 0) return;
+    runningScans.forEach((scan, i) => {
+      const t = setTimeout(() => {
+        setVisibleCards(prev => new Set([...prev, scan.id]));
+      }, i * 70);
+      return () => clearTimeout(t);
+    });
+  }, []);   // intentionally run only once on mount
 
   if (!runningScans || runningScans.length === 0) return null;
 
@@ -414,8 +424,9 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
 
   const patchScan = async (scan, body, onSuccess, onRevert) => {
     const realScanId = getRealScanId(scan);
+    const apiBase = scan.api || '/api/modules/company-jobscam';
     try {
-      const res = await fetch(`/api/modules/company-jobscam?id=${realScanId}`, {
+      const res = await fetch(`${apiBase}?id=${realScanId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -465,8 +476,9 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
   const handleConfirmRemove = async () => {
     if (confirmModal.scan) {
       const realScanId = getRealScanId(confirmModal.scan);
+      const apiBase = confirmModal.scan.api || '/api/modules/company-jobscam';
       try {
-        await fetch(`/api/modules/company-jobscam?id=${realScanId}`, {
+        await fetch(`${apiBase}?id=${realScanId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'stopped' }),
@@ -498,169 +510,168 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
   };
 
   return (
-    <div className="space-y-2 sm:space-y-3">
-      {runningScans.map(scan => {
-        const module = { color: scan.moduleColor, icon: scan.moduleIcon, textColor: scan.moduleTextColor };
-        const s = getScanState(scan.id);
-        const isPending = s.status === 'pending';
-        const isRunning = s.status === 'running' && !s.isPaused;
-        const isPaused = s.isPaused;
-        const progress = s.progress || 0;
+    <>
+      <div className="space-y-2 sm:space-y-3">
+        {runningScans.map((scan, index) => {
+          const module = { color: scan.moduleColor, icon: scan.moduleIcon, textColor: scan.moduleTextColor };
+          const s = getScanState(scan.id);
+          const isPending = s.status === 'pending';
+          const isRunning = s.status === 'running' && !s.isPaused;
+          const isPaused = s.isPaused;
+          const progress = s.progress || 0;
+          const isVisible = visibleCards.has(scan.id);
 
-        return (
-          <div
-            key={scan.id}
-            className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
-          >
-            {/* Atmospheric inner glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.04] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
-            {/* Radial shadow in bottom-right for depth */}
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#00E5FF]/[0.04] rounded-full blur-2xl pointer-events-none" />
-            {/* Top shimmer line */}
-            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
+          return (
+            <div
+              key={scan.id}
+              className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
+              style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 320ms ease, transform 320ms ease',
+              }}
+            >
+              {/* Atmospheric inner glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.04] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#00E5FF]/[0.04] rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
 
-            <div className="relative p-3 sm:p-5">
-              {/* Main row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-                {/* Left: icon + info */}
-                <div className="flex items-center gap-2.5 sm:gap-4 flex-1 min-w-0">
-                  <div className="relative w-9 h-9 sm:w-12 sm:h-12 border border-[#00E5FF]/40 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/10 shadow-inner shadow-[#00E5FF]/5">
-                    {/* Icon glow */}
-                    <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#00E5FF]/10 to-transparent" />
-                    <span className="relative">{getIcon(module.icon, "w-4 h-4 sm:w-6 sm:h-6 text-[#00E5FF]")}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                      <h4 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.06em] truncate">
-                        {scan.moduleName}
-                      </h4>
-                      {getStatusBadge(scan.id, scan.status)}
+              <div className="relative p-3 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+                  <div className="flex items-center gap-2.5 sm:gap-4 flex-1 min-w-0">
+                    <div className="relative w-9 h-9 sm:w-12 sm:h-12 border border-[#00E5FF]/40 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/10 shadow-inner shadow-[#00E5FF]/5">
+                      <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#00E5FF]/10 to-transparent" />
+                      <span className="relative">{getIcon(module.icon, "w-4 h-4 sm:w-6 sm:h-6 text-[#00E5FF]")}</span>
                     </div>
-                    <p className={`text-[9px] sm:text-[11px] truncate ${module.textColor || 'text-[#00E5FF]/60'}`}>
-                      Target: {scan.target}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                        <h4 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.06em] truncate">
+                          {scan.moduleName}
+                        </h4>
+                        {getStatusBadge(scan.id, scan.status)}
+                      </div>
+                      <p className={`text-[9px] sm:text-[11px] truncate ${module.textColor || 'text-[#00E5FF]/60'}`}>
+                        Target: {scan.target}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                    {isPending && (
+                      <button
+                        onClick={(e) => handleStartScan(scan, e)}
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
+                      >
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        </svg>
+                        Start
+                      </button>
+                    )}
+
+                    {!isPending && (
+                      <button
+                        onClick={(e) => handleInvestigationClick(scan, e)}
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
+                      >
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Details
+                      </button>
+                    )}
+
+                    {isRunning && (
+                      <button
+                        onClick={(e) => handlePauseClick(scan, e)}
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#fbbf24]/40 rounded-lg text-[#fbbf24] hover:bg-[#fbbf24]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#fbbf24]/5"
+                      >
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Pause
+                      </button>
+                    )}
+
+                    {isPaused && (
+                      <button
+                        onClick={(e) => handleResumeClick(scan, e)}
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
+                      >
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Resume
+                      </button>
+                    )}
+
+                    <button
+                      onClick={(e) => handleEditClick(scan, e)}
+                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/15 rounded-lg text-white/60 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em]"
+                    >
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      </svg>
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={(e) => handleRemoveClick(scan, e)}
+                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#f87171]/30 rounded-lg text-[#f87171] hover:bg-[#f87171]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#f87171]/[0.04]"
+                    >
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                      <span className="hidden sm:inline">Delete</span>
+                      <span className="sm:hidden">Del</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Right: action buttons */}
-                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                  {isPending && (
-                    <button
-                      onClick={(e) => handleStartScan(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      </svg>
-                      Start
-                    </button>
-                  )}
+                {isRunning && (
+                  <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.1em]">Scanning in progress</span>
+                      </div>
+                      <span className="text-[9px] sm:text-[10px] text-white font-semibold">{Math.min(progress, 100)}%</span>
+                    </div>
+                    <div className="h-1 sm:h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out shadow-sm shadow-[#00E5FF]/30"
+                        style={{ width: `${Math.min(progress, 100)}%`, background: 'linear-gradient(90deg, #00E5FF, #2DD4BF)' }}
+                      />
+                    </div>
+                  </div>
+                )}
 
-                  {!isPending && (
-                    <button
-                      onClick={(e) => handleInvestigationClick(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                {isPaused && (
+                  <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
+                    <div className="flex items-center justify-center gap-1.5 text-[8px] sm:text-[9px] text-white/30 uppercase tracking-[0.08em]">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#fbbf24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                       </svg>
-                      Details
-                    </button>
-                  )}
+                      Scan paused — click Resume to continue
+                    </div>
+                  </div>
+                )}
 
-                  {isRunning && (
-                    <button
-                      onClick={(e) => handlePauseClick(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#fbbf24]/40 rounded-lg text-[#fbbf24] hover:bg-[#fbbf24]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#fbbf24]/5"
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Pause
-                    </button>
-                  )}
-
-                  {isPaused && (
-                    <button
-                      onClick={(e) => handleResumeClick(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Resume
-                    </button>
-                  )}
-
-                  <button
-                    onClick={(e) => handleEditClick(scan, e)}
-                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/15 rounded-lg text-white/60 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em]"
-                  >
-                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                {scan.assets && Object.keys(scan.assets).length > 0 && (
+                  <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07] flex items-center gap-1.5 text-[8px] sm:text-[9px] text-white/30 uppercase tracking-[0.08em]">
+                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={(e) => handleRemoveClick(scan, e)}
-                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#f87171]/30 rounded-lg text-[#f87171] hover:bg-[#f87171]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#f87171]/[0.04]"
-                  >
-                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
-                    <span className="hidden sm:inline">Delete</span>
-                    <span className="sm:hidden">Del</span>
-                  </button>
-                </div>
+                    {Object.keys(scan.assets).length} assets collected
+                  </div>
+                )}
               </div>
-
-              {/* Running spinner + progress */}
-              {isRunning && (
-                <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
-                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.1em]">Scanning in progress</span>
-                    </div>
-                    <span className="text-[9px] sm:text-[10px] text-white font-semibold">{Math.min(progress, 100)}%</span>
-                  </div>
-                  <div className="h-1 sm:h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ease-out shadow-sm shadow-[#00E5FF]/30"
-                      style={{ width: `${Math.min(progress, 100)}%`, background: 'linear-gradient(90deg, #00E5FF, #2DD4BF)' }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Paused notice */}
-              {isPaused && (
-                <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
-                  <div className="flex items-center justify-center gap-1.5 text-[8px] sm:text-[9px] text-white/30 uppercase tracking-[0.08em]">
-                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#fbbf24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                    </svg>
-                    Scan paused — click Resume to continue
-                  </div>
-                </div>
-              )}
-
-              {/* Assets footer */}
-              {scan.assets && Object.keys(scan.assets).length > 0 && (
-                <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07] flex items-center gap-1.5 text-[8px] sm:text-[9px] text-white/30 uppercase tracking-[0.08em]">
-                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                  </svg>
-                  {Object.keys(scan.assets).length} assets collected
-                </div>
-              )}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}
@@ -681,7 +692,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         onClose={() => setInvestigationModal({ isOpen: false, scan: null })}
         scan={investigationModal.scan}
       />
-    </div>
+    </>
   );
 };
 
@@ -692,6 +703,18 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
   const [progressModal, setProgressModal] = useState({ isOpen: false, scan: null });
   const [editModal, setEditModal] = useState({ isOpen: false, scan: null });
+  const [visibleCards, setVisibleCards] = useState(new Set());
+
+  // Stagger history cards in on mount
+  useEffect(() => {
+    if (!scanHistory || scanHistory.length === 0) return;
+    scanHistory.slice(0, 3).forEach((scan, i) => {
+      const t = setTimeout(() => {
+        setVisibleCards(prev => new Set([...prev, scan.id]));
+      }, i * 80);
+      return () => clearTimeout(t);
+    });
+  }, []);
 
   if (!scanHistory || scanHistory.length === 0) return null;
 
@@ -728,58 +751,64 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
         </div>
 
         <div className="grid gap-2 sm:gap-3">
-          {scanHistory.slice(0, 3).map(scan => (
-            <div
-              key={scan.id}
-              className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
-            >
-              {/* Atmospheric glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
-              {/* Side accent bar */}
-              <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-gradient-to-b from-[#00E5FF]/40 to-[#2DD4BF]/40 rounded-full" />
+          {scanHistory.slice(0, 3).map((scan, index) => {
+            const isVisible = visibleCards.has(scan.id);
+            return (
+              <div
+                key={scan.id}
+                className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                  transition: 'opacity 320ms ease, transform 320ms ease',
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
+                <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-gradient-to-b from-[#00E5FF]/40 to-[#2DD4BF]/40 rounded-full" />
 
-              <div className="relative pl-4 sm:pl-5 pr-3 sm:pr-4 py-3 sm:py-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                    <div className="relative w-9 h-9 sm:w-10 sm:h-10 border border-[#00E5FF]/30 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/[0.07]">
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00E5FF]/10 to-transparent" />
-                      <span className="relative">{getIcon(scan.toolIcon, "w-4 h-4 sm:w-5 sm:h-5 text-[#00E5FF]")}</span>
+                <div className="relative pl-4 sm:pl-5 pr-3 sm:pr-4 py-3 sm:py-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                      <div className="relative w-9 h-9 sm:w-10 sm:h-10 border border-[#00E5FF]/30 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/[0.07]">
+                        <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00E5FF]/10 to-transparent" />
+                        <span className="relative">{getIcon(scan.toolIcon, "w-4 h-4 sm:w-5 sm:h-5 text-[#00E5FF]")}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.06em] truncate">{scan.tool}</h4>
+                        <p className="text-white/35 text-[9px] sm:text-[10px] uppercase tracking-[0.06em] truncate mt-0.5">{scan.target}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.06em] truncate">{scan.tool}</h4>
-                      <p className="text-white/35 text-[9px] sm:text-[10px] uppercase tracking-[0.06em] truncate mt-0.5">{scan.target}</p>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                    <button onClick={() => setProgressModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
-                      <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      Details
-                    </button>
-                    <button onClick={() => setEditModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
-                      <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
-                      Edit
-                    </button>
-                    <button onClick={() => setConfirmModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#f87171]/40 hover:text-[#f87171] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
-                      <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      <span className="hidden sm:inline">Delete</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                      <button onClick={() => setProgressModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
+                        <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Details
+                      </button>
+                      <button onClick={() => setEditModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
+                        <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
+                        Edit
+                      </button>
+                      <button onClick={() => setConfirmModal({ isOpen: true, scan })} className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/10 rounded-lg text-white/50 hover:border-[#f87171]/40 hover:text-[#f87171] transition-colors text-[8px] sm:text-[10px] uppercase tracking-[0.08em]">
+                        <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
 
-                    <div className="flex gap-1 ml-1">
-                      {scan.findings > 0 && (
-                        <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 border border-[#f87171]/30 rounded-lg text-[#f87171] text-[8px] sm:text-[9px] uppercase tracking-[0.08em] bg-[#f87171]/5">
-                          {scan.findings} findings
+                      <div className="flex gap-1 ml-1">
+                        {scan.findings > 0 && (
+                          <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 border border-[#f87171]/30 rounded-lg text-[#f87171] text-[8px] sm:text-[9px] uppercase tracking-[0.08em] bg-[#f87171]/5">
+                            {scan.findings} findings
+                          </span>
+                        )}
+                        <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 border border-[#2DD4BF]/30 rounded-lg text-[#2DD4BF] text-[8px] sm:text-[9px] uppercase tracking-[0.08em] bg-[#2DD4BF]/5">
+                          Done
                         </span>
-                      )}
-                      <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 border border-[#2DD4BF]/30 rounded-lg text-[#2DD4BF] text-[8px] sm:text-[9px] uppercase tracking-[0.08em] bg-[#2DD4BF]/5">
-                        Done
-                      </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

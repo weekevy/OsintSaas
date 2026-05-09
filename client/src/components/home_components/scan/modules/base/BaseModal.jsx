@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const BaseModal = ({ 
   isOpen, 
@@ -11,12 +11,16 @@ const BaseModal = ({
   saveButtonText = "Save Changes",
   showRevert = false,
   onRevert,
-  // maxWidth = "max-w-3xl"  // Wider modal
-  maxWidth = "max-w-6xl"  // 1152px
+  maxWidth = "max-w-6xl"
 }) => {
+  const saveCalledRef = useRef(false);
+  const modalRef = useRef(null);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Reset the ref when modal opens
+      saveCalledRef.current = false;
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -25,11 +29,64 @@ const BaseModal = ({
     };
   }, [isOpen]);
 
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
+  const handleSave = () => {
+    // Prevent double save calls
+    if (saving || saveCalledRef.current) {
+      console.log('BaseModal: Preventing duplicate save');
+      return;
+    }
+    
+    if (onSave) {
+      saveCalledRef.current = true;
+      onSave();
+      
+      // Reset ref after a short delay
+      setTimeout(() => {
+        saveCalledRef.current = false;
+      }, 1000);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    // Prevent Enter key from triggering save multiple times
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSave();
+    }
+    // Close on Escape key
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80">
-      <div className={`relative w-full ${maxWidth} max-h-[85vh] border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden`}>
+    <div 
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80"
+      onKeyDown={handleKeyDown}
+    >
+      <div 
+        ref={modalRef}
+        className={`relative w-full ${maxWidth} max-h-[85vh] border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden`}
+      >
         
         {/* Header */}
         <div className="relative px-6 py-4 border-b border-white/[0.08]">
@@ -51,43 +108,50 @@ const BaseModal = ({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)] custom-scroll">
-          {children}
-        </div>
+        {/* Content - wrapped in form for better UX */}
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}>
+          <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)] custom-scroll">
+            {children}
+          </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/[0.08] bg-black/20 flex justify-end gap-3">
-          {showRevert && onRevert && (
-            <button
-              onClick={onRevert}
-              disabled={saving}
-              className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50"
-            >
-              Revert
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onSave}
-            disabled={saving}
-            className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-xl hover:opacity-90 transition-all duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50 flex items-center gap-2"
-          >
-            {saving ? (
-              <>
-                <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : (
-              saveButtonText
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-white/[0.08] bg-black/20 flex justify-end gap-3">
+            {showRevert && onRevert && (
+              <button
+                type="button"
+                onClick={onRevert}
+                disabled={saving}
+                className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50"
+              >
+                Revert
+              </button>
             )}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-xl hover:opacity-90 transition-all duration-150 text-[11px] font-['Poppins'] uppercase tracking-[0.08em] disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                saveButtonText
+              )}
+            </button>
+          </div>
+        </form>
       </div>
 
       <style>{`

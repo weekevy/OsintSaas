@@ -1,36 +1,62 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { isTokenExpired, getToken, clearSession } from '../utils/authUtils';
 
+const IDLE_TIMEOUT = 10 * 1000; // 10 seconds of inactivity (FOR TESTING)
+
 export const useSessionCheck = (onSessionExpired) => {
+  const timeoutRef = useRef(null);
   const intervalRef = useRef(null);
+
+  const handleExpiry = useCallback(() => {
+    clearSession();
+    if (onSessionExpired) {
+      onSessionExpired();
+    }
+  }, [onSessionExpired]);
+
+  const resetTimer = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(handleExpiry, IDLE_TIMEOUT);
+  }, [handleExpiry]);
 
   const checkSession = useCallback(() => {
     const token = getToken();
     
     if (token && isTokenExpired(token)) {
-      clearSession();
-      if (onSessionExpired) {
-        onSessionExpired();
-      }
+      handleExpiry();
       return true;
     }
     return false;
-  }, [onSessionExpired]);
+  }, [handleExpiry]);
 
   useEffect(() => {
-    // Check immediately on mount
+    if (!onSessionExpired) return;
+
+    // Initial check
     checkSession();
-    
-    // Check every 30 seconds
+    resetTimer();
+
+    // Check token expiration periodically
     intervalRef.current = setInterval(checkSession, 30000);
+
+    // Activity listeners
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     
+    const handleActivity = () => resetTimer();
+    
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleActivity);
+    });
+
     // Cleanup
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
     };
-  }, [checkSession]);
+  }, [checkSession, resetTimer, onSessionExpired]);
 
-  return { checkSession };
+  return { checkSession, resetTimer };
 };

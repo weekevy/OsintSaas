@@ -47,14 +47,19 @@ const RiskCircle = ({
   };
 
   // Persist score + status whenever they change so refresh is instant
+  // But only persist when a project is actually selected
   useEffect(() => {
+    if (!hasProject) {
+      try { localStorage.removeItem(PERSIST_KEY); } catch { /* ignore */ }
+      return;
+    }
     try {
       localStorage.setItem(PERSIST_KEY, JSON.stringify({
         score: displayScore,
         status: projectStatus,
       }));
     } catch { /* ignore */ }
-  }, [displayScore, projectStatus]);
+  }, [displayScore, projectStatus, hasProject]);
 
   useEffect(() => {
     const prevStatus = prevStatusRef.current;
@@ -150,6 +155,12 @@ const RiskCircle = ({
       border: 'rgba(251,191,36,0.4)', bg: 'rgba(251,191,36,0.1)',
       pulse: false, strokeWidth: 11,
     };
+    // No project selected — always show idle/empty state
+    if (!hasProject) return {
+      label: 'IDLE', color: 'rgba(255,255,255,0.3)',
+      border: 'rgba(255,255,255,0.1)', bg: 'rgba(255,255,255,0.04)',
+      pulse: false, strokeWidth: 11,
+    };
     const s = activeScore;
     if (s >= 75) return { label: 'CRITICAL', color: '#f87171', border: 'rgba(248,113,113,0.4)', bg: 'rgba(248,113,113,0.1)', pulse: false, strokeWidth: 11 };
     if (s >= 50) return { label: 'HIGH',     color: '#fbbf24', border: 'rgba(251,191,36,0.4)',  bg: 'rgba(251,191,36,0.1)',  pulse: false, strokeWidth: 11 };
@@ -174,6 +185,10 @@ const RiskCircle = ({
   } else if (isPaused) {
     ringOffset = 0;
   } else if (isQueued || isPending || isStopped || isFailed || activeScore === 0) {
+    ringOffset = circ;
+    ringColor  = 'rgba(255,255,255,0.06)';
+  } else if (!hasProject) {
+    // ── FIX: No project selected → always render an empty/grey ring ──
     ringOffset = circ;
     ringColor  = 'rgba(255,255,255,0.06)';
   } else {

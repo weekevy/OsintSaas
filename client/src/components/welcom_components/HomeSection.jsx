@@ -79,7 +79,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
   const leftDouble  = [...leftFeed,  ...leftFeed];
   const rightDouble = [...rightFeed, ...rightFeed];
 
-  // Right panel — capability pillars shown beside the orb on xl
   const capabilities = [
     {
       icon: (
@@ -142,18 +141,41 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           <span className="text-[11px] font-bold tracking-[0.25em] text-white/60 uppercase">Global Intelligence Terminal</span>
         </div>
 
-        {/* Hero Title */}
-        <div className="w-full text-center px-4">
-          <h1 className={`font-black tracking-tight leading-[1.02] transition-all duration-700 delay-100 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}`}>
+        {/* ── FIX: Hero Title ──────────────────────────────────────────────
+            - Wrapper has a dynamic min-height to reserve space for the text.
+            - Entrance animation uses translate-y to avoid horizontal shifts.
+            - text-wrap: balance ensures better multi-line rendering.
+        ──────────────────────────────────────────────────────────────── */}
+        <div
+          className="w-full text-center px-4 flex flex-col justify-center overflow-visible mb-6"
+          style={{ 
+            minHeight: '1.2em',
+            contain: 'layout'
+          }}
+        >
+          <h1
+            className={`font-black tracking-tight leading-[1.05] transition-all duration-1000 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ 
+              fontSynthesis: 'none', 
+              textRendering: 'optimizeLegibility',
+              textWrap: 'balance'
+            }}
+          >
             <span
-              className="block text-white mt-1"
-              style={{ fontSize: 'clamp(2rem, 8vw, 5.5rem)' }}
+              className="block text-white"
+              style={{
+                fontSize: 'clamp(2.5rem, 8vw, 5.5rem)',
+                willChange: 'transform, opacity',
+              }}
             >
               Uncover the Truth
             </span>
             <span
-              className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent"
-              style={{ fontSize: 'clamp(3.3rem, 9.5vw, 6.5rem)' }}
+              className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent pb-2"
+              style={{
+                fontSize: 'clamp(3.5rem, 9.5vw, 6.5rem)',
+                willChange: 'transform, opacity',
+              }}
             >
               Break Down Scammers.
             </span>
@@ -190,9 +212,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           {/* ── xl: side-by-side  |  below xl: stacked centered ── */}
           <div className="flex flex-col xl:flex-row xl:items-center xl:gap-10">
 
-            {/* ════════════════════════════════
-                LEFT — orb + flanking feeds
-            ════════════════════════════════ */}
+            {/* LEFT — orb + flanking feeds */}
             <div className="flex items-center justify-center xl:justify-start gap-5 xl:gap-6 xl:flex-shrink-0">
 
               {/* Threat feed (lg+) */}
@@ -279,20 +299,16 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 </div>
               </div>
 
-            </div>{/* end left orb group */}
+            </div>
 
-            {/* ════════════════════════════════
-                RIGHT — capability panel (xl only)
-            ════════════════════════════════ */}
+            {/* RIGHT — capability panel (xl only) */}
             <div className="hidden xl:flex flex-col flex-1 min-w-0 pl-4">
 
-              {/* Section eyebrow */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px flex-1 bg-gradient-to-r from-[#00E5FF]/20 to-transparent" />
                 <span className="text-[10px] font-mono tracking-[0.25em] text-[#00E5FF]/40 uppercase whitespace-nowrap">What We Expose</span>
               </div>
 
-              {/* Big ghost word — purely decorative typography */}
               <div className="relative mb-4 select-none pointer-events-none overflow-hidden" style={{ height: '64px' }}>
                 <span
                   className="absolute left-0 top-0 font-black tracking-tighter leading-none whitespace-nowrap bg-gradient-to-r from-[#00E5FF]/8 to-transparent bg-clip-text text-transparent"
@@ -302,20 +318,17 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 </span>
               </div>
 
-              {/* Capability rows */}
               <div className="flex flex-col gap-4">
                 {capabilities.map((c, i) => (
                   <div
                     key={i}
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}
+                    className={`flex items-start gap-4 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
                     style={{ transitionDelay: `${500 + i * 80}ms` }}
                   >
-                    {/* Icon pill */}
                     <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center mt-0.5"
                       style={{ background: `${c.accent}0D`, border: `0.5px solid ${c.accent}28` }}>
                       {c.icon}
                     </div>
-                    {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-white font-bold text-sm">{c.title}</span>
@@ -327,7 +340,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 ))}
               </div>
 
-              {/* Bottom stat row */}
               <div className="flex items-center gap-6 mt-6 pt-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                 {[
                   { v: '18,340', l: 'Active Targets'  },
@@ -341,9 +353,9 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                   </div>
                 ))}
               </div>
-            </div>{/* end right panel */}
+            </div>
 
-          </div>{/* end xl side-by-side */}
+          </div>
 
           {/* Stats strip — visible below xl only */}
           <div className="flex xl:hidden items-center gap-6 sm:gap-10 mt-8 justify-center">
@@ -366,7 +378,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
           </div>
 
-        </div>{/* end broadcast zone */}
+        </div>
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full mt-16">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BaseModal from '../base/BaseModal';
 import { InputField, TextareaField, SelectField, Section } from '../base/BaseFields';
 import config from './config';
@@ -8,6 +8,19 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [files, setFiles] = useState([]);
+  
+  // Track if save has been called
+  const saveCalledRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      saveCalledRef.current = false;
+      setSaving(false);
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handleInputChange = (fieldId, value) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }));
@@ -19,43 +32,50 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
   };
 
   const handleSave = async () => {
-    // Prevent duplicate saves
-    if (saving) return;
+    // Prevent multiple saves
+    if (saveCalledRef.current || saving) {
+      console.log('⛔ SAVE BLOCKED - Already in progress or completed');
+      return;
+    }
     
+    saveCalledRef.current = true;
     setSaving(true);
     setError(null);
     
-    const dataToSend = {
-      ...formData,
-      project_id: projectId
-    };
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
     
-    console.log('🔵 UI MODE - LinkedIn data that would be saved:', { 
-      profile: dataToSend.profile_name, 
-      company: dataToSend.current_company,
-      files: files.length 
-    });
-    
-    // UI ONLY MODE - No API call
-    // Simulate network delay
-    setTimeout(() => {
-      console.log('✅ UI MODE - LinkedIn save successful (simulated)');
+    // Small delay to ensure state is stable
+    saveTimeoutRef.current = setTimeout(async () => {
+      console.log('🔵 UI MODE - Data that would be saved:', { profile: formData.profile_name, url: formData.profile_url });
       
-      if (onSave) {
+      // Follow the pattern of job-recruitment: pass data to onSave which handles the API
+      if (onSave && typeof onSave === 'function') {
         onSave({
           assets: formData,
           files: files,
           moduleType: moduleType
         });
       }
+      
+      // Reset form
       setFormData({});
       setFiles([]);
+      setError(null);
+      
+      // Close modal
       onClose();
-    }, 500);
+    }, 100);
   };
 
   const handleClose = () => {
     if (saving) return;
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveCalledRef.current = false;
     setFormData({});
     setFiles([]);
     setError(null);
@@ -72,25 +92,25 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
         placeholder: field.placeholder,
         required: field.required,
         help: field.help,
-        disabled: saving
+        disabled: saving,
       };
 
       if (field.type === 'file') {
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-white/60 text-[9px] font-mono uppercase tracking-[0.12em] mb-1">
               {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
+              {field.required && <span className="text-[#f87171] ml-1">*</span>}
             </label>
             <input
               type="file"
               accept={field.accept}
               multiple={field.multiple}
               onChange={(e) => handleFileChange(field.id, e.target.files)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500"
+              className="w-full px-3 py-2 bg-[#0d1114] border border-white/10 text-white text-sm font-mono focus:outline-none focus:border-[#00ff88]/50 transition-colors"
               disabled={saving}
             />
-            {field.help && <p className="text-xs text-gray-400 mt-1">{field.help}</p>}
+            {field.help && <p className="text-white/30 text-[8px] font-mono mt-1">{field.help}</p>}
           </div>
         );
       }
@@ -98,9 +118,11 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
       if (field.type === 'textarea') {
         return <TextareaField key={field.id} {...commonProps} rows={field.rows || 3} />;
       }
+
       if (field.type === 'select') {
         return <SelectField key={field.id} {...commonProps} options={field.options} />;
       }
+
       return <InputField key={field.id} {...commonProps} type={field.type} />;
     });
   };
@@ -109,20 +131,23 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={`New ${config.name}`}
-      description="Enter LinkedIn profile information to start investigation"
+      title={`NEW ${config.name.toUpperCase()}`}
+      description="ENTER LINKEDIN PROFILE INFORMATION TO START INVESTIGATION"
       onSave={handleSave}
       saving={saving}
-      saveButtonText="Start Investigation"
+      saveButtonText="START INVESTIGATION"
     >
       {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm text-center">{error}</p>
+        <div className="mb-4 p-3 bg-[#f87171]/10 border border-[#f87171]/30 rounded-lg">
+          <p className="text-[#f87171] text-[10px] font-mono text-center">{error}</p>
         </div>
       )}
-      
       {Object.entries(config.fields).map(([sectionId, section]) => (
-        <Section key={sectionId} title={section.title} description={section.description} iconName={section.iconName} iconColor={section.iconColor}>
+        <Section
+          key={sectionId}
+          title={section.title}
+          description={section.description}
+        >
           {renderFields(sectionId, section)}
         </Section>
       ))}

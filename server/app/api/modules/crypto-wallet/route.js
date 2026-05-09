@@ -2,18 +2,18 @@ import pool from '../../../../database/config';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
+// Track pending requests to prevent duplicates
+const pendingRequests = new Map();
+
 // Helper function to verify JWT token
 async function verifyToken(request) {
   try {
-    // Check Authorization header first
     const authHeader = request.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this');
       return decoded;
     }
-    
-    // Then check cookies
     const cookieHeader = request.headers.get('cookie');
     if (cookieHeader) {
       const cookies = Object.fromEntries(
@@ -22,13 +22,11 @@ async function verifyToken(request) {
           return [key, value];
         })
       );
-      
       if (cookies.token) {
         const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this');
         return decoded;
       }
     }
-    
     return null;
   } catch (error) {
     console.error('Token verification failed:', error);
@@ -36,7 +34,6 @@ async function verifyToken(request) {
   }
 }
 
-// Helper function to query the database using the pool
 async function query(sql, params) {
   try {
     const [results] = await pool.execute(sql, params);
@@ -47,21 +44,27 @@ async function query(sql, params) {
   }
 }
 
-// GET /api/modules/crypto-wallet - Get all crypto wallet scans for the current user
+function calculateProgress(scan) {
+  if (scan.status === 'completed') return 100;
+  if (scan.status === 'running') return 50;
+  if (scan.status === 'queued' || scan.status === 'pending') return 0;
+  return 0;
+}
+
+// GET - Fetch all crypto wallet scans
 export async function GET(request) {
   try {
-    // Verify user from token
     const user = await verifyToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all scans for the current user that are crypto-wallet type
     const [scans] = await query(`
       SELECT 
-        s.id,
+        s.id as scan_id,
         s.scan_type,
         s.status,
+        s.progress,
         s.priority,
         s.findings_count,
         s.started_at,
@@ -86,12 +89,11 @@ export async function GET(request) {
       ORDER BY s.created_at DESC
     `, [user.id]);
 
-    // Format the response
     const formattedScans = scans.map(scan => ({
-      id: scan.id,
+      id: scan.scan_id,
       scan_type: scan.scan_type,
       status: scan.status,
-      progress: calculateProgress(scan),
+      progress: scan.progress || calculateProgress(scan),
       started_at: scan.started_at,
       completed_at: scan.completed_at,
       created_at: scan.created_at,
@@ -105,19 +107,20 @@ export async function GET(request) {
         blockchain: scan.blockchain,
         exchange: scan.exchange,
         notes: scan.notes,
-        transaction_count: scan.transaction_count || 0,
+        transaction_count: scan.transaction_count,
         balance: scan.balance,
-        risk_score: scan.risk_score || 0
+        risk_score: scan.risk_score
       },
       findings_count: scan.findings_count || 0
     }));
 
     return NextResponse.json({ 
       success: true, 
-      scans: formattedScans 
+      scans: formattedScans,
+      last_updated: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error fetching crypto wallet scans:', error);
+    console.error('Error fetching crypto scans:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to fetch scans',
@@ -126,250 +129,157 @@ export async function GET(request) {
   }
 }
 
-// POST /api/modules/crypto-wallet - Create new crypto wallet scan
+// POST - Create new crypto scan
 export async function POST(request) {
+  let connection;
   try {
-    // Verify user from token
     const user = await verifyToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
+    const walletAddress = body.wallet_address;
+
+    if (!walletAddress) {
+      return NextResponse.json({ success: false, error: 'Wallet address is required' }, { status: 400 });
+    }
+
+    // Duplicate protection
+    const requestId = `crypto_${user.id}_${walletAddress}`;
+    if (pendingRequests.has(requestId)) {
+      return NextResponse.json({ success: false, error: 'Request already being processed' }, { status: 429 });
+    }
+    pendingRequests.set(requestId, true);
+    setTimeout(() => pendingRequests.delete(requestId), 5000);
     
-    // Start transaction
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
-      // First, find or create a project for this user
       let projectId = body.project_id;
-      
       if (!projectId) {
-        // Check if user has a default project
-        const [projects] = await connection.execute(
-          'SELECT id FROM projects WHERE user_id = ? AND name = ? LIMIT 1',
-          [user.id, 'Default Project']
-        );
-        
-        if (projects.length > 0) {
-          projectId = projects[0].id;
-        } else {
-          // Create a default project for the user
-          const [newProject] = await connection.execute(
-            `INSERT INTO projects (user_id, name, description, status, created_at) 
-             VALUES (?, 'Default Project', 'Default project for crypto wallet scans', 'active', NOW())`,
-            [user.id]
-          );
+        const [projects] = await connection.execute('SELECT id FROM projects WHERE user_id = ? AND name = ? LIMIT 1', [user.id, 'Default Project']);
+        if (projects.length > 0) projectId = projects[0].id;
+        else {
+          const [newProject] = await connection.execute(`INSERT INTO projects (user_id, name, description, status, created_at) VALUES (?, 'Default Project', 'Default project for crypto scans', 'active', NOW())`, [user.id]);
           projectId = newProject.insertId;
         }
       }
 
-      // Determine target value (use wallet address)
-      const targetValue = body.wallet_address || 'Unknown';
-      const targetLabel = body.wallet_address ? 
-        `${body.wallet_address.substring(0, 10)}... - Wallet Tracker` : 
-        'Crypto Wallet Tracker';
-
-      // Create target
-      const [targetResult] = await connection.execute(
-        `INSERT INTO targets (
-          project_id, type, value, label, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, NOW())`,
-        [
-          projectId,
-          'wallet',
-          targetValue,
-          targetLabel,
-          'pending'
-        ]
-      );
-
+      const [targetResult] = await connection.execute(`INSERT INTO targets (project_id, type, value, label, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())`, [projectId, 'crypto', walletAddress, `${body.blockchain || 'Crypto'} Wallet`, 'pending']);
       const targetId = targetResult.insertId;
 
-      // Create scan
-      const [scanResult] = await connection.execute(
-        `INSERT INTO scans (
-          target_id, scan_type, status, priority, created_at
-        ) VALUES (?, ?, ?, ?, NOW())`,
-        [
-          targetId,
-          'crypto-wallet',
-          'queued',
-          1
-        ]
-      );
-
+      const [scanResult] = await connection.execute(`INSERT INTO scans (target_id, scan_type, status, priority, progress, created_at) VALUES (?, ?, ?, ?, 0, NOW())`, [targetId, 'crypto-wallet', 'queued', 1]);
       const scanId = scanResult.insertId;
 
-      // Create crypto wallet specific data - matching exact table columns
-      await connection.execute(
-        `INSERT INTO crypto_wallet_scans (
-          scan_id, 
-          wallet_address, 
-          blockchain,
-          exchange, 
-          notes, 
-          transaction_count,
-          balance, 
-          risk_score, 
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [
-          scanId,
-          body.wallet_address || null,
-          body.blockchain || null,
-          body.exchange || null,
-          body.notes || null,
-          body.transaction_count || 0,
-          body.balance || null,
-          body.risk_score || 0
-        ]
-      );
+      await connection.execute(`INSERT INTO crypto_wallet_scans (scan_id, wallet_address, blockchain, exchange, notes, created_at) VALUES (?, ?, ?, ?, ?, NOW())`, [scanId, walletAddress, body.blockchain || null, body.exchange || null, body.notes || null]);
 
       await connection.commit();
       connection.release();
+      pendingRequests.delete(requestId);
 
-      return NextResponse.json({ 
-        success: true, 
-        scan: {
-          id: scanId,
-          status: 'queued',
-          assets: {
-            wallet_address: body.wallet_address,
-            blockchain: body.blockchain,
-            balance: body.balance,
-            risk_score: body.risk_score || 0
-          }
-        },
-        message: 'Crypto wallet scan created successfully' 
-      });
-
+      return NextResponse.json({ success: true, message: '✅ Crypto wallet scan created successfully!', scan: { id: scanId, status: 'queued', wallet_address: walletAddress } });
     } catch (error) {
       await connection.rollback();
-      connection.release();
+      if (connection) connection.release();
+      pendingRequests.delete(requestId);
       throw error;
     }
   } catch (error) {
-    console.error('Error creating crypto wallet scan:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to create scan',
-      details: error.message 
-    }, { status: 500 });
+    if (connection) connection.release();
+    console.error('Error creating crypto scan:', error);
+    return NextResponse.json({ success: false, error: 'Failed to create scan', details: error.message }, { status: 500 });
   }
 }
 
-// DELETE /api/modules/crypto-wallet?id=1 - Delete scan
-export async function DELETE(request) {
+// PATCH - Update scan status
+export async function PATCH(request) {
+  let connection;
   try {
-    // Verify user from token
     const user = await verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const { searchParams } = new URL(request.url);
+    const scanId = parseInt(searchParams.get('id'));
+    if (!scanId) return NextResponse.json({ success: false, error: 'Invalid scan ID' }, { status: 400 });
+    const body = await request.json();
+    const { status, progress, findings_count } = body;
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [scanCheck] = await connection.execute(`SELECT s.id FROM scans s JOIN targets t ON s.target_id = t.id JOIN projects p ON t.project_id = p.id WHERE s.id = ? AND p.user_id = ?`, [scanId, user.id]);
+    if (scanCheck.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return NextResponse.json({ success: false, error: 'Scan not found or unauthorized' }, { status: 404 });
     }
+    const updates = [];
+    const values = [];
+    if (status) { updates.push('status = ?'); values.push(status); }
+    if (progress !== undefined) { updates.push('progress = ?'); values.push(progress); }
+    if (findings_count !== undefined) { updates.push('findings_count = ?'); values.push(findings_count); }
+    if (status === 'running') updates.push('started_at = COALESCE(started_at, NOW())');
+    if (['completed', 'failed', 'stopped'].includes(status)) updates.push('completed_at = NOW()');
+    updates.push('updated_at = NOW()');
+    if (updates.length > 0) {
+      const query = `UPDATE scans SET ${updates.join(', ')} WHERE id = ?`;
+      values.push(scanId);
+      await connection.execute(query, values);
+    }
+    await connection.commit();
+    connection.release();
+    return NextResponse.json({ success: true, message: 'Scan status updated' });
+  } catch (error) {
+    if (connection) { await connection.rollback(); connection.release(); }
+    console.error('Error updating crypto scan status:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
 
+// DELETE - Remove scan
+export async function DELETE(request) {
+  let connection;
+  try {
+    const user = await verifyToken(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id'));
-
-    // Verify the scan belongs to this user before deleting
-    const [scans] = await query(`
-      SELECT s.id 
-      FROM scans s
-      JOIN targets t ON s.target_id = t.id
-      JOIN projects p ON t.project_id = p.id
-      WHERE s.id = ? AND p.user_id = ?
-    `, [id, user.id]);
-
-    if (scans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    if (!id) return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
+    const [scanCheck] = await query(`SELECT s.id, s.target_id FROM scans s JOIN targets t ON s.target_id = t.id JOIN projects p ON t.project_id = p.id WHERE s.id = ? AND p.user_id = ?`, [id, user.id]);
+    if (scanCheck.length === 0) return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    const targetId = scanCheck[0].target_id;
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    await connection.execute('DELETE FROM crypto_wallet_scans WHERE scan_id = ?', [id]);
+    await connection.execute('DELETE FROM scans WHERE id = ?', [id]);
+    if (targetId) {
+      const [remainingScans] = await connection.execute('SELECT COUNT(*) as count FROM scans WHERE target_id = ?', [targetId]);
+      if (remainingScans[0].count === 0) await connection.execute('DELETE FROM targets WHERE id = ?', [targetId]);
     }
-
-    await pool.execute('DELETE FROM scans WHERE id = ?', [id]);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Scan deleted successfully' 
-    });
+    await connection.commit();
+    connection.release();
+    return NextResponse.json({ success: true, message: '✅ Crypto scan deleted successfully' });
   } catch (error) {
+    if (connection) connection.release();
     console.error('Error deleting scan:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to delete scan',
-      details: error.message 
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to delete scan' }, { status: 500 });
   }
 }
 
-// PUT /api/modules/crypto-wallet?id=1 - Update scan assets
+// PUT - Update scan assets
 export async function PUT(request) {
   try {
-    // Verify user from token
     const user = await verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id'));
     const body = await request.json();
-
-    // Verify the scan belongs to this user before updating
-    const [scans] = await query(`
-      SELECT cw.scan_id 
-      FROM crypto_wallet_scans cw
-      JOIN scans s ON cw.scan_id = s.id
-      JOIN targets t ON s.target_id = t.id
-      JOIN projects p ON t.project_id = p.id
-      WHERE cw.scan_id = ? AND p.user_id = ?
-    `, [id, user.id]);
-
-    if (scans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
-    }
-
-    // Update crypto wallet specific data
-    await pool.execute(
-      `UPDATE crypto_wallet_scans SET
-        wallet_address = ?,
-        blockchain = ?,
-        exchange = ?,
-        notes = ?,
-        transaction_count = ?,
-        balance = ?,
-        risk_score = ?,
-        updated_at = NOW()
-      WHERE scan_id = ?`,
-      [
-        body.wallet_address || null,
-        body.blockchain || null,
-        body.exchange || null,
-        body.notes || null,
-        body.transaction_count || 0,
-        body.balance || null,
-        body.risk_score || 0,
-        id
-      ]
-    );
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Scan updated successfully' 
-    });
+    if (!id) return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
+    const [scanCheck] = await query(`SELECT s.id FROM scans s JOIN targets t ON s.target_id = t.id JOIN projects p ON t.project_id = p.id WHERE s.id = ? AND p.user_id = ?`, [id, user.id]);
+    if (scanCheck.length === 0) return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    await pool.execute(`UPDATE crypto_wallet_scans SET wallet_address = ?, blockchain = ?, exchange = ?, notes = ?, updated_at = NOW() WHERE scan_id = ?`, [body.wallet_address || null, body.blockchain || null, body.exchange || null, body.notes || null, id]);
+    return NextResponse.json({ success: true, message: 'Scan updated successfully' });
   } catch (error) {
-    console.error('Error updating scan:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to update scan',
-      details: error.message 
-    }, { status: 500 });
+    console.error('Error updating crypto scan:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update scan' }, { status: 500 });
   }
-}
-
-// Helper functions
-function calculateProgress(scan) {
-  if (scan.status === 'completed') return 100;
-  if (scan.status === 'running') return 50;
-  if (scan.status === 'queued' || scan.status === 'pending') return 0;
-  return 0;
 }

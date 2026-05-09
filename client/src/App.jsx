@@ -5,6 +5,7 @@ import LoadingScreen from './components/LoadingScreen';
 import Welcom from './components/Welcom';
 import Home from './components/Home';
 import ToastContainer from './components/common/Toast';
+import SessionManager from './components/common/SessionManager';
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -16,6 +17,7 @@ const AppRoutes = () => {
   return (
     <>
       <ToastContainer />
+      <SessionManager />
       <Routes>
         <Route 
           path="/" 

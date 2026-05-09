@@ -82,6 +82,9 @@ const Home = () => {
     setSelectedProjectStatus('idle');
     setSelectedProjectFindings(0);
     setSelectedModuleId(null);
+    // ── FIX: clear the RiskCircle persisted score so a stale score never
+    // pre-fills the ring on refresh when no project is selected ──
+    try { localStorage.removeItem('riskCircle_lastState'); } catch { /* ignore */ }
   };
 
   const handleTabChange = (tab) => {

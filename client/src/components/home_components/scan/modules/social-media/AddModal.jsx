@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BaseModal from '../base/BaseModal';
 import { InputField, TextareaField, SelectField, FileUploadField, Section } from '../base/BaseFields';
 import config from './config';
-import api from './api';
 
 const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }) => {
   const [formData, setFormData] = useState({});
@@ -12,6 +11,21 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
+  
+  // Track if save has been called
+  const saveCalledRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      saveCalledRef.current = false;
+      setSaving(false);
+      setErrors({});
+      setFormData({});
+      setUploadedFiles([]);
+    }
+  }, [isOpen]);
 
   const handleDragEnter = (e) => {
     e.preventDefault();
@@ -57,9 +71,20 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
   };
 
   const handleSave = async () => {
+    if (saveCalledRef.current || saving) return;
+    
+    saveCalledRef.current = true;
     setSaving(true);
-    const result = await api.create(formData, uploadedFiles);
-    if (result.success && onSave) await onSave(result);
+    
+    // Follow pattern: pass to onSave which handles API
+    if (onSave) {
+      await onSave({
+        assets: formData,
+        files: uploadedFiles,
+        moduleType: moduleType
+      });
+    }
+    
     setSaving(false);
     onClose();
   };
@@ -95,6 +120,7 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
             help={field.help}
             rows={field.rows || 3}
             error={errors[field.id]}
+            disabled={saving}
           />
         );
       }
@@ -110,6 +136,7 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
             required={field.required}
             help={field.help}
             error={errors[field.id]}
+            disabled={saving}
           />
         );
       }
@@ -125,6 +152,7 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
           required={field.required}
           help={field.help}
           error={errors[field.id]}
+          disabled={saving}
         />
       );
     });
@@ -134,11 +162,11 @@ const AddModal = ({ isOpen, onClose, moduleType, moduleName, onSave, projectId }
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={config.name}
-      description={config.description}
+      title={`NEW ${config.name.toUpperCase()}`}
+      description={config.description.toUpperCase()}
       onSave={handleSave}
       saving={saving}
-      saveButtonText="Start Investigation"
+      saveButtonText="START INVESTIGATION"
     >
       {Object.entries(config.fields).map(([sectionId, section]) => (
         <Section key={sectionId} title={section.title} description={section.description}>

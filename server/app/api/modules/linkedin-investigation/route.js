@@ -2,6 +2,9 @@ import pool from '../../../../database/config';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
+// Track pending requests to prevent duplicates
+const pendingRequests = new Map();
+
 // Helper function to verify JWT token
 async function verifyToken(request) {
   try {
@@ -61,15 +64,22 @@ export async function GET(request) {
 
     const [scans] = await query(`
       SELECT 
-        s.id,
+        s.id as scan_id,
         s.scan_type,
         s.status,
+        s.progress,
         s.priority,
         s.findings_count,
         s.started_at,
         s.completed_at,
         s.created_at,
-        l.*,
+        l.id as linkedin_record_id,
+        l.profile_url,
+        l.profile_name,
+        l.profile_headline,
+        l.profile_location,
+        l.connections_list,
+        l.mutual_connections,
         t.value as target_value,
         t.type as target_type,
         t.label as target_label
@@ -83,10 +93,11 @@ export async function GET(request) {
     `, [user.id]);
 
     const formattedScans = scans.map(scan => ({
-      id: scan.id,
+      id: scan.scan_id,
+      originalId: scan.linkedin_record_id,
       scan_type: scan.scan_type,
       status: scan.status,
-      progress: calculateProgress(scan),
+      progress: scan.progress || calculateProgress(scan),
       started_at: scan.started_at,
       completed_at: scan.completed_at,
       created_at: scan.created_at,
@@ -96,6 +107,8 @@ export async function GET(request) {
         label: scan.target_label
       },
       assets: {
+        id: scan.scan_id,
+        linkedin_record_id: scan.linkedin_record_id,
         profile_url: scan.profile_url,
         profile_name: scan.profile_name,
         profile_headline: scan.profile_headline,
@@ -106,7 +119,11 @@ export async function GET(request) {
       findings_count: scan.findings_count || 0
     }));
 
-    return NextResponse.json({ success: true, scans: formattedScans });
+    return NextResponse.json({ 
+      success: true, 
+      scans: formattedScans,
+      last_updated: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error fetching LinkedIn scans:', error);
     return NextResponse.json({ 
@@ -119,6 +136,8 @@ export async function GET(request) {
 
 // POST - Create new LinkedIn scan
 export async function POST(request) {
+  let connection;
+  
   try {
     const user = await verifyToken(request);
     if (!user) {
@@ -126,9 +145,47 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    console.log('LinkedIn POST received:', body);
+    const profileUrl = body.profile_url;
+
+    if (!profileUrl) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'LinkedIn profile URL is required' 
+      }, { status: 400 });
+    }
+
+    // Better duplicate protection: check if a scan with same URL is already pending for this user
+    const [existingScans] = await query(`
+      SELECT s.id 
+      FROM scans s
+      JOIN linkedin_scans l ON s.id = l.scan_id
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE l.profile_url = ? 
+      AND p.user_id = ? 
+      AND s.status IN ('queued', 'pending', 'running')
+      LIMIT 1
+    `, [profileUrl, user.id]);
+
+    if (existingScans.length > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'A scan for this profile is already in progress' 
+      }, { status: 409 });
+    }
     
-    const connection = await pool.getConnection();
+    // Generate unique request ID to prevent rapid-fire duplicates
+    const requestId = `linkedin_${user.id}_${profileUrl}`;
+    if (pendingRequests.has(requestId)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Request already being processed' 
+      }, { status: 429 });
+    }
+    pendingRequests.set(requestId, true);
+    setTimeout(() => pendingRequests.delete(requestId), 5000);
+    
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
@@ -158,7 +215,7 @@ export async function POST(request) {
         [
           projectId,
           'url',
-          body.profile_url || 'Unknown',
+          profileUrl,
           `${body.profile_name || 'LinkedIn'} Profile`,
           'pending'
         ]
@@ -167,8 +224,8 @@ export async function POST(request) {
       const targetId = targetResult.insertId;
 
       const [scanResult] = await connection.execute(
-        `INSERT INTO scans (target_id, scan_type, status, priority, created_at)
-         VALUES (?, ?, ?, ?, NOW())`,
+        `INSERT INTO scans (target_id, scan_type, status, priority, progress, created_at)
+         VALUES (?, ?, ?, ?, 0, NOW())`,
         [targetId, 'linkedin', 'queued', 1]
       );
 
@@ -181,38 +238,39 @@ export async function POST(request) {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           scanId,
-          body.profile_url || '',
-          body.profile_name || '',
-          body.profile_headline || '',
-          body.profile_location || '',
-          body.connections_list || '',
-          body.mutual_connections || ''
+          profileUrl,
+          body.profile_name || null,
+          body.profile_headline || null,
+          body.profile_location || null,
+          body.connections_list || null,
+          body.mutual_connections || null
         ]
       );
 
       await connection.commit();
       connection.release();
+      
+      pendingRequests.delete(requestId);
 
       return NextResponse.json({ 
         success: true, 
+        message: '✅ LinkedIn scan created successfully!',
         scan: {
           id: scanId,
           status: 'queued',
-          assets: {
-            profile_url: body.profile_url,
-            profile_name: body.profile_name,
-            profile_headline: body.profile_headline
-          }
-        },
-        message: 'LinkedIn scan created successfully' 
+          profile_name: body.profile_name,
+          profile_url: profileUrl
+        }
       });
 
     } catch (error) {
       await connection.rollback();
-      connection.release();
+      if (connection) connection.release();
+      pendingRequests.delete(requestId);
       throw error;
     }
   } catch (error) {
+    if (connection) connection.release();
     console.error('Error creating LinkedIn scan:', error);
     return NextResponse.json({ 
       success: false, 
@@ -222,9 +280,87 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Remove LinkedIn scan
-// DELETE - Remove LinkedIn scan
+// PATCH - Update LinkedIn scan status
+export async function PATCH(request) {
+  let connection;
+  try {
+    const user = await verifyToken(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const scanId = parseInt(searchParams.get('id'));
+
+    if (!scanId) {
+      return NextResponse.json({ success: false, error: 'Invalid scan ID' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { status, progress, findings_count } = body;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Verify scan belongs to user
+    const [scanCheck] = await connection.execute(`
+      SELECT s.id 
+      FROM scans s
+      JOIN targets t ON s.target_id = t.id
+      JOIN projects p ON t.project_id = p.id
+      WHERE s.id = ? AND p.user_id = ?
+    `, [scanId, user.id]);
+
+    if (scanCheck.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return NextResponse.json({ success: false, error: 'Scan not found or unauthorized' }, { status: 404 });
+    }
+
+    const updates = [];
+    const values = [];
+
+    if (status) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+    if (progress !== undefined) {
+      updates.push('progress = ?');
+      values.push(progress);
+    }
+    if (findings_count !== undefined) {
+      updates.push('findings_count = ?');
+      values.push(findings_count);
+    }
+
+    if (status === 'running') updates.push('started_at = COALESCE(started_at, NOW())');
+    if (['completed', 'failed', 'stopped'].includes(status)) updates.push('completed_at = NOW()');
+
+    updates.push('updated_at = NOW()');
+
+    if (updates.length > 0) {
+      const query = `UPDATE scans SET ${updates.join(', ')} WHERE id = ?`;
+      values.push(scanId);
+      await connection.execute(query, values);
+    }
+
+    await connection.commit();
+    connection.release();
+
+    return NextResponse.json({ success: true, message: 'Scan status updated' });
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    console.error('Error updating LinkedIn scan status:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+// DELETE - Remove LinkedIn scan (FIXED TO USE scans.id)
 export async function DELETE(request) {
+  let connection;
   try {
     const user = await verifyToken(request);
     if (!user) {
@@ -232,57 +368,87 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const linkedinScanId = parseInt(searchParams.get('id'));
+    const providedId = parseInt(searchParams.get('id'));
 
-    if (!linkedinScanId) {
+    if (!providedId) {
       return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
     }
 
-    // First, get the scan_id from linkedin_scans and verify ownership
-    const [linkedinScans] = await query(`
-      SELECT ls.scan_id, ls.id as linkedin_scan_id
-      FROM linkedin_scans ls
-      JOIN scans s ON ls.scan_id = s.id
+    // Identify the scan_id correctly
+    let scanId = providedId;
+    let found = false;
+
+    // Check if provided ID is scanId
+    const [scanCheck] = await query(`
+      SELECT s.id, s.target_id
+      FROM scans s
       JOIN targets t ON s.target_id = t.id
       JOIN projects p ON t.project_id = p.id
-      WHERE ls.id = ? AND p.user_id = ?
-    `, [linkedinScanId, user.id]);
+      WHERE s.id = ? AND p.user_id = ?
+    `, [providedId, user.id]);
 
-    if (linkedinScans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
-    }
+    if (scanCheck.length > 0) {
+      found = true;
+    } else {
+      // Check if provided ID is linkedin_scans.id
+      const [lsCheck] = await query(`
+        SELECT ls.scan_id, s.target_id
+        FROM linkedin_scans ls
+        JOIN scans s ON ls.scan_id = s.id
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        WHERE ls.id = ? AND p.user_id = ?
+      `, [providedId, user.id]);
 
-    const scanId = linkedinScans[0].scan_id;
-    const linkedinRecordId = linkedinScans[0].linkedin_scan_id;
-
-    // Get the target_id from scans table
-    const [scans] = await query(`SELECT target_id FROM scans WHERE id = ?`, [scanId]);
-    const targetId = scans[0]?.target_id;
-
-    // Delete in correct order
-    // 1. Delete from linkedin_scans
-    await pool.execute('DELETE FROM linkedin_scans WHERE id = ?', [linkedinRecordId]);
-    
-    // 2. Delete from scans table
-    await pool.execute('DELETE FROM scans WHERE id = ?', [scanId]);
-    
-    // 3. Delete target if no other scans reference it
-    if (targetId) {
-      const [remainingScans] = await pool.execute(
-        'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
-        [targetId]
-      );
-      
-      if (remainingScans[0].count === 0) {
-        await pool.execute('DELETE FROM targets WHERE id = ?', [targetId]);
+      if (lsCheck.length > 0) {
+        scanId = lsCheck[0].scan_id;
+        found = true;
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'LinkedIn scan deleted successfully' 
-    });
+    if (!found) {
+      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    }
+
+    const [targetInfo] = await query('SELECT target_id FROM scans WHERE id = ?', [scanId]);
+    const targetId = targetInfo[0]?.target_id;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // 1. Delete from linkedin_scans
+      await connection.execute('DELETE FROM linkedin_scans WHERE scan_id = ?', [scanId]);
+      
+      // 2. Delete from scans table
+      await connection.execute('DELETE FROM scans WHERE id = ?', [scanId]);
+      
+      // 3. Delete target if no other scans reference it
+      if (targetId) {
+        const [remainingScans] = await connection.execute(
+          'SELECT COUNT(*) as count FROM scans WHERE target_id = ?', 
+          [targetId]
+        );
+        
+        if (remainingScans[0].count === 0) {
+          await connection.execute('DELETE FROM targets WHERE id = ?', [targetId]);
+        }
+      }
+
+      await connection.commit();
+      connection.release();
+
+      return NextResponse.json({ 
+        success: true, 
+        message: '✅ LinkedIn scan deleted successfully' 
+      });
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
   } catch (error) {
+    if (connection) connection.release();
     console.error('Error deleting LinkedIn scan:', error);
     return NextResponse.json({ 
       success: false, 
@@ -292,7 +458,7 @@ export async function DELETE(request) {
   }
 }
 
-// PUT - Update LinkedIn scan assets
+// PUT - Update LinkedIn scan assets (FIXED TO USE scans.id)
 export async function PUT(request) {
   try {
     const user = await verifyToken(request);
@@ -301,20 +467,37 @@ export async function PUT(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id'));
+    const providedId = parseInt(searchParams.get('id'));
     const body = await request.json();
 
-    const [scans] = await query(`
-      SELECT l.scan_id 
-      FROM linkedin_scans l
-      JOIN scans s ON l.scan_id = s.id
+    if (!providedId) {
+      return NextResponse.json({ error: 'Invalid scan ID' }, { status: 400 });
+    }
+
+    let scanId = providedId;
+    const [scanCheck] = await query(`
+      SELECT s.id 
+      FROM scans s
       JOIN targets t ON s.target_id = t.id
       JOIN projects p ON t.project_id = p.id
-      WHERE l.scan_id = ? AND p.user_id = ?
-    `, [id, user.id]);
+      WHERE s.id = ? AND p.user_id = ?
+    `, [providedId, user.id]);
 
-    if (scans.length === 0) {
-      return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+    if (scanCheck.length === 0) {
+      const [lsCheck] = await query(`
+        SELECT ls.scan_id 
+        FROM linkedin_scans ls
+        JOIN scans s ON ls.scan_id = s.id
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        WHERE ls.id = ? AND p.user_id = ?
+      `, [providedId, user.id]);
+
+      if (lsCheck.length > 0) {
+        scanId = lsCheck[0].scan_id;
+      } else {
+        return NextResponse.json({ error: 'Scan not found or unauthorized' }, { status: 404 });
+      }
     }
 
     await pool.execute(
@@ -329,12 +512,12 @@ export async function PUT(request) {
       WHERE scan_id = ?`,
       [
         body.profile_url || '',
-        body.profile_name || '',
-        body.profile_headline || '',
-        body.profile_location || '',
-        body.connections_list || '',
-        body.mutual_connections || '',
-        id
+        body.profile_name || null,
+        body.profile_headline || null,
+        body.profile_location || null,
+        body.connections_list || null,
+        body.mutual_connections || null,
+        scanId
       ]
     );
 

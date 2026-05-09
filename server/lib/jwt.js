@@ -3,8 +3,8 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
 const REFRESH_SECRET = process.env.REFRESH_SECRET || 'your-super-secret-refresh-key-change-this';
-const JWT_EXPIRES_IN = '15m';
-const REFRESH_EXPIRES_IN = '7d';
+const JWT_EXPIRES_IN = '24h';
+const REFRESH_EXPIRES_IN = '30d';
 
 export const generateTokens = (user) => {
   const token = jwt.sign(
@@ -52,7 +52,7 @@ export const setTokenCookies = (response, tokens) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60, 
+    maxAge: 24 * 60 * 60, // 24 hours in seconds
     path: '/',
   });
 
@@ -63,13 +63,12 @@ export const setTokenCookies = (response, tokens) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
     path: '/',
   });
 
   return response;
 };
-
 export const clearTokenCookies = (response) => {
   response.cookies.set({
     name: 'token',

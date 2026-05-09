@@ -28,6 +28,30 @@ const ALL_MODULES = [
     color: 'from-[#2DD4BF] to-[#00E5FF]',
     textColor: 'text-[#2DD4BF]',
   },
+  {
+    id: 'social-media',
+    name: 'Social Media OSINT',
+    api: '/api/modules/social-media',
+    icon: 'social',
+    color: 'from-[#FF0088] to-[#FF00CC]',
+    textColor: 'text-[#FF0088]',
+  },
+  {
+    id: 'scam-website',
+    name: 'Scam Website Analysis',
+    api: '/api/modules/scam-website',
+    icon: 'globe',
+    color: 'from-[#FF8800] to-[#FFBB00]',
+    textColor: 'text-[#FF8800]',
+  },
+  {
+    id: 'crypto-wallet',
+    name: 'Crypto Wallet Scanner',
+    api: '/api/modules/crypto-wallet',
+    icon: 'wallet',
+    color: 'from-[#8800FF] to-[#CC00FF]',
+    textColor: 'text-[#8800FF]',
+  },
 ];
 
 const getModuleById = (moduleId) =>
@@ -44,6 +68,8 @@ const getTargetDisplay = (scan, moduleId) => {
       return 'JOB SCAM CHECK';
     case 'linkedin':
       return scan.assets?.profile_name || 'LINKEDIN PROFILE';
+    case 'social-media':
+      return scan.assets?.display_name || scan.assets?.twitter_url || scan.assets?.facebook_url || 'SOCIAL PROFILE';
     default:
       return 'SCAN';
   }

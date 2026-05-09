@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import BaseModal from '../base/BaseModal';
 import { InputField, TextareaField, SelectField, Section } from '../base/BaseFields';
 import config from './config';
-import api from './api';
 
 const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
   const [formData, setFormData] = useState({});
@@ -22,15 +21,15 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     setSaving(true);
-    const result = await api.update(scan.id, formData);
-    if (result.success && onUpdate) {
+    
+    if (onUpdate) {
       await onUpdate(scan.id, formData);
-      onClose();
-    } else {
-      setError(result.error || 'Failed to update assets');
     }
+    
     setSaving(false);
+    onClose();
   };
 
   const handleRevert = () => {
@@ -41,79 +40,49 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
   const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalData);
 
   const renderFields = (sectionId, section) => {
-    return section.fields
-      .filter(field => field.type !== 'file')
-      .map(field => {
-        if (field.type === 'textarea') {
-          return (
-            <TextareaField
-              key={field.id}
-              id={field.id}
-              label={field.label}
-              value={formData[field.id]}
-              onChange={handleInputChange}
-              placeholder={field.placeholder}
-              required={field.required}
-              help={field.help}
-              rows={field.rows || 3}
-              disabled={saving}
-            />
-          );
-        }
-        if (field.type === 'select') {
-          return (
-            <SelectField
-              key={field.id}
-              id={field.id}
-              label={field.label}
-              value={formData[field.id]}
-              onChange={handleInputChange}
-              options={field.options}
-              required={field.required}
-              help={field.help}
-              disabled={saving}
-            />
-          );
-        }
-        return (
-          <InputField
-            key={field.id}
-            id={field.id}
-            label={field.label}
-            type={field.type}
-            value={formData[field.id]}
-            onChange={handleInputChange}
-            placeholder={field.placeholder}
-            required={field.required}
-            help={field.help}
-            disabled={saving}
-          />
-        );
-      });
+    return section.fields.map(field => {
+      const commonProps = {
+        id: field.id,
+        label: field.label,
+        value: formData[field.id],
+        onChange: handleInputChange,
+        placeholder: field.placeholder,
+        required: field.required,
+        help: field.help,
+        disabled: saving,
+      };
+
+      if (field.type === 'textarea') {
+        return <TextareaField key={field.id} {...commonProps} rows={field.rows || 3} />;
+      }
+      if (field.type === 'select') {
+        return <SelectField key={field.id} {...commonProps} options={field.options} />;
+      }
+      return <InputField key={field.id} {...commonProps} type={field.type} />;
+    });
   };
 
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Edit ${config.name}`}
-      description="Update the investigation assets"
+      title={`EDIT ${config.name.toUpperCase()}`}
+      description="UPDATE THE INVESTIGATION ASSETS"
       onSave={handleSave}
       saving={saving}
-      saveButtonText="Update Assets"
+      saveButtonText="UPDATE ASSETS"
       showRevert={hasChanges}
       onRevert={handleRevert}
     >
-      {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm text-center">{error}</p>
-        </div>
-      )}
-      {Object.entries(config.fields).map(([sectionId, section]) => (
-        <Section key={sectionId} title={section.title} description={section.description}>
-          {renderFields(sectionId, section)}
-        </Section>
-      ))}
+      <div className="space-y-5 max-h-[50vh] overflow-y-auto pr-1">
+        {Object.entries(config.fields).map(([sectionId, section]) => (
+          <Section key={sectionId} title={section.title} description={section.description}>
+            <div className="space-y-3">
+              {renderFields(sectionId, section)}
+            </div>
+          </Section>
+        ))}
+      </div>
     </BaseModal>
   );
 };

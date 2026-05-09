@@ -12,8 +12,6 @@ import {
   RegisterModal,
 } from './welcom_components';
 import ChatAssistant from './common/ChatAssistant';
-import SessionExpiredModal from './common/SessionExpiredModal';
-import { useSessionCheck } from '../hooks/useSessionCheck';
 import { clearSession } from '../utils/authUtils';
 import GlobalStyles from './welcom_components/GlobalStyles';
 
@@ -22,7 +20,6 @@ const Welcome = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
-  const [showExpiredModal, setShowExpiredModal] = useState(false);
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -31,18 +28,6 @@ const Welcome = () => {
   const aboutRef = useRef(null);
   const servicesRef = useRef(null);
   const faqRef = useRef(null);
-
-  const handleSessionExpired = useCallback(() => {
-    clearSession();
-    setShowExpiredModal(true);
-  }, []);
-
-  const handleCloseExpiredModal = useCallback(() => {
-    setShowExpiredModal(false);
-    navigate('/');
-  }, [navigate]);
-
-  useSessionCheck(handleSessionExpired);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
@@ -87,11 +72,6 @@ const Welcome = () => {
   return (
     <div className="relative bg-black overflow-x-hidden font-sans selection:bg-[#00E5FF]/30">
       <GlobalStyles/>
-      
-      <SessionExpiredModal 
-        isOpen={showExpiredModal} 
-        onClose={handleCloseExpiredModal}
-      />
       
       <Navbar 
         location={location}

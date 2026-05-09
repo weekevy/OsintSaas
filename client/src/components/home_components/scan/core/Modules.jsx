@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import { investigationModules as defaultModules, openSourcePlatforms as defaultPlatforms } from '../utils/constants';
 import { getIcon } from '../utils/icons';
 
@@ -22,23 +22,137 @@ export const FancyCheckbox = memo(({ label, checked, onChange }) => (
 ));
 FancyCheckbox.displayName = 'FancyCheckbox';
 
+// ==================== Animated Skeleton Components ====================
+
+const ModuleCardSkeleton = ({ index }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    // Staggered animation for each skeleton
+    const timer = setTimeout(() => setIsVisible(true), index * 50);
+    return () => clearTimeout(timer);
+  }, [index]);
+
+  return (
+    <div 
+      className={`border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+      style={{ minHeight: 220 }}
+    >
+      {/* Shimmer effect */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-14 h-14 bg-white/10 rounded-xl flex-shrink-0 animate-pulse"/>
+          <div className="flex-1 pt-1">
+            <div className="h-4 bg-white/10 rounded w-3/4 mb-2 animate-pulse"/>
+            <div className="h-3 bg-white/10 rounded w-1/3 animate-pulse"/>
+          </div>
+        </div>
+        <div className="h-3 bg-white/10 rounded w-full mb-1.5 animate-pulse"/>
+        <div className="h-3 bg-white/10 rounded w-4/5 mb-4 animate-pulse"/>
+        <div className="flex gap-2">
+          {[1,2,3].map(i => (
+            <div key={i} className="h-5 bg-white/10 rounded-full w-16 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}/>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PlatformCardSkeleton = ({ index }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), index * 30);
+    return () => clearTimeout(timer);
+  }, [index]);
+
+  return (
+    <div 
+      className={`border border-white/10 rounded-xl p-4 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+      style={{ minHeight: 100 }}
+    >
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-white/10 rounded-lg flex-shrink-0 animate-pulse"/>
+          <div className="flex-1">
+            <div className="h-3.5 bg-white/10 rounded w-3/4 mb-1.5 animate-pulse"/>
+            <div className="h-2.5 bg-white/10 rounded w-1/2 animate-pulse"/>
+          </div>
+        </div>
+        <div className="h-2 bg-white/10 rounded w-full animate-pulse"/>
+      </div>
+    </div>
+  );
+};
+
+// Add shimmer animation to global styles (add this to your global CSS or tailwind config)
+const shimmerStyle = `
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+.animate-fade-out-down {
+  animation: fadeOutDown 0.3s ease-out forwards;
+}
+`;
+
+// Inject styles if not already present
+if (typeof document !== 'undefined') {
+  if (!document.querySelector('#skeleton-styles')) {
+    const styleTag = document.createElement('style');
+    styleTag.id = 'skeleton-styles';
+    styleTag.textContent = shimmerStyle;
+    document.head.appendChild(styleTag);
+  }
+}
+
 // ==================== Realistic Module Icons ====================
 const ModuleIcon = ({ type, size = 36 }) => {
   const s = size;
   const icons = {
     'job-recruitment': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* briefcase body */}
         <rect x="6" y="16" width="36" height="26" rx="4" fill="url(#job-body)" opacity="0.9"/>
         <rect x="6" y="16" width="36" height="26" rx="4" stroke="#00E5FF" strokeWidth="1.2" fill="none"/>
-        {/* handle */}
         <path d="M17 16V13C17 10.8 18.8 9 21 9H27C29.2 9 31 10.8 31 13V16" stroke="#2DD4BF" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        {/* center divider line */}
         <line x1="6" y1="26" x2="42" y2="26" stroke="#00E5FF" strokeWidth="1" opacity="0.4"/>
-        {/* clasp */}
         <rect x="20" y="23" width="8" height="6" rx="2" fill="#00E5FF" opacity="0.8"/>
         <rect x="22" y="25" width="4" height="2" rx="1" fill="#0a0f14"/>
-        {/* shine */}
         <rect x="8" y="18" width="14" height="3" rx="1" fill="white" opacity="0.06"/>
         <defs>
           <linearGradient id="job-body" x1="6" y1="16" x2="42" y2="42" gradientUnits="userSpaceOnUse">
@@ -52,14 +166,10 @@ const ModuleIcon = ({ type, size = 36 }) => {
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
         <rect x="5" y="5" width="38" height="38" rx="8" fill="url(#li-bg)"/>
         <rect x="5" y="5" width="38" height="38" rx="8" stroke="#60a5fa" strokeWidth="1.2" fill="none"/>
-        {/* in text */}
         <rect x="13" y="19" width="5" height="16" rx="1.5" fill="#60a5fa"/>
         <circle cx="15.5" cy="14.5" r="3" fill="#60a5fa"/>
-        {/* right column */}
         <rect x="22" y="19" width="5" height="16" rx="1.5" fill="#60a5fa" opacity="0.9"/>
-        {/* arch */}
         <path d="M27 24C27 21.2 29 19 32 19C35 19 37 21.2 37 24V35H32V24.5C32 23.7 31.4 23 30.5 23C29.7 23 29 23.7 29 24.5V35H27V24Z" fill="#60a5fa" opacity="0.9"/>
-        {/* shine */}
         <rect x="7" y="7" width="16" height="5" rx="2" fill="white" opacity="0.05"/>
         <defs>
           <linearGradient id="li-bg" x1="5" y1="5" x2="43" y2="43" gradientUnits="userSpaceOnUse">
@@ -71,15 +181,12 @@ const ModuleIcon = ({ type, size = 36 }) => {
     ),
     'social-media': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* network nodes */}
         <circle cx="24" cy="10" r="6" fill="url(#sm-top)" stroke="#c084fc" strokeWidth="1.2"/>
         <circle cx="10" cy="34" r="6" fill="url(#sm-bl)" stroke="#a855f7" strokeWidth="1.2"/>
         <circle cx="38" cy="34" r="6" fill="url(#sm-br)" stroke="#c084fc" strokeWidth="1.2"/>
-        {/* connecting lines with glow */}
         <line x1="19" y1="14" x2="14" y2="30" stroke="#c084fc" strokeWidth="1.5" opacity="0.6" strokeLinecap="round"/>
         <line x1="29" y1="14" x2="34" y2="30" stroke="#c084fc" strokeWidth="1.5" opacity="0.6" strokeLinecap="round"/>
         <line x1="16" y1="34" x2="32" y2="34" stroke="#a855f7" strokeWidth="1.5" opacity="0.6" strokeLinecap="round"/>
-        {/* inner dots */}
         <circle cx="24" cy="10" r="2.5" fill="white" opacity="0.7"/>
         <circle cx="10" cy="34" r="2.5" fill="white" opacity="0.7"/>
         <circle cx="38" cy="34" r="2.5" fill="white" opacity="0.7"/>
@@ -92,14 +199,11 @@ const ModuleIcon = ({ type, size = 36 }) => {
     ),
     'scam-website': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* globe */}
         <circle cx="24" cy="24" r="17" fill="url(#sw-bg)" stroke="#f87171" strokeWidth="1.2"/>
-        {/* latitude lines */}
         <ellipse cx="24" cy="24" rx="9" ry="17" stroke="#f87171" strokeWidth="0.8" opacity="0.3" fill="none"/>
         <line x1="7" y1="24" x2="41" y2="24" stroke="#f87171" strokeWidth="0.8" opacity="0.3"/>
         <line x1="9" y1="16" x2="39" y2="16" stroke="#f87171" strokeWidth="0.8" opacity="0.2"/>
         <line x1="9" y1="32" x2="39" y2="32" stroke="#f87171" strokeWidth="0.8" opacity="0.2"/>
-        {/* warning overlay */}
         <circle cx="34" cy="14" r="9" fill="#0f0a0a"/>
         <path d="M34 8L40.5 19H27.5L34 8Z" fill="url(#sw-warn)" stroke="#fbbf24" strokeWidth="1"/>
         <line x1="34" y1="12" x2="34" y2="16" stroke="#0f0a0a" strokeWidth="1.5" strokeLinecap="round"/>
@@ -112,12 +216,10 @@ const ModuleIcon = ({ type, size = 36 }) => {
     ),
     'scam-email': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* envelope - red tint */}
         <rect x="5" y="12" width="38" height="26" rx="4" fill="url(#se-bg)" stroke="#f87171" strokeWidth="1.2"/>
         <path d="M5 15L24 27L43 15" stroke="#fbbf24" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
         <line x1="5" y1="38" x2="19" y2="27" stroke="#f87171" strokeWidth="0.8" opacity="0.4"/>
         <line x1="43" y1="38" x2="29" y2="27" stroke="#f87171" strokeWidth="0.8" opacity="0.4"/>
-        {/* skull/warning inside */}
         <circle cx="34" cy="36" r="7" fill="#1a0608"/>
         <path d="M34 31C31.2 31 29 33 29 35.5C29 37.2 30 38.7 31.5 39.5V41H36.5V39.5C38 38.7 39 37.2 39 35.5C39 33 36.8 31 34 31Z" fill="#f87171" opacity="0.9"/>
         <rect x="31.5" y="41" width="2" height="1.5" rx="0.5" fill="#f87171"/>
@@ -134,19 +236,13 @@ const ModuleIcon = ({ type, size = 36 }) => {
     ),
     'phone-number': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* phone body */}
         <rect x="13" y="4" width="22" height="40" rx="5" fill="url(#ph-bg)" stroke="#a3e635" strokeWidth="1.2"/>
-        {/* screen */}
         <rect x="16" y="10" width="16" height="24" rx="2" fill="url(#ph-screen)" opacity="0.8"/>
-        {/* home button */}
         <circle cx="24" cy="39" r="2" stroke="#a3e635" strokeWidth="1" fill="none"/>
-        {/* signal waves */}
         <path d="M20 17C20 17 22 15 24 15C26 15 28 17 28 17" stroke="#a3e635" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.9"/>
         <path d="M17 14C17 14 20.5 10 24 10C27.5 10 31 14 31 14" stroke="#a3e635" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.5"/>
-        {/* notification dot */}
         <circle cx="33" cy="8" r="4" fill="#f87171"/>
         <text x="33" y="11" textAnchor="middle" fill="white" fontSize="5" fontWeight="bold">!</text>
-        {/* shine */}
         <rect x="15" y="6" width="8" height="3" rx="1" fill="white" opacity="0.07"/>
         <defs>
           <linearGradient id="ph-bg" x1="13" y1="4" x2="35" y2="44" gradientUnits="userSpaceOnUse">
@@ -162,19 +258,13 @@ const ModuleIcon = ({ type, size = 36 }) => {
     ),
     'crypto-wallet': (
       <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
-        {/* wallet body */}
         <rect x="4" y="14" width="40" height="28" rx="5" fill="url(#cw-bg)" stroke="#fbbf24" strokeWidth="1.2"/>
-        {/* flap */}
         <path d="M4 20H44V14C44 11.8 42.2 10 40 10H8C5.8 10 4 11.8 4 14V20Z" fill="url(#cw-flap)" stroke="#fbbf24" strokeWidth="1.2"/>
-        {/* coin slot */}
         <rect x="28" y="24" width="14" height="12" rx="3" fill="#0a0806" stroke="#fbbf24" strokeWidth="1"/>
-        {/* coin */}
         <circle cx="35" cy="30" r="4" fill="url(#cw-coin)" stroke="#fbbf24" strokeWidth="0.8"/>
         <text x="35" y="33" textAnchor="middle" fill="#0a0806" fontSize="5" fontWeight="bold">₿</text>
-        {/* card lines */}
         <rect x="8" y="26" width="14" height="2" rx="1" fill="#fbbf24" opacity="0.4"/>
         <rect x="8" y="30" width="10" height="2" rx="1" fill="#fbbf24" opacity="0.25"/>
-        {/* shine */}
         <rect x="6" y="11" width="16" height="3" rx="1" fill="white" opacity="0.06"/>
         <defs>
           <linearGradient id="cw-bg" x1="4" y1="14" x2="44" y2="42" gradientUnits="userSpaceOnUse">
@@ -263,6 +353,47 @@ const RISK_CONFIG = {
   MEDIUM:   { color: '#a3e635', bg: 'rgba(163,230,53,0.1)',   label: 'MEDIUM' },
 };
 
+// ==================== Under Construction Overlay ====================
+const UnderConstructionOverlay = ({ rounded = '1rem' }) => (
+  <div
+    className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2"
+    style={{
+      background: 'rgba(10,10,10,0.85)',
+      backdropFilter: 'blur(3px)',
+      borderRadius: rounded,
+    }}
+  >
+    {/* Diagonal warning stripes */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage: 'repeating-linear-gradient(45deg, #fbbf24 0px, #fbbf24 2px, transparent 2px, transparent 12px)',
+        borderRadius: rounded,
+      }}
+    />
+    {/* Wrench icon */}
+    <svg
+      width="28" height="28" viewBox="0 0 24 24" fill="none"
+      stroke="#fbbf24" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+      style={{ position: 'relative' }}
+    >
+      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+    </svg>
+    <span
+      className="relative text-[10px] font-black uppercase tracking-[0.2em]"
+      style={{ color: '#fbbf24' }}
+    >
+      Under Construction
+    </span>
+    <span
+      className="relative text-[8px] uppercase tracking-[0.12em]"
+      style={{ color: 'rgba(251,191,36,0.45)' }}
+    >
+      Coming Soon
+    </span>
+  </div>
+);
+
 // ==================== Platform Icons ====================
 const PlatformIcon = ({ id, className = 'w-5 h-5' }) => {
   const icons = {
@@ -327,36 +458,9 @@ const PLATFORM_META = {
   dehashed:      { color: '#c084fc', border: 'rgba(192,132,252,0.25)', bg: 'rgba(192,132,252,0.08)', label: 'Creds' },
 };
 
-// ==================== Skeletons ====================
-const ModuleCardSkeleton = () => (
-  <div className="border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] animate-pulse" style={{ minHeight: 220 }}>
-    <div className="flex items-start gap-4 mb-4">
-      <div className="w-14 h-14 bg-white/10 rounded-xl flex-shrink-0"/>
-      <div className="flex-1 pt-1">
-        <div className="h-4 bg-white/10 rounded w-3/4 mb-2"/>
-        <div className="h-3 bg-white/10 rounded w-1/3"/>
-      </div>
-    </div>
-    <div className="h-3 bg-white/10 rounded w-full mb-1.5"/>
-    <div className="h-3 bg-white/10 rounded w-4/5 mb-4"/>
-    <div className="flex gap-2">
-      {[1,2,3].map(i => <div key={i} className="h-5 bg-white/10 rounded-full w-16"/>)}
-    </div>
-  </div>
-);
-
-const PlatformCardSkeleton = () => (
-  <div className="border border-white/10 rounded-xl p-4 bg-[#0a0a0a] animate-pulse" style={{ minHeight: 100 }}>
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-10 h-10 bg-white/10 rounded-lg flex-shrink-0"/>
-      <div className="flex-1">
-        <div className="h-3.5 bg-white/10 rounded w-3/4 mb-1.5"/>
-        <div className="h-2.5 bg-white/10 rounded w-1/2"/>
-      </div>
-    </div>
-    <div className="h-2 bg-white/10 rounded w-full"/>
-  </div>
-);
+// ==================== Under Construction IDs ====================
+const UNDER_CONSTRUCTION_MODULES = ['scam-email', 'phone-number', 'crypto-wallet', 'email-leak'];
+const UNDER_CONSTRUCTION_PLATFORMS = [''];
 
 // ==================== InvestigationModules ====================
 export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
@@ -365,22 +469,34 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
   const [stats] = useState({ total: 45, active: 3 });
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState(null);
+  const [showContent, setShowContent] = useState(false);
 
-  React.useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 120);
-    return () => clearTimeout(t);
+  useEffect(() => {
+    // Simulate loading with smooth transition
+    const loadTimer = setTimeout(() => {
+      setIsLoading(false);
+      // Small delay before showing content for smooth fade-in
+      setTimeout(() => setShowContent(true), 50);
+    }, 800);
+    
+    return () => clearTimeout(loadTimer);
   }, []);
 
   return (
     <div className="space-y-8 font-sans">
-
       {/* ── Stats Overview ── */}
       <div className="grid grid-cols-2 gap-4">
         {[
           { label: 'TOTAL SCANS (30D)', value: stats.total, color: 'text-white', sub: '+12% this week' },
           { label: 'ACTIVE NOW',        value: stats.active, color: 'text-[#2DD4BF]', sub: 'Modules running' },
-        ].map(({ label, value, color, sub }) => (
-          <div key={label} className="relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden">
+        ].map(({ label, value, color, sub }, idx) => (
+          <div 
+            key={label} 
+            className={`relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
+              !isLoading && showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+            style={{ transitionDelay: `${idx * 100}ms` }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 to-transparent pointer-events-none"/>
             <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00E5FF]/30"/>
             <div className="text-white/35 text-[9px] uppercase tracking-[0.14em] mb-1">{label}</div>
@@ -392,7 +508,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
       {/* ── Investigation Modules ── */}
       <div>
-        <div className="flex items-center gap-3 mb-5">
+        <div className={`flex items-center gap-3 mb-5 transition-all duration-500 ease-out ${
+          !isLoading && showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+        }`}>
           <div className="w-0.5 h-7 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF]"/>
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.14em]">Investigation Modules</h3>
           <span className="text-[8px] px-2 py-0.5 border border-white/15 text-white/35 uppercase tracking-[0.1em] rounded-sm">
@@ -402,20 +520,24 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {isLoading
-            ? [0,1,2,3].map(i => <ModuleCardSkeleton key={i}/>)
-            : modules.map((module) => {
+            ? [0,1,2,3].map(i => <ModuleCardSkeleton key={i} index={i}/>)
+            : modules.map((module, idx) => {
                 const meta = MODULE_META[module.id] || MODULE_META['job-recruitment'];
                 const risk = RISK_CONFIG[meta.risk];
                 const isHovered = hoveredId === module.id;
+                const isUnderConstruction = UNDER_CONSTRUCTION_MODULES.includes(module.id);
 
                 return (
                   <button
                     key={module.id}
-                    onClick={() => onStartScan(module, selectedTarget)}
+                    onClick={() => !isUnderConstruction && onStartScan(module, selectedTarget)}
                     onMouseEnter={() => setHoveredId(module.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className="group relative text-left rounded-2xl overflow-hidden transition-all duration-300"
-                    style={{
+                    className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-500 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    } ${isUnderConstruction ? 'cursor-default' : ''}`}
+                    style={{ 
+                      transitionDelay: `${idx * 80}ms`,
                       background: isHovered
                         ? `linear-gradient(135deg, ${meta.accentBg} 0%, #0a0a0a 60%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, #0a0a0a 60%)',
@@ -426,6 +548,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                       minHeight: 220,
                     }}
                   >
+                    {/* Under Construction Overlay */}
+                    {isUnderConstruction && <UnderConstructionOverlay rounded="1rem" />}
+
                     {/* Top glow line */}
                     <div
                       className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300"
@@ -550,7 +675,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
       {/* ── Open Source Platforms ── */}
       <div>
-        <div className="flex items-center gap-3 mb-5">
+        <div className={`flex items-center gap-3 mb-5 transition-all duration-500 ease-out delay-200 ${
+          !isLoading && showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+        }`}>
           <div className="w-0.5 h-7 bg-gradient-to-b from-[#2DD4BF] to-[#00E5FF]"/>
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.14em]">Open Source Platforms</h3>
           <span className="text-[8px] px-2 py-0.5 border border-white/15 text-white/35 uppercase tracking-[0.1em] rounded-sm">
@@ -560,18 +687,23 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {isLoading
-            ? [0,1,2,3,4,5].map(i => <PlatformCardSkeleton key={i}/>)
-            : platforms.map((platform) => {
+            ? [0,1,2,3,4,5].map(i => <PlatformCardSkeleton key={i} index={i}/>)
+            : platforms.map((platform, idx) => {
                 const pm = PLATFORM_META[platform.id] || { color: '#00E5FF', border: 'rgba(0,229,255,0.2)', bg: 'rgba(0,229,255,0.07)', label: 'Intel' };
                 const isH = hoveredId === platform.id;
+                const isUnderConstruction = UNDER_CONSTRUCTION_PLATFORMS.includes(platform.id);
+
                 return (
                   <button
                     key={platform.id}
-                    onClick={() => onStartScan(platform, selectedTarget)}
+                    onClick={() => !isUnderConstruction && onStartScan(platform, selectedTarget)}
                     onMouseEnter={() => setHoveredId(platform.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className="group relative text-left rounded-xl overflow-hidden transition-all duration-250"
-                    style={{
+                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-500 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    } ${isUnderConstruction ? 'cursor-default' : ''}`}
+                    style={{ 
+                      transitionDelay: `${400 + idx * 60}ms`,
                       background: isH
                         ? `linear-gradient(135deg, ${pm.bg} 0%, #0a0a0a 70%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, #0a0a0a 70%)',
@@ -582,6 +714,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                       minHeight: 110,
                     }}
                   >
+                    {/* Under Construction Overlay */}
+                    {isUnderConstruction && <UnderConstructionOverlay rounded="0.75rem" />}
+
                     {/* top glow line */}
                     <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300"
                       style={{ background: `linear-gradient(90deg, transparent, ${pm.color}, transparent)`, opacity: isH ? 0.6 : 0.15 }}/>
