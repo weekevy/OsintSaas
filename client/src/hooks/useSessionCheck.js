@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { isTokenExpired, getToken, clearSession } from '../utils/authUtils';
 
-const IDLE_TIMEOUT = 10 * 1000; // 10 seconds of inactivity (FOR TESTING)
-
+const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
+// const IDLE_TIMEOUT = 10 * 1000; // 10 seconds of inactivity
 export const useSessionCheck = (onSessionExpired) => {
   const timeoutRef = useRef(null);
   const intervalRef = useRef(null);

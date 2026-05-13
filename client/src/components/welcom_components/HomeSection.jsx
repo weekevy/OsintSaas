@@ -141,43 +141,100 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           <span className="text-[11px] font-bold tracking-[0.25em] text-white/60 uppercase">Global Intelligence Terminal</span>
         </div>
 
-        {/* ── FIX: Hero Title ──────────────────────────────────────────────
-            - Wrapper has a dynamic min-height to reserve space for the text.
-            - Entrance animation uses translate-y to avoid horizontal shifts.
-            - text-wrap: balance ensures better multi-line rendering.
-        ──────────────────────────────────────────────────────────────── */}
+        {/* Hero Title */}
         <div
           className="w-full text-center px-4 flex flex-col justify-center overflow-visible mb-6"
-          style={{ 
-            minHeight: '1.2em',
-            contain: 'layout'
-          }}
+          style={{ minHeight: '1.2em', contain: 'layout' }}
         >
           <h1
             className={`font-black tracking-tight leading-[1.05] transition-all duration-1000 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-            style={{ 
-              fontSynthesis: 'none', 
-              textRendering: 'optimizeLegibility',
-              textWrap: 'balance'
-            }}
+            style={{ fontSynthesis: 'none', textRendering: 'optimizeLegibility', textWrap: 'balance' }}
           >
+            {/* Static white line — unchanged */}
             <span
               className="block text-white"
-              style={{
-                fontSize: 'clamp(2.5rem, 8vw, 5.5rem)',
-                willChange: 'transform, opacity',
-              }}
+              style={{ fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', willChange: 'transform, opacity' }}
             >
               Uncover the Truth
             </span>
+
+            {/*
+              ── ANIMATED GRADIENT LINE ──────────────────────────────────────
+              Android Chrome / Samsung Internet have a known bug where
+              animating `background-position` on a `background-clip: text`
+              element flickers or shows nothing when `willChange: opacity`
+              is also present on a parent. Fix:
+                1. Wrap in a `position: relative` block to isolate stacking.
+                2. Put a solid-color fallback span underneath (aria-hidden)
+                   so if clip fails, text is still readable in cyan.
+                3. Animate background-position on a 300%-wide gradient —
+                   this is the most-compatible path; avoid animating
+                   `filter`, `hue-rotate`, or `transform` on clip:text nodes.
+                4. Force GPU layer with `translate3d(0,0,0)` directly on the
+                   animated element, NOT on an ancestor (ancestor GPU layers
+                   can break clip:text on older Android WebViews).
+              ─────────────────────────────────────────────────────────────── */}
             <span
-              className="block bg-gradient-to-r from-[#00E5FF] via-[#2DD4BF] to-[#007AFF] bg-clip-text text-transparent pb-2"
+              className="block pb-2"
               style={{
                 fontSize: 'clamp(3.5rem, 9.5vw, 6.5rem)',
-                willChange: 'transform, opacity',
+                position: 'relative',
+                display: 'block',
               }}
             >
-              Break Down Scammers.
+              {/* Solid fallback — sits behind, guarantees legibility */}
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'block',
+                  color: '#00E5FF',
+                  fontSize: 'inherit',
+                  fontWeight: 'inherit',
+                  lineHeight: 'inherit',
+                  letterSpacing: 'inherit',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                Break Down Scammers.
+              </span>
+
+              {/* Animated clip-text layer */}
+              <span
+                style={{
+                  position: 'relative',
+                  display: 'block',
+                  /*
+                   * 300%-wide gradient: cyan → teal → blue → cyan
+                   * Looping is seamless because start and end colours match.
+                   */
+                  backgroundImage:
+                    'linear-gradient(90deg, #00E5FF 0%, #2DD4BF 20%, #007AFF 45%, #00E5FF 65%, #2DD4BF 82%, #007AFF 100%)',
+                  backgroundSize: '300% 100%',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  color: 'transparent',
+                  /*
+                   * Animate background-position: 0% → 100%.
+                   * On a 300%-wide bg this sweeps the full colour cycle.
+                   * `linear` keeps it smooth; 4 s feels energetic not frantic.
+                   */
+                  animation: 'gradientSweep 4s linear infinite',
+                  /*
+                   * IMPORTANT for Android: apply translate3d directly here,
+                   * not on a parent. This promotes the element to its own
+                   * GPU layer, which fixes Samsung Internet's clip:text bug
+                   * during CSS animation.
+                   */
+                  transform: 'translate3d(0, 0, 0)',
+                  willChange: 'background-position',
+                }}
+              >
+                Break Down Scammers.
+              </span>
             </span>
           </h1>
         </div>
@@ -202,20 +259,16 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
         {/* ── SIGNAL BROADCAST ZONE ─────────────────────────────────────── */}
         <div className={`relative w-full transition-all duration-1000 delay-400 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
-          {/* Top rule */}
           <div className="flex items-center gap-4 mb-8 w-full max-w-3xl mx-auto xl:mx-0 xl:max-w-full">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
             <span className="text-[10px] font-mono tracking-[0.3em] text-[#00E5FF]/35 uppercase whitespace-nowrap">Live Signal Broadcast</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
           </div>
 
-          {/* ── xl: side-by-side  |  below xl: stacked centered ── */}
           <div className="flex flex-col xl:flex-row xl:items-center xl:gap-10">
 
-            {/* LEFT — orb + flanking feeds */}
             <div className="flex items-center justify-center xl:justify-start gap-5 xl:gap-6 xl:flex-shrink-0">
 
-              {/* Threat feed (lg+) */}
               <div className="hidden lg:flex flex-col" style={{ width: '160px', height: '310px' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" style={{ animation: 'blink 1.8s ease-in-out infinite' }} />
@@ -233,7 +286,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 </div>
               </div>
 
-              {/* Center orb */}
               <div className="relative flex items-center justify-center shrink-0 scale-75 sm:scale-100 transition-transform duration-700" style={{ width: '310px', height: '310px' }}>
                 {tags.map((t, i) => (
                   <div key={i} className="absolute flex flex-col items-start px-2.5 py-1.5 rounded-lg pointer-events-none"
@@ -278,7 +330,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
                 }} />
               </div>
 
-              {/* Data stream feed (lg+) */}
               <div className="hidden lg:flex flex-col" style={{ width: '160px', height: '310px' }}>
                 <div className="flex items-center gap-2 mb-3 justify-end">
                   <span className="text-[9px] font-mono tracking-[0.2em] text-[#00E5FF]/50 uppercase">Data Stream</span>
@@ -300,7 +351,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
               </div>
 
             </div>
-
             {/* RIGHT — capability panel (xl only) */}
             <div className="hidden xl:flex flex-col flex-1 min-w-0 pl-4">
 
@@ -408,6 +458,17 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
       </div>
 
       <style>{`
+        /*
+          gradientSweep — moves background-position from 0% to 100%
+          on a 300%-wide gradient. This is the most Android-compatible
+          way to animate a colour sweep on clipped text. Avoid animating
+          filter/hue-rotate or transform on the same element as
+          background-clip:text — they conflict on Samsung Internet.
+        */
+        @keyframes gradientSweep {
+          0%   { background-position: 0%   50%; }
+          100% { background-position: 100% 50%; }
+        }
         @keyframes ringPulse {
           0%   { opacity: 0;   transform: scale(0.88) translate3d(0,0,0); }
           25%  { opacity: 1; }

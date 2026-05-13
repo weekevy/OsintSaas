@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoadingScreen from './components/LoadingScreen';
 import Welcom from './components/Welcom';
 import Home from './components/Home';
+import JoinTeam from './components/JoinTeam';
 import ToastContainer from './components/common/Toast';
 import SessionManager from './components/common/SessionManager';
 
@@ -36,6 +37,8 @@ const AppRoutes = () => {
               <Navigate to="/" replace />
           } 
         />
+
+        <Route path="/join-team" element={<JoinTeam />} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
