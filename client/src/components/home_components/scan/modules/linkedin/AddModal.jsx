@@ -42,32 +42,33 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
     setSaving(true);
     setError(null);
     
-    // Clear any existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+    console.log('🔵 Saving LinkedIn data:', { profile: formData.profile_name, url: formData.profile_url });
     
-    // Small delay to ensure state is stable
-    saveTimeoutRef.current = setTimeout(async () => {
-      console.log('🔵 UI MODE - Data that would be saved:', { profile: formData.profile_name, url: formData.profile_url });
-      
-      // Follow the pattern of job-recruitment: pass data to onSave which handles the API
-      if (onSave && typeof onSave === 'function') {
-        onSave({
+    if (onSave && typeof onSave === 'function') {
+      try {
+        await onSave({
           assets: formData,
           files: files,
           moduleType: moduleType
         });
+        
+        // Reset form
+        setFormData({});
+        setFiles([]);
+        setError(null);
+        
+        // Close modal
+        onClose();
+      } catch (err) {
+        console.error('Save failed:', err);
+        setError('FAILED TO START INVESTIGATION');
+        saveCalledRef.current = false;
+        setSaving(false);
       }
-      
-      // Reset form
-      setFormData({});
-      setFiles([]);
-      setError(null);
-      
-      // Close modal
-      onClose();
-    }, 100);
+    } else {
+      setSaving(false);
+      saveCalledRef.current = false;
+    }
   };
 
   const handleClose = () => {

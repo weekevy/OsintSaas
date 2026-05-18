@@ -182,7 +182,7 @@ export async function POST(request) {
       const [targetResult] = await connection.execute('INSERT INTO targets (project_id, type, value, label, status, created_at) VALUES (?, "url", ?, ?, "pending", NOW())', [projectId, body.job_url || body.company_website || 'Manual', targetLabel]);
       const targetId = targetResult.insertId;
 
-      const [scanResult] = await connection.execute('INSERT INTO scans (target_id, scan_type, status, priority, progress, created_at) VALUES (?, "job-recruitment", "queued", 1, 0, NOW())', [targetId]);
+      const [scanResult] = await connection.execute('INSERT INTO scans (target_id, scan_type, status, priority, progress, created_at) VALUES (?, "job-recruitment", "pending", 1, 0, NOW())', [targetId]);
       const scanId = scanResult.insertId;
 
       await connection.execute(
@@ -194,17 +194,10 @@ export async function POST(request) {
 
       await connection.commit();
       connection.release();
-      
-      const dockerApiUrl = process.env.JOB_RECRUITMENT_API_URL || 'http://127.0.0.1:8000';
-      const dockerApiKey = process.env.DOCKER_API_KEY || 'your-super-secret-api-key-change-this';
 
-      fetch(`${dockerApiUrl}/scan/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-Key': dockerApiKey },
-        body: JSON.stringify({ scan_id: scanId, target: body.job_url || body.company_website || body.company_name, user_id: user.id })
-      }).catch(err => console.error('Docker Trigger Error:', err));
+      pendingRequests.delete(requestId);
 
-      return NextResponse.json({ success: true, scan: { id: scanId, status: 'queued' } });
+      return NextResponse.json({ success: true, scan: { id: scanId, status: 'pending' } });
 
     } catch (error) {
       if (connection) await connection.rollback();

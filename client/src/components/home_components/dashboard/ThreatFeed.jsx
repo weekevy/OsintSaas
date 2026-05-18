@@ -32,21 +32,22 @@ const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
   const [threatFeeds, setThreatFeeds] = useState([]);
 
   useEffect(() => {
-    if (selectedProjectId) {
-      console.log('Project changed, generating new threat feeds for project:', selectedProjectId);
+    if (feeds && feeds.length > 0) {
+      // Map alerts format to threat feed format
+      const mapped = feeds.map(f => ({
+        id: f.id,
+        source: f.source || 'SYSTEM',
+        threat: f.threat || f.message || 'Unknown threat detected',
+        severity: f.severity || 'low',
+        time: f.time || 'Unknown'
+      }));
+      setThreatFeeds(mapped);
+    } else {
+      // Only generate random feeds if there are absolutely no real feeds
       const newFeeds = generateRandomFeeds(selectedProjectId);
       setThreatFeeds(newFeeds);
     }
-  }, [selectedProjectId]);
-
-  useEffect(() => {
-    if (feeds && feeds.length > 0) {
-      setThreatFeeds(feeds);
-    } else {
-      const newFeeds = generateRandomFeeds();
-      setThreatFeeds(newFeeds);
-    }
-  }, []);
+  }, [feeds, selectedProjectId]);
 
   const getSeverityColor = (severity) => {
     switch(severity?.toLowerCase()) {

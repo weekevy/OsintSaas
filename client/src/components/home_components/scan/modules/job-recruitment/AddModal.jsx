@@ -42,33 +42,20 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
     setSaving(true);
     setError(null);
     
-    // Clear any existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+    const dataToSend = {
+      ...formData,
+      project_id: projectId
+    };
     
-    // Small delay to ensure state is stable
-    saveTimeoutRef.current = setTimeout(async () => {
-      const dataToSend = {
-        ...formData,
-        project_id: projectId
-      };
-      
-      console.log('🔵 UI MODE - Data that would be saved:', { company: dataToSend.company_name, job: dataToSend.job_title });
-      console.log('🔵 UI MODE - Files to upload:', files.length);
-      
-      // UI ONLY MODE - No API call
-      // Simulate network delay
-      setTimeout(() => {
-        console.log('✅ UI MODE - Save successful (simulated)');
-        
-        if (onSave && typeof onSave === 'function') {
-          onSave({
-            assets: formData,
-            files: files,
-            moduleType: moduleType
-          });
-        }
+    console.log('🔵 Saving data:', { company: dataToSend.company_name, job: dataToSend.job_title });
+    
+    if (onSave && typeof onSave === 'function') {
+      try {
+        await onSave({
+          assets: formData,
+          files: files,
+          moduleType: moduleType
+        });
         
         // Reset form
         setFormData({});
@@ -77,8 +64,16 @@ const AddModal = ({ isOpen, onClose, onSave, moduleType, moduleName, projectId }
         
         // Close modal
         onClose();
-      }, 500);
-    }, 100);
+      } catch (err) {
+        console.error('Save failed:', err);
+        setError('FAILED TO START INVESTIGATION');
+        saveCalledRef.current = false;
+        setSaving(false);
+      }
+    } else {
+      setSaving(false);
+      saveCalledRef.current = false;
+    }
   };
 
   const handleClose = () => {

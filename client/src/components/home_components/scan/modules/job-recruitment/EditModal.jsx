@@ -26,17 +26,21 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
     setSaving(true);
     setError(null);
     
-    console.log('🔵 UI MODE - Would update scan:', scan.id, formData);
+    console.log('🔵 Updating scan:', scan.id, formData);
     
-    // UI ONLY MODE - No API call
-    setTimeout(() => {
-      console.log('✅ UI MODE - Update successful (simulated)');
-      
-      if (onUpdate) {
-        onUpdate(scan.id, formData);
+    if (onUpdate) {
+      try {
+        await onUpdate(scan.id, formData);
+        onClose();
+      } catch (err) {
+        console.error('Update failed:', err);
+        setError('FAILED TO UPDATE ASSETS');
+        setSaving(false);
       }
+    } else {
+      setSaving(false);
       onClose();
-    }, 500);
+    }
   };
 
   const handleRevert = () => {

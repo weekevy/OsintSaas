@@ -25,14 +25,22 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
     setSaving(true);
     setError(null);
     
-    console.log('🔵 UI MODE - Would update LinkedIn scan:', scan.id, formData);
+    console.log('🔵 Updating LinkedIn scan:', scan.id, formData);
 
-    // Simulate delay and pass to onUpdate which handles API call
-    setTimeout(() => {
-      if (onUpdate) onUpdate(scan.id, formData);
+    if (onUpdate) {
+      try {
+        await onUpdate(scan.id, formData);
+        setSaving(false);
+        onClose();
+      } catch (err) {
+        console.error('Update failed:', err);
+        setError('FAILED TO UPDATE ASSETS');
+        setSaving(false);
+      }
+    } else {
       setSaving(false);
       onClose();
-    }, 500);
+    }
   };
 
   const handleRevert = () => {

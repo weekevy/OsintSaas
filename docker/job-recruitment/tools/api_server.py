@@ -16,7 +16,7 @@ from slowapi.errors import RateLimitExceeded
 from dotenv import load_dotenv
 
 # Import the scanner engine
-from tools.scanner import ScannerEngine
+from tools.scanner import ScannerEngine as OSINTScanner
 
 # Load environment variables
 load_dotenv()
@@ -93,8 +93,8 @@ class ScanRequest(BaseModel):
 
 class EventRequest(BaseModel):
     scan_id: int
-    scan_name: str
-    target: str
+    scan_name: Optional[str] = "Investigation"
+    target: Optional[str] = "Unknown"
     user_id: int
     event_type: Optional[str] = None
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -125,28 +125,39 @@ def save_event(event_data: Dict[str, Any]):
     
     return event_id
 
+# Active scans tracking
+active_engines: Dict[int, OSINTScanner] = {}
+
 # Background Scan Runner
 async def run_osint_scan(scan_id: int, target: str, user_id: int):
     logger.info(f"Starting background scan for ID {scan_id}, target: {target}")
+    engine = None
     try:
-        engine = ScannerEngine(scan_id, target, user_id)
+        engine = OSINTScanner(scan_id, target, user_id)
+        active_engines[scan_id] = engine
         await engine.run()
         logger.info(f"Background scan for ID {scan_id} completed successfully")
     except Exception as e:
         logger.error(f"Error in background scan {scan_id}: {str(e)}", exc_info=True)
-        # We should try to mark it as failed in DB if the engine didn't catch it
-        try:
-            from tools.scanner import ScannerEngine
-            engine = ScannerEngine(scan_id, target, user_id)
-            await engine.update_progress(0, "failed")
-        except:
-            pass
+        if engine:
+            try:
+                await engine.update_progress(0, "failed")
+            except:
+                pass
+            finally:
+                await engine._close_db()
+    finally:
+        if scan_id in active_engines:
+            del active_engines[scan_id]
 
 # Endpoints
 @app.post("/scan/start", dependencies=[Depends(verify_api_key)])
 async def start_scan_endpoint(request: ScanRequest, background_tasks: BackgroundTasks):
     logger.info(f"Received scan start request for ID {request.scan_id}")
     
+    if request.scan_id in active_engines:
+        return {"success": False, "message": "Scan already running"}
+        
     # Start the scan in the background
     background_tasks.add_task(run_osint_scan, request.scan_id, request.target, request.user_id)
     
@@ -157,7 +168,7 @@ async def start_scan_endpoint(request: ScanRequest, background_tasks: Background
     }
 
 @app.post("/event/{event_type}", response_model=EventResponse, dependencies=[Depends(verify_api_key)])
-@limiter.limit("10/minute")
+@limiter.limit("20/minute")
 async def handle_event(event_type: str, request: Request, event: EventRequest):
     event_dict = event.dict()
     event_dict["event_type"] = event_type
@@ -168,6 +179,17 @@ async def handle_event(event_type: str, request: Request, event: EventRequest):
     if event_type not in valid_types:
         logger.warning(f"❌ Invalid event type: {event_type}")
         raise HTTPException(status_code=400, detail=f"Invalid event type. Must be one of {valid_types}")
+    
+    # Handle live engine actions
+    if event.scan_id in active_engines:
+        engine = active_engines[event.scan_id]
+        if event_type == "pause":
+            await engine.pause()
+        elif event_type == "resume":
+            await engine.resume()
+        elif event_type == "delete":
+            await engine.stop()
+            logger.info(f"Scan {event.scan_id} stopped via delete event")
     
     state_map = {
         "start": "running",

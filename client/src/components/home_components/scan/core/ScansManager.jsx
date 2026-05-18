@@ -14,23 +14,19 @@ const InvestigationPopup = ({ isOpen, onClose, scan }) => {
 
   React.useEffect(() => {
     if (isOpen && scan) {
-      setIsLoading(true);
-      const timer = setTimeout(() => {
-        setInvestigationData({
-          target: scan.target,
-          module: scan.moduleName,
-          status: 'investigating',
-          findings: [],
-          steps: [
-            { id: 1, name: 'Initializing', status: 'completed', timestamp: new Date().toISOString() },
-            { id: 2, name: 'Scanning Target', status: 'running', timestamp: new Date().toISOString() },
-            { id: 3, name: 'Analyzing Results', status: 'pending', timestamp: null },
-            { id: 4, name: 'Generating Report', status: 'pending', timestamp: null },
-          ]
-        });
-        setIsLoading(false);
-      }, 1500);
-      return () => clearTimeout(timer);
+      setIsLoading(false);
+      setInvestigationData({
+        target: scan.target,
+        module: scan.moduleName,
+        status: 'investigating',
+        findings: [],
+        steps: [
+          { id: 1, name: 'Initializing', status: 'completed', timestamp: new Date().toISOString() },
+          { id: 2, name: 'Scanning Target', status: 'running', timestamp: new Date().toISOString() },
+          { id: 3, name: 'Analyzing Results', status: 'pending', timestamp: null },
+          { id: 4, name: 'Generating Report', status: 'pending', timestamp: null },
+        ]
+      });
     }
   }, [isOpen, scan]);
 
@@ -384,7 +380,7 @@ const extractScanId = (compositeId) => {
 // ──────────────────────────────────────────────────────────────
 // RunningScans
 // ──────────────────────────────────────────────────────────────
-export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
+export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh }) => {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
   const [progressModal, setProgressModal] = useState({ isOpen: false, scan: null });
   const [investigationModal, setInvestigationModal] = useState({ isOpen: false, scan: null });
@@ -431,7 +427,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         event_type: eventType,
         scan_id: realScanId,
         scan_name: scan.moduleName,
-        target: scan.target,
+        target: scan.rawTarget || scan.target,
         previous_state: getScanState(scan.id).status,
         data
       });
@@ -466,7 +462,9 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     updateScanState(scan.id, { status: 'running', isPaused: false, progress: 0 });
     
     const eventSuccess = await sendEvent(scan, 'start');
-    if (!eventSuccess) {
+    if (eventSuccess) {
+      setTimeout(() => onRefresh?.(), 500);
+    } else {
       updateScanState(scan.id, prevState);
     }
   };
@@ -477,7 +475,9 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     updateScanState(scan.id, { isPaused: true });
     
     const eventSuccess = await sendEvent(scan, 'pause');
-    if (!eventSuccess) {
+    if (eventSuccess) {
+      setTimeout(() => onRefresh?.(), 500);
+    } else {
       updateScanState(scan.id, prevState);
     }
   };
@@ -488,7 +488,9 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     updateScanState(scan.id, { isPaused: false, status: 'running' });
     
     const eventSuccess = await sendEvent(scan, 'resume');
-    if (!eventSuccess) {
+    if (eventSuccess) {
+      setTimeout(() => onRefresh?.(), 500);
+    } else {
       updateScanState(scan.id, prevState);
     }
   };
@@ -511,12 +513,24 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
 
   const getStatusBadge = (scanId, originalStatus) => {
     const s = getScanState(scanId);
-    if (s.isPaused) return (
+    const status = originalStatus || s.status;
+
+    if (status === 'failed') return (
+      <span className="flex items-center gap-1 px-2 py-0.5 border border-red-500/40 rounded-lg text-red-400 text-[8px] sm:text-[10px] uppercase tracking-[0.08em] bg-red-500/10 whitespace-nowrap">
+        <span className="w-1 h-1 bg-red-500 rounded-full" />Failed
+      </span>
+    );
+    if (s.isPaused || status === 'paused') return (
       <span className="flex items-center gap-1 px-2 py-0.5 border border-[#fbbf24]/40 rounded-lg text-[#fbbf24] text-[8px] sm:text-[10px] uppercase tracking-[0.08em] bg-[#fbbf24]/10 whitespace-nowrap">
         <span className="w-1 h-1 bg-[#fbbf24] rounded-full" />Paused
       </span>
     );
-    if (s.status === 'running') return (
+    if (status === 'completed') return (
+      <span className="flex items-center gap-1 px-2 py-0.5 border border-[#22d3ee]/40 rounded-lg text-[#22d3ee] text-[8px] sm:text-[10px] uppercase tracking-[0.08em] bg-[#22d3ee]/10 whitespace-nowrap">
+        <span className="w-1 h-1 bg-[#22d3ee] rounded-full" />Completed
+      </span>
+    );
+    if (status === 'running') return (
       <span className="flex items-center gap-1 px-2 py-0.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] text-[8px] sm:text-[10px] uppercase tracking-[0.08em] bg-[#2DD4BF]/10 whitespace-nowrap">
         <span className="w-1 h-1 bg-[#2DD4BF] rounded-full animate-pulse" />Running
       </span>
@@ -534,10 +548,25 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
         {runningScans.map((scan, index) => {
           const module = { color: scan.moduleColor, icon: scan.moduleIcon, textColor: scan.moduleTextColor };
           const s = getScanState(scan.id);
-          const isPending = s.status === 'pending';
-          const isRunning = s.status === 'running' && !s.isPaused;
-          const isPaused = s.isPaused;
-          const progress = s.progress || 0;
+          
+          // ── FIX: Status Priority Logic ──
+          // If the prop says 'pending'/'queued' but local state says 'running', 
+          // we prefer 'running' (optimistic update).
+          let currentStatus = scan.status;
+          if ((currentStatus === 'pending' || currentStatus === 'queued') && s.status === 'running') {
+            currentStatus = 'running';
+          } else if (currentStatus === 'running' && s.isPaused) {
+            currentStatus = 'paused';
+          }
+          
+          const isPending = currentStatus === 'pending' || currentStatus === 'queued';
+          const isRunning = currentStatus === 'running' && !s.isPaused;
+          const isPaused = currentStatus === 'paused' || s.isPaused;
+          const isCompleted = currentStatus === 'completed';
+          const isFailed = currentStatus === 'failed';
+          
+          // Use live progress from scan object if available
+          const progress = isCompleted ? 100 : (scan.progress !== undefined ? scan.progress : (s.progress || 0));
           const isVisible = visibleCards.has(scan.id);
 
           return (
@@ -567,7 +596,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                         <h4 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.06em] truncate">
                           {scan.moduleName}
                         </h4>
-                        {getStatusBadge(scan.id, scan.status)}
+                        {getStatusBadge(scan.id, currentStatus)}
                       </div>
                       <p className={`text-[9px] sm:text-[11px] truncate ${module.textColor || 'text-[#00E5FF]/60'}`}>
                         Target: {scan.target}
@@ -588,7 +617,19 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                       </button>
                     )}
 
-                    {!isPending && (
+                    {isFailed && (
+                      <button
+                        onClick={(e) => handleStartScan(scan, e)}
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-500/40 rounded-lg text-red-400 hover:bg-red-500/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-red-500/5"
+                      >
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Retry
+                      </button>
+                    )}
+
+                    {!isPending && !isFailed && (
                       <button
                         onClick={(e) => handleInvestigationClick(scan, e)}
                         className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
@@ -613,13 +654,13 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                       </button>
                     )}
 
-                    {isPaused && (
+                    {isPaused && !isFailed && (
                       <button
                         onClick={(e) => handleResumeClick(scan, e)}
                         className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         Resume
@@ -649,19 +690,30 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
                   </div>
                 </div>
 
-                {isRunning && (
+                {(isRunning || isPaused || isFailed || isCompleted) && (
                   <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
                     <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                       <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.1em]">Scanning in progress</span>
+                        {isRunning && !isPaused ? (
+                          <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className={`w-1.5 h-1.5 rounded-full ${isFailed ? 'bg-red-500' : isCompleted ? 'bg-[#22d3ee]' : isPaused ? 'bg-[#fbbf24]' : 'bg-[#00E5FF]'}`} />
+                        )}
+                        <span className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.1em]">
+                          {isFailed ? 'Scan Failed' : isCompleted ? 'Scan Completed' : isPaused ? 'Scan Paused' : isRunning ? 'Scanning in progress' : 'Ready to Start'}
+                        </span>
                       </div>
-                      <span className="text-[9px] sm:text-[10px] text-white font-semibold">{Math.min(progress, 100)}%</span>
+                      <span className={`text-[9px] sm:text-[10px] font-semibold ${isFailed ? 'text-red-400' : isCompleted ? 'text-[#22d3ee]' : isPaused ? 'text-[#fbbf24]' : 'text-white'}`}>
+                        {Math.min(progress, 100)}%
+                      </span>
                     </div>
                     <div className="h-1 sm:h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500 ease-out shadow-sm shadow-[#00E5FF]/30"
-                        style={{ width: `${Math.min(progress, 100)}%`, background: 'linear-gradient(90deg, #00E5FF, #2DD4BF)' }}
+                        style={{ 
+                          width: `${Math.min(progress, 100)}%`, 
+                          background: isFailed ? '#ef4444' : isCompleted ? '#22d3ee' : isPaused ? '#fbbf24' : 'linear-gradient(90deg, #00E5FF, #2DD4BF)' 
+                        }}
                       />
                     </div>
                   </div>

@@ -503,14 +503,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Simulate loading with smooth transition
-    const loadTimer = setTimeout(() => {
-      setIsLoading(false);
-      // Small delay before showing content for smooth fade-in
-      setTimeout(() => setShowContent(true), 50);
-    }, 800);
-    
-    return () => clearTimeout(loadTimer);
+    // Immediate loading
+    setIsLoading(false);
+    setShowContent(true);
   }, []);
 
   return (

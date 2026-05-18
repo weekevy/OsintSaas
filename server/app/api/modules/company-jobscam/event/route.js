@@ -51,8 +51,14 @@ export async function POST(request) {
     
     const DOCKER_URL = process.env.JOB_RECRUITMENT_API_URL || 'http://127.0.0.1:8000';
     
+    // Decide which Docker endpoint to call
+    let dockerEndpoint = `/event/${event_type}`;
+    if (event_type === 'start') {
+      dockerEndpoint = '/scan/start';
+    }
+
     // Forward the event to Docker container
-    const dockerResponse = await fetch(`${DOCKER_URL}/event/${event_type}`, {
+    const dockerResponse = await fetch(`${DOCKER_URL}${dockerEndpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

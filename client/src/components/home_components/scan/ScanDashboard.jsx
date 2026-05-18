@@ -4,6 +4,7 @@ import { InvestigationModules, CustomScanConfig } from './core/Modules';
 import { RunningScans, ScanHistory, ScheduledScans } from './core/ScansManager';
 import { getModuleAddModal, getModuleEditModal } from './modules';
 import { getIcon } from './utils/icons';
+import api from '../../../services/api';
 
 // Cache for modules data to prevent re-fetching on tab switches
 let cachedModules = null;
@@ -245,7 +246,7 @@ const ScanDashboard = ({
     async ({ silent = false, useCache = true } = {}) => {
       if (useCache && cachedModules && lastFetchTime && (Date.now() - lastFetchTime) < CACHE_DURATION) {
         const all = cachedModules;
-        setRunningScans(all.filter((s) => ['queued', 'running', 'paused'].includes(s.status)));
+        setRunningScans(all.filter((s) => ['queued', 'pending', 'running', 'paused', 'failed', 'completed'].includes(s.status)));
         setScanHistory(all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
         if (!silent) setStatus('idle');
         setInitialLoadDone(true);
@@ -264,8 +265,8 @@ const ScanDashboard = ({
           filterModule === 'all' ? ALL_MODULES : ALL_MODULES.filter((m) => m.id === filterModule);
         const results = await Promise.allSettled(
           modulesToFetch.map(async (module) => {
-            const res = await fetch(`${module.api}?_=${Date.now()}`, { signal: controller.signal });
-            const data = await res.json();
+            const response = await api.get(`${module.api}?_=${Date.now()}`, { signal: controller.signal });
+            const data = response.data;
             if (!data.success || !data.scans?.length) return [];
             return data.scans.map((scan) => ({
               id: `${module.id}_${scan.id}`,
@@ -278,6 +279,7 @@ const ScanDashboard = ({
               moduleTextColor: module.textColor,
               toolIcon: module.icon,
               target: getTargetDisplay(scan, module.id),
+              rawTarget: scan.target?.value || scan.assets?.job_url || scan.assets?.company_website || 'Unknown',
               api: module.api,
               status: scan.status,
               progress: scan.progress || 0,
@@ -309,7 +311,7 @@ const ScanDashboard = ({
         }
         prevScanIdsRef.current = allNextIds;
 
-        setRunningScans(all.filter((s) => ['queued', 'running', 'paused'].includes(s.status)));
+        setRunningScans(all.filter((s) => ['queued', 'pending', 'running', 'paused', 'failed', 'completed'].includes(s.status)));
         setScanHistory(all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
         setLastUpdated(new Date());
         setInitialLoadDone(true);
@@ -411,7 +413,10 @@ const ScanDashboard = ({
           const data = await res.json();
           success = data.success;
         }
-        if (success) { handleCloseAdd(); debouncedRefresh(); }
+        if (success) { 
+          handleCloseAdd(); 
+          fetchAllScans({ silent: true, useCache: false }); 
+        }
       } catch (err) {
         console.error('Save error:', err);
       } finally {
@@ -544,7 +549,7 @@ const ScanDashboard = ({
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="w-0.5 h-4 sm:h-5 bg-gradient-to-b from-[#2DD4BF] to-[#00E5FF] rounded-full" />
             <h3 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em]">
-              Active Scans
+              Current Scans
               {!showSkeleton && (
                 <span className="ml-1.5 text-[#2DD4BF]/70 text-[10px] sm:text-[11px]">
                   ({annotatedRunningScans.length})
@@ -568,6 +573,7 @@ const ScanDashboard = ({
                   runningScans={[scan]}
                   onEditScan={handleEditScan}
                   onRemoveScan={handleRemoveScan}
+                  onRefresh={() => fetchAllScans({ silent: true, useCache: false })}
                   onUpdateScanStatus={(scanId, newStatus) =>
                     setRunningScans((prev) =>
                       prev.map((s) => s.originalId === scanId ? { ...s, status: newStatus } : s)

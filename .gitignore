@@ -1,4 +1,4 @@
-## Logs
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -12,7 +12,7 @@ lerna-debug.log*
 client/.env
 server/.env
 docker/job-recruitment/.env
-
+lab/
 # Docker runtime data
 docker/*/events/
 docker/*/output/

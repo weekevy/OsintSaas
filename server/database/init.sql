@@ -431,6 +431,24 @@ WHERE NOT EXISTS (
 -- ON DUPLICATE KEY UPDATE email = email;
 
 -- ============================================
+-- 21. NOTIFICATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    type ENUM('info', 'success', 'warning', 'error', 'threat') DEFAULT 'info',
+    is_read BOOLEAN DEFAULT FALSE,
+    scan_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE SET NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- CREATE INDEXES FOR BETTER PERFORMANCE
 -- ============================================
 CREATE INDEX idx_scans_user_project ON scans(target_id);

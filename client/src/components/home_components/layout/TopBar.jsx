@@ -39,12 +39,14 @@ const TopBar = ({
     }, 30000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedProject?.id]); // Re-fetch when project changes
 
   const fetchNotifications = async () => {
     try {
       setNotifLoading(true);
-      const response = await api.get('/api/notifications');
+      const projectId = selectedProject?.id;
+      const url = projectId ? `/api/notifications?projectId=${projectId}` : '/api/notifications';
+      const response = await api.get(url);
       if (response.data.success) {
         setNotifications(response.data.notifications);
       }
@@ -153,6 +155,19 @@ const TopBar = ({
 
   const onSearchKeyDown = (e) => {
     if (e.key === 'Enter') runAnalyze();
+  };
+
+  const handleClearAllNotifications = async () => {
+    try {
+      const response = await api.delete('/api/notifications/clear-all');
+      if (response.data.success) {
+        setNotifications([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+      // Fallback for UI if API fails
+      setNotifications([]);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -285,7 +300,12 @@ const TopBar = ({
                 </div>
                 {notifications.length > 0 && (
                   <div className="border-t border-white/5 p-4 bg-white/[0.01] text-center">
-                    <button className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] hover:text-white transition-colors">Clear All Intelligence</button>
+                    <button 
+                      onClick={handleClearAllNotifications}
+                      className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] hover:text-white transition-colors"
+                    >
+                      Clear All Intelligence
+                    </button>
                   </div>
                 )}
               </div>

@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import db from '@/database/config';
 import { verifyToken } from '@/lib/jwt';
 
-// GET /api/notifications - Fetch user notifications
-export async function GET(request) {
+export async function DELETE(request) {
   try {
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     const token = request.cookies.get('token')?.value;
+
     if (!token) {
-      const response = NextResponse.json({ authenticated: false }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
@@ -22,33 +22,17 @@ export async function GET(request) {
       return response;
     }
 
-    const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('projectId');
+    await db.execute(
+      'DELETE FROM notifications WHERE user_id = ?',
+      [decoded.id]
+    );
 
-    let query = 'SELECT n.* FROM notifications n';
-    const params = [decoded.id];
-
-    if (projectId) {
-      query += `
-        JOIN scans s ON n.scan_id = s.id
-        JOIN targets t ON s.target_id = t.id
-        WHERE n.user_id = ? AND t.project_id = ?
-      `;
-      params.push(projectId);
-    } else {
-      query += ' WHERE n.user_id = ?';
-    }
-
-    query += ' ORDER BY n.created_at DESC LIMIT 50';
-
-    const [notifications] = await db.execute(query, params);
-
-    const response = NextResponse.json({ success: true, notifications });
+    const response = NextResponse.json({ success: true, message: 'All notifications cleared' });
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     return response;
   } catch (error) {
-    console.error('Fetch notifications error:', error);
+    console.error('Clear notifications error:', error);
     const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -62,7 +46,7 @@ export async function OPTIONS(request) {
   const response = new NextResponse(null, { status: 200 });
   response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  response.headers.set('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return response;
 }

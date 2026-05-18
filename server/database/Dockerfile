@@ -9,4 +9,3 @@ ENV MYSQL_PASSWORD=pass
 
 # Expose port
 EXPOSE 3306
-

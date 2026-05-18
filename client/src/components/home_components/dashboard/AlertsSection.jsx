@@ -186,44 +186,73 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:gap-4">
-        {alerts.map((alert) => (
-          <div
-            key={alert.id}
-            className={`p-4 lg:p-5 rounded-2xl border ${getSeverityColor(alert.severity)} glass-card flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:border-white/20 cursor-pointer`}
-          >
-            <div className="flex-shrink-0">
-              {getSeverityIcon(alert.severity)}
-            </div>
-            <div className="flex-1 w-full sm:w-auto">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className={`font-semibold text-sm lg:text-base capitalize font-sans ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
-                  {alert.severity} Risk
-                </span>
-                <span className="text-xs px-2 py-1 rounded-full bg-white/10 font-sans">
-                  {alert.source}
-                </span>
+      <div className="relative">
+        <div className="max-h-[420px] overflow-y-auto pr-1 scrollbar-custom custom-touch-scroll">
+          <div className="grid grid-cols-1 gap-3 lg:gap-4 pb-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className={`p-4 lg:p-5 rounded-2xl border ${getSeverityColor(alert.severity)} glass-card flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:border-white/20 cursor-pointer relative overflow-hidden`}
+              >
+                <div className="flex-shrink-0">
+                  {getSeverityIcon(alert.severity)}
+                </div>
+                <div className="flex-1 w-full sm:w-auto">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className={`font-semibold text-sm lg:text-base capitalize font-sans ${alert.severity === 'critical' ? 'text-red-400' : alert.severity === 'high' ? 'text-orange-400' : 'text-yellow-400'}`}>
+                      {alert.severity} Risk
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-white/10 font-sans">
+                      {alert.source}
+                    </span>
+                  </div>
+                  <p className="text-white/90 text-sm lg:text-base font-sans leading-relaxed">{alert.message}</p>
+                  <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-3 text-xs lg:text-sm font-sans">
+                    <button className="flex items-center gap-1.5 hover:text-white transition-colors text-white/60 bg-white/5 px-2.5 py-1 rounded-lg">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Review</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 hover:text-white transition-colors text-white/60 bg-white/5 px-2.5 py-1 rounded-lg">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+                <span className="text-white/40 text-[10px] sm:text-xs sm:ml-auto font-sans bg-white/5 px-2 py-1 rounded-md">{alert.time}</span>
               </div>
-              <p className="text-white/90 text-sm lg:text-base font-sans">{alert.message}</p>
-              <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs lg:text-sm font-sans">
-                <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Review</span>
-                </button>
-                <button className="flex items-center gap-1 hover:text-white transition-colors text-white/60">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>Watch</span>
-                </button>
-              </div>
-            </div>
-            <span className="text-white/40 text-xs sm:text-sm sm:ml-auto font-sans">{alert.time}</span>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Bottom fade effect to indicate more content */}
+        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#090b0e] to-transparent pointer-events-none rounded-b-2xl z-10" />
       </div>
+
+      <style jsx>{`
+        .scrollbar-custom::-webkit-scrollbar {
+          width: 4px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.2);
+          border-radius: 10px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 229, 255, 0.4);
+        }
+        .custom-touch-scroll {
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 229, 255, 0.2) transparent;
+        }
+      `}</style>
     </div>
   );
 };
