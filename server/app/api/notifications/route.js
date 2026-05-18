@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import db from '@/database/config';
 import { verifyToken } from '@/lib/jwt';
 
-export async function DELETE(request, { params }) {
+// GET /api/notifications - Fetch user notifications
+export async function GET(request) {
   try {
     const origin = request.headers.get('origin') || 'http://localhost:5173';
-    const { id } = await params;
     const token = request.cookies.get('token')?.value;
     if (!token) {
-      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ authenticated: false }, { status: 401 });
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
@@ -22,38 +22,17 @@ export async function DELETE(request, { params }) {
       return response;
     }
 
-    // Verify membership and role
-    const [membership] = await db.execute(
-      'SELECT role FROM team_members WHERE team_id = ? AND user_id = ?',
-      [id, decoded.id]
+    const [notifications] = await db.execute(
+      'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50',
+      [decoded.id]
     );
 
-    if (membership.length === 0) {
-      const response = NextResponse.json({ error: 'You are not a member of this team' }, { status: 400 });
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
-    }
-
-    if (membership[0].role === 'owner') {
-      const response = NextResponse.json({ error: 'Owners cannot leave a team. Delete the team instead.' }, { status: 403 });
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
-    }
-
-    // Remove the member
-    await db.execute(
-      'DELETE FROM team_members WHERE team_id = ? AND user_id = ?',
-      [id, decoded.id]
-    );
-
-    const response = NextResponse.json({ success: true, message: 'You have left the team' });
+    const response = NextResponse.json({ success: true, notifications });
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     return response;
   } catch (error) {
-    console.error('Leave team error:', error);
+    console.error('Fetch notifications error:', error);
     const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -67,7 +46,7 @@ export async function OPTIONS(request) {
   const response = new NextResponse(null, { status: 200 });
   response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return response;
 }

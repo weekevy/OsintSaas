@@ -17,7 +17,7 @@ export async function GET(request) {
     if (decoded) {
       // Token is valid, get user data
       const [users] = await db.execute(
-        'SELECT id, email, first_name, last_name, role FROM users WHERE id = ?',
+        'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
         [decoded.id]
       );
 
@@ -30,6 +30,7 @@ export async function GET(request) {
         user: {
           id: users[0].id,
           email: users[0].email,
+          username: users[0].username,
           firstName: users[0].first_name,
           lastName: users[0].last_name,
           role: users[0].role
@@ -50,7 +51,7 @@ export async function GET(request) {
         if (sessions.length > 0) {
           // Get user data
           const [users] = await db.execute(
-            'SELECT id, email, first_name, last_name, role FROM users WHERE id = ?',
+            'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
             [sessions[0].user_id]
           );
 
@@ -69,6 +70,7 @@ export async function GET(request) {
               user: {
                 id: users[0].id,
                 email: users[0].email,
+                username: users[0].username,
                 firstName: users[0].first_name,
                 lastName: users[0].last_name,
                 role: users[0].role

@@ -4,9 +4,10 @@ import { hashPassword } from '@/lib/password';
 import { generateTokens, setTokenCookies } from '@/lib/jwt';
 
 // Add OPTIONS handler for CORS preflight
-export async function OPTIONS() {
+export async function OPTIONS(request) {
+  const origin = request.headers.get('origin') || 'http://localhost:5173';
   const response = new NextResponse(null, { status: 200 });
-  response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+  response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -15,16 +16,17 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { email, password, firstName, lastName } = await request.json();
+    const origin = request.headers.get('origin') || 'http://localhost:5173';
+    const { email, password, username, firstName, lastName } = await request.json();
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !password || !username) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Email, password, and username are required' },
         { 
           status: 400,
           headers: {
-            'Access-Control-Allow-Origin': 'http://localhost:5173',
+            'Access-Control-Allow-Origin': origin,
             'Access-Control-Allow-Credentials': 'true',
           }
         }
@@ -37,26 +39,26 @@ export async function POST(request) {
         { 
           status: 400,
           headers: {
-            'Access-Control-Allow-Origin': 'http://localhost:5173',
+            'Access-Control-Allow-Origin': origin,
             'Access-Control-Allow-Credentials': 'true',
           }
         }
       );
     }
 
-    // Check if user already exists
+    // Check if user already exists (email or username)
     const [existingUsers] = await db.execute(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
+      'SELECT id FROM users WHERE email = ? OR username = ?',
+      [email, username]
     );
 
     if (existingUsers.length > 0) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'User with this email or username already exists' },
         { 
           status: 409,
           headers: {
-            'Access-Control-Allow-Origin': 'http://localhost:5173',
+            'Access-Control-Allow-Origin': origin,
             'Access-Control-Allow-Credentials': 'true',
           }
         }
@@ -68,15 +70,15 @@ export async function POST(request) {
 
     // Create user
     const [result] = await db.execute(
-      'INSERT INTO users (email, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?)',
-      [email, hashedPassword, firstName || null, lastName || null, 'user']
+      'INSERT INTO users (email, username, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?, ?)',
+      [email, username, hashedPassword, firstName || null, lastName || null, 'user']
     );
 
     const userId = result.insertId;
 
     // Get created user
     const [users] = await db.execute(
-      'SELECT id, email, first_name, last_name, role FROM users WHERE id = ?',
+      'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
       [userId]
     );
 
@@ -106,6 +108,7 @@ export async function POST(request) {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         firstName: user.first_name,
         lastName: user.last_name,
         role: user.role
@@ -113,7 +116,7 @@ export async function POST(request) {
     });
 
     // Add CORS headers
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+    response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     
     // ✅ This now works with the updated jwt.js
@@ -123,12 +126,13 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Registration error:', error);
+    const origin = request.headers.get('origin') || 'http://localhost:5173';
     return NextResponse.json(
       { error: 'Internal server error' },
       { 
         status: 500,
         headers: {
-          'Access-Control-Allow-Origin': 'http://localhost:5173',
+          'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Credentials': 'true',
         }
       }

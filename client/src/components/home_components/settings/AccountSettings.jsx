@@ -147,18 +147,19 @@ const AccountSettings = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-4 border-t border-white/10 bg-white/5">
+        <div className="flex justify-end gap-3 p-6 border-t border-white/10 bg-white/5">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors duration-150 text-sm font-['Poppins']"
+            className="px-6 py-3 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl transition-all duration-300 text-xs font-black uppercase tracking-[0.2em]"
           >
-            Cancel
+            Abort
           </button>
           <button
             onClick={handleSaveClick}
-            className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-sm font-['Poppins']"
+            disabled={isLoading}
+            className="px-10 py-3 bg-[#00E5FF] text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#00E5FF]/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Changes
+            {isLoading ? 'Encrypting...' : 'Save Configuration'}
           </button>
         </div>
       </div>

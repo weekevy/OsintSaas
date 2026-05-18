@@ -1,35 +1,23 @@
 import pool from '../../../../database/config';
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@/lib/jwt';
 
 // Track pending requests to prevent duplicates
 const pendingRequests = new Map();
 
-// Helper function to verify JWT token
-async function verifyToken(request) {
+// Helper function to verify JWT token from request
+async function getAuthenticatedUser(request) {
   try {
     const authHeader = request.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this');
-      return decoded;
+      return verifyToken(token);
     }
-    const cookieHeader = request.headers.get('cookie');
-    if (cookieHeader) {
-      const cookies = Object.fromEntries(
-        cookieHeader.split('; ').map(c => {
-          const [key, value] = c.split('=');
-          return [key, value];
-        })
-      );
-      if (cookies.token) {
-        const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this');
-        return decoded;
-      }
-    }
+    const token = request.cookies.get('token')?.value;
+    if (token) return verifyToken(token);
     return null;
   } catch (error) {
-    console.error('Token verification failed:', error);
+    console.error('Authentication failed:', error);
     return null;
   }
 }
@@ -54,7 +42,7 @@ function calculateProgress(scan) {
 // GET - Fetch all scam website scans
 export async function GET(request) {
   try {
-    const user = await verifyToken(request);
+    const user = await getAuthenticatedUser(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -143,7 +131,7 @@ export async function GET(request) {
 export async function POST(request) {
   let connection;
   try {
-    const user = await verifyToken(request);
+    const user = await getAuthenticatedUser(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -168,6 +156,18 @@ export async function POST(request) {
 
     try {
       let projectId = body.project_id;
+      
+      // If project_id is provided, verify it belongs to the user
+      if (projectId) {
+        const [projectCheck] = await connection.execute(
+          'SELECT id FROM projects WHERE id = ? AND user_id = ? LIMIT 1',
+          [projectId, user.id]
+        );
+        if (projectCheck.length === 0) {
+          projectId = null;
+        }
+      }
+
       if (!projectId) {
         const [projects] = await connection.execute('SELECT id FROM projects WHERE user_id = ? AND name = ? LIMIT 1', [user.id, 'Default Project']);
         if (projects.length > 0) projectId = projects[0].id;
@@ -233,7 +233,7 @@ export async function POST(request) {
 export async function PATCH(request) {
   let connection;
   try {
-    const user = await verifyToken(request);
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const scanId = parseInt(searchParams.get('id'));
@@ -275,7 +275,7 @@ export async function PATCH(request) {
 export async function DELETE(request) {
   let connection;
   try {
-    const user = await verifyToken(request);
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id'));
@@ -304,7 +304,7 @@ export async function DELETE(request) {
 // PUT - Update scan assets
 export async function PUT(request) {
   try {
-    const user = await verifyToken(request);
+    const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id'));

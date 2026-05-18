@@ -3,7 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ModalContainer from './ModalContainer';
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ email: '', username: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
@@ -62,7 +62,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     }
     setIsLoading(true);
     setError('');
-    const result = await register(formData.email, formData.password);
+    const result = await register(formData.email, formData.password, formData.username);
     if (result.success) {
       setTempUserEmail(formData.email);
       setShowOTP(true);
@@ -97,16 +97,29 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Email Identity</label>
-          <input 
-            type="email" 
-            required 
-            value={formData.email} 
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
-            placeholder="agent@osintsaas.com" 
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Email Identity</label>
+            <input 
+              type="email" 
+              required 
+              value={formData.email} 
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
+              placeholder="agent@osintsaas.com" 
+            />
+          </div>
+          <div>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Nexus Username</label>
+            <input 
+              type="text" 
+              required 
+              value={formData.username} 
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })} 
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
+              placeholder="operator_7" 
+            />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

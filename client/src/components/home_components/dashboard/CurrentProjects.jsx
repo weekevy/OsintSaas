@@ -436,6 +436,7 @@ const CurrentModules = ({
 
   return (
     <div
+      id="tour-project-list"
       className="relative rounded-2xl font-['Poppins'] w-full border border-white/[0.09] shadow-xl shadow-black/30 ring-1 ring-white/[0.04]"
       style={{ height: '408px', display: 'flex', flexDirection: 'column' }}
     >

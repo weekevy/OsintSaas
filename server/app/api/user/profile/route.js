@@ -99,42 +99,27 @@ export async function PUT(request) {
     const { 
       firstName, 
       lastName, 
-      bio, 
       title, 
       phone, 
       location, 
-      website,
-      linkedin,
-      twitter,
-      github 
     } = await request.json();
-
-    // Prepare social object
-    const social = JSON.stringify({
-      linkedin,
-      twitter,
-      github
-    });
 
     // Update user profile
     await db.execute(
       `UPDATE users SET 
-        first_name = COALESCE(?, first_name),
-        last_name = COALESCE(?, last_name),
-        bio = COALESCE(?, bio),
-        title = COALESCE(?, title),
-        phone = COALESCE(?, phone),
-        location = COALESCE(?, location),
-        website = COALESCE(?, website),
-        social = COALESCE(?, social)
+        first_name = ?,
+        last_name = ?,
+        title = ?,
+        phone = ?,
+        location = ?
        WHERE id = ?`,
-      [firstName, lastName, bio, title, phone, location, website, social, decoded.id]
+      [firstName || null, lastName || null, title || null, phone || null, location || null, decoded.id]
     );
 
     // Get updated user
     const [users] = await db.execute(
-      `SELECT id, email, first_name, last_name, bio, title, phone, 
-              location, website, social, created_at
+      `SELECT id, email, first_name, last_name, title, phone, 
+              location, created_at
        FROM users WHERE id = ?`,
       [decoded.id]
     );
@@ -148,12 +133,9 @@ export async function PUT(request) {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        bio: user.bio,
         title: user.title,
         phone: user.phone,
         location: user.location,
-        website: user.website,
-        social: user.social ? JSON.parse(user.social) : {},
         createdAt: user.created_at
       }
     });

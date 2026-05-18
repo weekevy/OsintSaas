@@ -4,6 +4,7 @@ import { verifyToken } from '@/lib/jwt';
 
 export async function GET(request) {
   try {
+    const origin = request.headers.get('origin') || 'http://localhost:5173';
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
@@ -19,7 +20,7 @@ export async function GET(request) {
     }
 
     const response = NextResponse.json({ success: true, invitation: invites[0] });
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+    response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     return response;
   } catch (error) {
@@ -30,6 +31,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const origin = request.headers.get('origin') || 'http://localhost:5173';
     const auth_token = request.cookies.get('token')?.value;
     if (!auth_token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -81,7 +83,7 @@ export async function POST(request) {
       await connection.commit();
 
       const response = NextResponse.json({ success: true, message: 'Joined team successfully' });
-      response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+      response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
     } catch (err) {
@@ -96,9 +98,10 @@ export async function POST(request) {
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(request) {
+  const origin = request.headers.get('origin') || 'http://localhost:5173';
   const response = new NextResponse(null, { status: 200 });
-  response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+  response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');

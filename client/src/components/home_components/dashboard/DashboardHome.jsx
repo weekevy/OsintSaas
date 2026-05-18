@@ -51,7 +51,7 @@ const DashboardHome = ({
         </header> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-10 items-start">
-          <div className="lg:col-span-1 min-w-0">
+          <div className="lg:col-span-1 min-w-0" id="tour-risk-circle">
             <RiskCircle
               riskData={selectedRiskData}
               projectName={selectedProjectName}
@@ -64,7 +64,7 @@ const DashboardHome = ({
           </div>
 
           <div className="lg:col-span-2 flex flex-col gap-6 md:gap-8 min-w-0">
-            <div className="glass-card rounded-2xl p-5 sm:p-6 border border-white/[0.08] relative overflow-hidden group transition-colors duration-300 hover:border-[#00E5FF]/25">
+            <div id="tour-start-scan" className="glass-card rounded-2xl p-5 sm:p-6 border border-white/[0.08] relative overflow-hidden group transition-colors duration-300 hover:border-[#00E5FF]/25">
               <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00E5FF]/20 to-[#2DD4BF]/10 border border-[#00E5FF]/25 flex items-center justify-center shrink-0 shadow-[0_0_24px_-8px_rgba(0,229,255,0.5)]">
@@ -105,16 +105,20 @@ const DashboardHome = ({
           </div>
         </div>
 
-        <section className="mb-8 md:mb-10">
+        <section className="mb-8 md:mb-10" id="tour-alerts">
           <AlertsSection alerts={alerts} selectedProjectId={selectedProjectId} />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-10">
-          <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} />
-          <ThreatFeed feeds={[]} selectedProjectId={selectedProjectId} />
+          <div id="tour-recent-scans">
+            <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} />
+          </div>
+          <div id="tour-threat-feed">
+            <ThreatFeed feeds={[]} selectedProjectId={selectedProjectId} />
+          </div>
         </section>
 
-        <section>
+        <section id="tour-quick-tools">
           <QuickTools />
         </section>
 

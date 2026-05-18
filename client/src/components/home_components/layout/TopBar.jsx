@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import UserMenu from './UserMenu';
+import api from '../../../services/api';
 
 const shellMax = 'max-w-[1680px] mx-auto w-full';
 
@@ -22,10 +23,55 @@ const TopBar = ({
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [credits, setCredits] = useState(250);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   const searchTypeRef = useRef(null);
   const notificationsRef = useRef(null);
   const mobileSearchRef = useRef(null);
+
+  useEffect(() => {
+    fetchNotifications();
+    
+    // Set up polling for notifications every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setNotifLoading(true);
+      const response = await api.get('/api/notifications');
+      if (response.data.success) {
+        setNotifications(response.data.notifications);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handleInviteResponse = async (notificationId, action) => {
+    try {
+      const response = await api.post('/api/notifications/respond', {
+        notificationId,
+        action
+      });
+      if (response.data.success) {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        if (action === 'accept' && activeTab === 'team') {
+          // If we're on the team tab, trigger a refresh (could use a global event or prop)
+          window.location.reload(); 
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to respond to invitation');
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -109,19 +155,21 @@ const TopBar = ({
     if (e.key === 'Enter') runAnalyze();
   };
 
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   return (
     <header className="sticky top-0 z-[9998] flex flex-col font-sans border-b border-white/[0.08] bg-[#080a0d] max-md:backdrop-blur-none md:bg-[#080a0d]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
       {/* Top row */}
-      <div className={`${shellMax} flex flex-wrap items-center justify-between gap-x-2 gap-y-3 px-3 sm:px-5 lg:px-8 py-3 sm:py-3.5`}>
+      <div className={`${shellMax} flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 sm:px-5 lg:px-8 py-2 sm:py-3.5`}>
         {/* Brand + project - LEFT SIDE (always on left) */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-4 md:gap-5">
-          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5" id="tour-brand">
             <span className="relative flex h-2 w-2 shrink-0 sm:h-2.5 sm:w-2.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full rounded-full bg-[#00E5FF] opacity-50" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00E5FF] sm:h-2.5 sm:w-2.5" />
             </span>
             <h1
-              className="cursor-pointer truncate text-lg font-semibold tracking-tight text-white sm:text-xl md:text-2xl"
+              className="cursor-pointer truncate text-base font-semibold tracking-tight text-white sm:text-xl md:text-2xl"
               onClick={() => onTabChange('dashboard')}
             >
               Weekey
@@ -133,59 +181,113 @@ const TopBar = ({
         </div>
 
         {/* Center space - empty, pushing actions to the right */}
-        <div className="flex-1"></div>
+        <div className="flex-1" id="tour-search"></div>
 
         {/* Actions - RIGHT SIDE (credits, notifications, profile) - ALWAYS on right side */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
+            id="tour-credits"
             type="button"
-            className="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-2 py-2 transition-colors hover:border-[#00E5FF]/30 hover:bg-white/[0.06] sm:gap-2.5 sm:px-3 sm:py-2"
+            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-2 py-1.5 transition-colors hover:border-[#00E5FF]/30 hover:bg-white/[0.06] sm:gap-2.5 sm:px-3 sm:py-2"
             aria-label={`${credits} tokens remaining`}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00E5FF]/12 ring-1 ring-[#00E5FF]/25 sm:h-9 sm:w-9">
-              <svg className="h-4 w-4 text-[#00E5FF] sm:h-[18px] sm:w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#00E5FF]/12 ring-1 ring-[#00E5FF]/25 sm:h-9 sm:w-9">
+              <svg className="h-3.5 w-3.5 text-[#00E5FF] sm:h-[18px] sm:w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold tabular-nums text-white sm:hidden">{credits}</span>
+            <span className="text-xs font-semibold tabular-nums text-white sm:hidden">{credits}</span>
             <div className="hidden flex-col items-start leading-none sm:flex">
               <span className="text-sm font-semibold tabular-nums text-white">{credits}</span>
               <span className="text-[9px] font-medium uppercase tracking-wider text-[#00E5FF]/65">tokens</span>
             </div>
           </button>
 
-          <div className="relative" ref={notificationsRef}>
+          <div className="relative" ref={notificationsRef} id="tour-notifications">
             <button
               type="button"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative rounded-xl border border-white/[0.1] bg-white/[0.04] p-2.5 text-white/55 transition-colors hover:border-[#00E5FF]/25 hover:text-[#00E5FF] sm:p-3"
+              className="relative rounded-xl border border-white/[0.1] bg-white/[0.04] p-2 text-white/55 transition-colors hover:border-[#00E5FF]/25 hover:text-[#00E5FF] sm:p-3"
               aria-label="Notifications"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              {alertsCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#f87171] px-1 text-[10px] font-bold text-white">
-                  {alertsCount > 99 ? '99+' : alertsCount}
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#f87171] px-1 text-[10px] font-bold text-white shadow-lg">
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 z-[10000] mt-2 w-[min(100vw-1.5rem,20rem)] rounded-2xl border border-white/[0.1] bg-[#0c0e12] shadow-2xl sm:w-80 md:backdrop-blur-sm">
-                <div className="border-b border-white/[0.08] px-4 py-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-white/90">Notifications</h3>
+              <div className="absolute right-0 md:right-0 z-[10000] mt-4 w-[min(calc(100vw-1.5rem),24rem)] max-md:fixed max-md:top-16 max-md:left-3 max-md:right-3 max-md:w-auto max-md:mt-0 rounded-3xl border border-white/10 bg-[#0c0e12] shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:w-96 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="border-b border-white/[0.08] px-6 py-4 flex justify-between items-center bg-white/[0.02]">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/90">Intelligence Feed</h3>
+                  <span className="text-[9px] font-bold text-[#00E5FF] bg-[#00E5FF]/10 px-2 py-0.5 rounded-full uppercase">{unreadCount} New</span>
                 </div>
-                <div className="max-h-80 overflow-y-auto">
-                  {credits === 0 ? (
-                    <div className="border-b border-white/[0.06] p-4 transition-colors hover:bg-white/[0.03]">
-                      <p className="text-xs font-semibold text-white">No credits</p>
-                      <p className="mt-1 text-[11px] text-white/45">Purchase more to continue scanning.</p>
+                
+                <div className="max-h-[32rem] overflow-y-auto custom-scrollbar">
+                  {notifLoading ? (
+                    <div className="p-10 flex flex-col items-center justify-center gap-3">
+                      <div className="w-6 h-6 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
+                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Decrypting...</span>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-6 h-6 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H4a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                      </div>
+                      <p className="text-[11px] font-black text-white/20 uppercase tracking-[0.2em]">Nexus Clear</p>
                     </div>
                   ) : (
-                    <p className="p-4 text-[13px] text-white/45">You&apos;re all caught up.</p>
+                    <div className="divide-y divide-white/5">
+                      {notifications.map((notif) => (
+                        <div key={notif.id} className="p-5 hover:bg-white/[0.02] transition-colors relative group">
+                          {!notif.is_read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#00E5FF]" />}
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/5 border border-[#00E5FF]/20 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-1">
+                                <h4 className="text-[13px] font-black text-white tracking-tight">{notif.title}</h4>
+                                <span className="text-[9px] font-medium text-white/20 uppercase">{new Date(notif.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                              </div>
+                              <p className="text-[11px] text-white/40 leading-relaxed font-medium mb-3">{notif.message}</p>
+                              
+                              {notif.type === 'team_invite' && (
+                                <div className="flex gap-2">
+                                  <button 
+                                    onClick={() => handleInviteResponse(notif.id, 'accept')}
+                                    className="px-4 py-1.5 bg-[#00E5FF] text-black text-[9px] font-black uppercase tracking-widest rounded-lg hover:brightness-110 transition-all active:scale-95"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button 
+                                    onClick={() => handleInviteResponse(notif.id, 'decline')}
+                                    className="px-4 py-1.5 bg-white/5 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all active:scale-95"
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
+                {notifications.length > 0 && (
+                  <div className="border-t border-white/5 p-4 bg-white/[0.01] text-center">
+                    <button className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] hover:text-white transition-colors">Clear All Intelligence</button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -196,6 +298,7 @@ const TopBar = ({
 
       {/* Tab nav: mobile = floating curved bar; md+ = segmented pills */}
       <div
+        id="tour-nav"
         className={[
           'max-md:fixed max-md:z-[9990]',
           'max-md:left-1/2 max-md:-translate-x-1/2 max-md:w-max max-md:max-w-[min(calc(100vw-1.25rem),42rem)]',

@@ -28,35 +28,66 @@ const ModuleCardSkeleton = ({ index }) => {
   const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
-    // Staggered animation for each skeleton
-    const timer = setTimeout(() => setIsVisible(true), index * 50);
+    const timer = setTimeout(() => setIsVisible(true), index * 60);
     return () => clearTimeout(timer);
   }, [index]);
 
   return (
     <div 
-      className={`border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
+      className={`relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-700 ease-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
       style={{ minHeight: 220 }}
     >
-      {/* Shimmer effect */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-        
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-14 h-14 bg-white/10 rounded-xl flex-shrink-0 animate-pulse"/>
-          <div className="flex-1 pt-1">
-            <div className="h-4 bg-white/10 rounded w-3/4 mb-2 animate-pulse"/>
-            <div className="h-3 bg-white/10 rounded w-1/3 animate-pulse"/>
+      {/* Top glow line skeleton */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-white/5" />
+      
+      {/* Shimmer effect overlay */}
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+      
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-start gap-3">
+            {/* Icon skeleton */}
+            <div className="w-14 h-14 bg-white/5 rounded-xl flex-shrink-0 animate-pulse border border-white/10"/>
+            <div className="pt-1">
+              {/* Title skeleton */}
+              <div className="h-4 bg-white/10 rounded w-32 mb-2 animate-pulse"/>
+              {/* Subtitle skeleton */}
+              <div className="h-2.5 bg-white/5 rounded w-20 animate-pulse"/>
+            </div>
           </div>
+          {/* Risk badge skeleton */}
+          <div className="w-16 h-5 bg-white/5 rounded-full animate-pulse border border-white/10"/>
         </div>
-        <div className="h-3 bg-white/10 rounded w-full mb-1.5 animate-pulse"/>
-        <div className="h-3 bg-white/10 rounded w-4/5 mb-4 animate-pulse"/>
-        <div className="flex gap-2">
+
+        {/* Description lines */}
+        <div className="space-y-2 mb-5">
+          <div className="h-3 bg-white/5 rounded w-full animate-pulse"/>
+          <div className="h-3 bg-white/5 rounded w-4/5 animate-pulse"/>
+        </div>
+
+        {/* Tags skeletons */}
+        <div className="flex gap-2 mb-5">
           {[1,2,3].map(i => (
-            <div key={i} className="h-5 bg-white/10 rounded-full w-16 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}/>
+            <div key={i} className="h-5 bg-white/5 rounded-full w-14 animate-pulse border border-white/[0.05]" />
           ))}
+        </div>
+
+        {/* Footer skeleton */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/5">
+          <div className="flex gap-4">
+            <div className="space-y-1.5">
+              <div className="h-2 bg-white/5 rounded w-10 animate-pulse"/>
+              <div className="h-3 bg-white/10 rounded w-8 animate-pulse"/>
+            </div>
+            <div className="space-y-1.5">
+              <div className="h-2 bg-white/5 rounded w-10 animate-pulse"/>
+              <div className="h-3 bg-white/10 rounded w-8 animate-pulse"/>
+            </div>
+          </div>
+          {/* Action button skeleton */}
+          <div className="w-7 h-7 rounded-full bg-white/5 animate-pulse border border-white/10"/>
         </div>
       </div>
     </div>

@@ -338,6 +338,26 @@ const ScanDashboard = ({
     };
   }, [fetchAllScans]);
 
+  // ── Auto-refresh when scans are active ──
+  useEffect(() => {
+    const hasActiveScans = runningScans.some(s => ['queued', 'running', 'paused'].includes(s.status));
+    let intervalId = null;
+
+    if (hasActiveScans) {
+      console.log('🔄 Active scans detected, starting auto-refresh...');
+      intervalId = setInterval(() => {
+        fetchAllScans({ silent: true, useCache: false });
+      }, 3000); // 3 seconds
+    }
+
+    return () => {
+      if (intervalId) {
+        console.log('🛑 Stopping auto-refresh...');
+        clearInterval(intervalId);
+      }
+    };
+  }, [runningScans, fetchAllScans]);
+
   useEffect(() => {
     cachedModules = null;
     lastFetchTime = null;

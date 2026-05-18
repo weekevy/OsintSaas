@@ -1,7 +1,7 @@
 import React from 'react';
 
 const TeamCard = ({ team, onClick, onAction }) => {
-  const { name, member_count, max_members, created_at, role } = team;
+  const { name, member_count, max_members, created_at, role, description } = team;
   
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -28,65 +28,64 @@ const TeamCard = ({ team, onClick, onAction }) => {
   return (
     <div 
       onClick={onClick}
-      className="group relative rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 hover:border-[#00E5FF]/30 transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group relative rounded-3xl border border-white/[0.08] bg-[#0a0a0a] p-1 hover:border-[#00E5FF]/20 transition-all duration-300 cursor-pointer overflow-hidden shadow-xl"
     >
-      {/* Background Glow */}
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#00E5FF]/5 blur-3xl rounded-full group-hover:bg-[#00E5FF]/10 transition-colors duration-300" />
-      
-      <div className="relative z-10">
-        <div className="flex justify-between items-start mb-4">
-          <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#00E5FF]/30 transition-colors duration-300">
-            <svg className="w-6 h-6 text-[#00E5FF]/60 group-hover:text-[#00E5FF] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getRoleBadgeColor(role)}`}>
-            {role || 'Member'}
-          </span>
-        </div>
+      {/* Delete/Leave Action - "X" Button */}
+      <button
+        onClick={(e) => stopPropagation(e, () => onAction('remove', team))}
+        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 transition-all duration-200"
+        title={role === 'owner' ? 'Delete Team' : 'Leave Team'}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
 
-        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#00E5FF] transition-colors duration-300 truncate">
-          {name}
-        </h3>
-        <p className="text-xs text-white/40 mb-6 font-medium">
-          Created on {formatDate(created_at)}
-        </p>
-
-        <div className="space-y-4">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-white/40">Members</span>
-            <span className="text-white font-semibold">{member_count} / {max_members}</span>
+      <div className="relative z-10 p-4 sm:p-6 bg-gradient-to-b from-white/[0.02] to-transparent rounded-[22px]">
+        {/* Header Section */}
+        <div className="flex justify-between items-start mb-4 lg:mb-6">
+          <div className="relative">
+            <div className="w-11 h-11 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-[#00E5FF]/5 border border-white/10 flex items-center justify-center group-hover:border-[#00E5FF]/40 transition-all duration-500">
+              <svg className="w-5 h-5 lg:w-7 lg:h-7 text-white/30 group-hover:text-[#00E5FF] transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
           </div>
-          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] transition-all duration-500"
-              style={{ width: `${(member_count / max_members) * 100}%` }}
-            />
+          <div className="flex flex-col items-end gap-1 lg:gap-2 pr-8 lg:pr-10"> {/* Padding to avoid overlap with X */}
+            <span className={`px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full border text-[8px] lg:text-[9px] font-bold tracking-[0.15em] ${getRoleBadgeColor(role)} shadow-inner`}>
+              {role || 'Member'}
+            </span>
+            <span className="text-[8px] lg:text-[9px] text-white/20 font-bold tracking-widest">
+              ID: T-{team.id.toString().padStart(4, '0')}
+            </span>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-6 pt-4 border-t border-white/5">
-          <button 
-            onClick={(e) => stopPropagation(e, () => onAction('invite', team))}
-            className="flex-1 py-2 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold text-white/60 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 transition-all duration-200"
-          >
-            Invite
-          </button>
-          <button 
-            onClick={(e) => stopPropagation(e, () => onAction('settings', team))}
-            className="flex-1 py-2 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-200"
-          >
-            Manage
-          </button>
-          <button 
-            onClick={(e) => stopPropagation(e, () => onAction('remove', team))}
-            className="p-2 rounded-lg bg-red-500/5 border border-red-500/10 text-red-500/60 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 transition-all duration-200"
-            title={role === 'owner' ? 'Delete Team' : 'Leave Team'}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+        {/* Content Section */}
+        <div className="mb-4 lg:mb-6">
+          <h3 className="text-lg lg:text-xl font-bold text-white mb-1 group-hover:text-[#00E5FF] transition-colors duration-300 tracking-tight">
+            {name}
+          </h3>
+          <p className="text-[10px] lg:text-[11px] text-white/40 font-medium leading-relaxed line-clamp-2 min-h-[30px] lg:min-h-[32px]">
+            {description || 'No description provided for this team.'}
+          </p>
+        </div>
+
+        {/* Stats Section */}
+        <div className="space-y-3 lg:space-y-4">
+          <div className="flex justify-between items-end">
+            <div className="space-y-0.5 lg:space-y-1">
+              <span className="block text-[9px] lg:text-[10px] text-white/20 font-bold tracking-[0.1em]">Capacity</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg lg:text-xl font-bold text-white">{member_count}</span>
+                <span className="text-[10px] lg:text-xs text-white/20">/ {max_members}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="block text-[9px] lg:text-[10px] text-white/20 font-bold tracking-[0.1em] mb-0.5 lg:mb-1">Established</span>
+              <span className="text-[10px] lg:text-[11px] text-white/50 font-medium">{formatDate(created_at)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

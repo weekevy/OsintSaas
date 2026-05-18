@@ -3,9 +3,10 @@ import db from '@/database/config';
 import { comparePassword } from '@/lib/password';
 import { generateTokens, setTokenCookies } from '@/lib/jwt';
 
-export async function OPTIONS() {
+export async function OPTIONS(request) {
+  const origin = request.headers.get('origin') || 'http://localhost:5173';
   const response = new NextResponse(null, { status: 200 });
-  response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+  response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -14,25 +15,26 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const origin = request.headers.get('origin') || 'http://localhost:5173';
+    const { email, password } = await request.json(); // 'email' field can be email or username
 
     // Validate input
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Email/Username and password are required' },
         { status: 400 }
       );
     }
 
-    // Get user from database
+    // Get user from database (check both email and username)
     const [users] = await db.execute(
-      'SELECT id, email, password, first_name, last_name, role FROM users WHERE email = ? AND is_active = TRUE',
-      [email]
+      'SELECT id, email, username, password, first_name, last_name, role FROM users WHERE (email = ? OR username = ?) AND is_active = TRUE',
+      [email, email]
     );
 
     if (users.length === 0) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Invalid email/username or password' },
         { status: 401 }
       );
     }
@@ -43,7 +45,7 @@ export async function POST(request) {
     const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Invalid email/username or password' },
         { status: 401 }
       );
     }
@@ -78,6 +80,7 @@ export async function POST(request) {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         firstName: user.first_name,
         lastName: user.last_name,
         role: user.role
@@ -85,7 +88,7 @@ export async function POST(request) {
     });
 
     // Add CORS headers
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:5173');
+    response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     
     setTokenCookies(response, tokens);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   TopBar,
   DashboardHome,
@@ -12,6 +13,7 @@ import {
   AnalyticsDashboard
 } from "./home_components";
 import { AccountSettings } from "./home_components/settings";
+import ProductTour from "./common/ProductTour";
 
 // ── Read a localStorage key safely at module level (before any render) ──
 const ls = (key, fallback = null) => {
@@ -48,6 +50,26 @@ const Home = () => {
   const [alerts, setAlerts] = useState([]);
   const [timeRange, setTimeRange] = useState(() => ls('timeRange', 'week'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.email) {
+      const tourKey = `hasSeenTour_${user.email}`;
+      const hasSeenTour = localStorage.getItem(tourKey);
+      if (!hasSeenTour) {
+        const timer = setTimeout(() => setIsTourOpen(true), 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user]);
+
+  const completeTour = () => {
+    if (user?.email) {
+      setIsTourOpen(false);
+      localStorage.setItem(`hasSeenTour_${user.email}`, 'true');
+    }
+  };
 
   // ── All project-related state initialised directly from localStorage ──
   // This is the key fix: no useEffect delay means RiskCircle gets the correct
@@ -159,8 +181,22 @@ const Home = () => {
   }, []);
 
   const handleLogout = () => {
+    // Clear auth data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // Clear project-specific state to prevent leakage between accounts
+    localStorage.removeItem('selectedProject');
+    localStorage.removeItem('selectedRiskData');
+    localStorage.removeItem('selectedProjectName');
+    localStorage.removeItem('selectedProjectTarget');
+    localStorage.removeItem('selectedProjectStatus');
+    localStorage.removeItem('selectedProjectFindings');
+    localStorage.removeItem('searchInput');
+    localStorage.removeItem('searchType');
+    localStorage.removeItem('currentModules_selectedId');
+    try { localStorage.removeItem('riskCircle_lastState'); } catch (e) {}
+    
     navigate('/');
   };
 
@@ -315,6 +351,11 @@ const Home = () => {
           </div>
         </main>
         <AccountSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        <ProductTour 
+          isOpen={isTourOpen} 
+          onComplete={completeTour} 
+          onSkip={completeTour} 
+        />
       </div>
     </>
   );

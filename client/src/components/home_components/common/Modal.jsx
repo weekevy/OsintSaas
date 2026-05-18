@@ -25,13 +25,16 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000]"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000]"
         onClick={onClose}
       />
       
-      <div className="fixed inset-0 flex items-center justify-center p-4 z-[1001]">
+      <div 
+        className="fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[10001] overflow-y-auto"
+        onClick={onClose}
+      >
         <div 
-          className={`w-full ${sizeClasses[size]} bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl`}
+          className={`w-full ${sizeClasses[size]} my-auto bg-gradient-to-b from-gray-900 to-black rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden`}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-6 border-b border-white/10">

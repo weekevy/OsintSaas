@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/database/config';
 import { verifyToken } from '@/lib/jwt';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request, { params }) {
   try {
@@ -37,29 +36,28 @@ export async function POST(request, { params }) {
     }
 
     const body = await request.json();
-    const { username, role } = body;
+    const { userId, role } = body;
 
-    if (!username) {
-      const response = NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    if (!userId) {
+      const response = NextResponse.json({ error: 'User ID is required' }, { status: 400 });
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
     }
 
-    // 1. Find user by username
-    const [invitedUsers] = await db.execute('SELECT id, email FROM users WHERE username = ?', [username]);
-    if (invitedUsers.length === 0) {
-      const response = NextResponse.json({ error: "This username doesn't exist!" }, { status: 404 });
+    // Check if user exists
+    const [user] = await db.execute('SELECT id FROM users WHERE id = ?', [userId]);
+    if (user.length === 0) {
+      const response = NextResponse.json({ error: 'User not found' }, { status: 404 });
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
     }
-    const invitedUser = invitedUsers[0];
 
-    // 2. Check if user is already a member
+    // Check if user is already a member
     const [existingMember] = await db.execute(
       'SELECT id FROM team_members WHERE team_id = ? AND user_id = ?',
-      [teamId, invitedUser.id]
+      [teamId, userId]
     );
     if (existingMember.length > 0) {
       const response = NextResponse.json({ error: 'User is already a member of this team' }, { status: 400 });
@@ -68,8 +66,8 @@ export async function POST(request, { params }) {
       return response;
     }
 
-    // 3. Check if team is full
-    const [teamInfo] = await db.execute('SELECT name, max_members FROM teams WHERE id = ?', [teamId]);
+    // Check if team is full
+    const [teamInfo] = await db.execute('SELECT max_members FROM teams WHERE id = ?', [teamId]);
     const [memberCount] = await db.execute('SELECT COUNT(*) as count FROM team_members WHERE team_id = ?', [teamId]);
     
     if (memberCount[0].count >= teamInfo[0].max_members) {
@@ -79,58 +77,20 @@ export async function POST(request, { params }) {
       return response;
     }
 
-    const inviteToken = uuidv4();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
-
-    // Get a connection for the transaction
-    const connection = await db.getConnection();
-    
-    try {
-      await connection.beginTransaction();
-
-      // Create the invitation
-      await connection.execute(
-        'INSERT INTO team_invitations (team_id, inviter_id, email, token, role, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
-        [teamId, decoded.id, invitedUser.email, inviteToken, role || 'member', expiresAt]
-      );
-
-      // Create the notification
-      await connection.execute(
-        'INSERT INTO notifications (user_id, type, title, message, data) VALUES (?, ?, ?, ?, ?)',
-        [
-          invitedUser.id, 
-          'team_invite', 
-          'New Team Invitation', 
-          `You have been invited to join the team "${teamInfo[0].name}" as a ${role || 'member'}.`,
-          JSON.stringify({ 
-            teamId, 
-            teamName: teamInfo[0].name, 
-            inviteToken, 
-            inviterName: decoded.username || decoded.email,
-            role: role || 'member'
-          })
-        ]
-      );
-
-      await connection.commit();
-    } catch (err) {
-      await connection.rollback();
-      throw err;
-    } finally {
-      connection.release();
-    }
+    await db.execute(
+      'INSERT INTO team_members (team_id, user_id, role) VALUES (?, ?, ?)',
+      [teamId, userId, role || 'member']
+    );
 
     const response = NextResponse.json({ 
       success: true, 
-      message: `Invitation sent to ${username}`
+      message: 'Member added successfully'
     });
-    
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     return response;
   } catch (error) {
-    console.error('Create invite error:', error);
+    console.error('Add member error:', error);
     const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -144,7 +104,7 @@ export async function OPTIONS(request) {
   const response = new NextResponse(null, { status: 200 });
   response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return response;
 }

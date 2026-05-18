@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getIcon } from '../utils/icons';
 import { getModuleAddModal, getModuleEditModal } from '../modules';
+import api from '../../../../services/api';
 
 const SCAN_STATES_KEY = 'osint_scan_states';
 
@@ -422,6 +423,25 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
 
   const getRealScanId = (scan) => scan.originalId || extractScanId(scan.id);
 
+  const sendEvent = async (scan, eventType, data = {}) => {
+    const realScanId = getRealScanId(scan);
+    const eventApi = `${scan.api || '/api/modules/company-jobscam'}/event`;
+    try {
+      const response = await api.post(eventApi, {
+        event_type: eventType,
+        scan_id: realScanId,
+        scan_name: scan.moduleName,
+        target: scan.target,
+        previous_state: getScanState(scan.id).status,
+        data
+      });
+      return response.data.success;
+    } catch (err) {
+      console.error(`Event ${eventType} error:`, err.response?.data?.error || err.message);
+      return false;
+    }
+  };
+
   const patchScan = async (scan, body, onSuccess, onRevert) => {
     const realScanId = getRealScanId(scan);
     const apiBase = scan.api || '/api/modules/company-jobscam';
@@ -440,32 +460,37 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
     }
   };
 
-  const handleStartScan = (scan, e) => {
+  const handleStartScan = async (scan, e) => {
     e.stopPropagation();
+    const prevState = getScanState(scan.id);
     updateScanState(scan.id, { status: 'running', isPaused: false, progress: 0 });
-    patchScan(scan, { status: 'running', progress: 0 },
-      null,
-      () => updateScanState(scan.id, { status: 'pending', isPaused: false, progress: 0 })
-    );
+    
+    const eventSuccess = await sendEvent(scan, 'start');
+    if (!eventSuccess) {
+      updateScanState(scan.id, prevState);
+    }
   };
 
-  const handlePauseClick = (scan, e) => {
+  const handlePauseClick = async (scan, e) => {
     e.stopPropagation();
-    const prev = getScanState(scan.id);
+    const prevState = getScanState(scan.id);
     updateScanState(scan.id, { isPaused: true });
-    patchScan(scan, { status: 'paused' },
-      null,
-      () => updateScanState(scan.id, { isPaused: prev.isPaused })
-    );
+    
+    const eventSuccess = await sendEvent(scan, 'pause');
+    if (!eventSuccess) {
+      updateScanState(scan.id, prevState);
+    }
   };
 
-  const handleResumeClick = (scan, e) => {
+  const handleResumeClick = async (scan, e) => {
     e.stopPropagation();
+    const prevState = getScanState(scan.id);
     updateScanState(scan.id, { isPaused: false, status: 'running' });
-    patchScan(scan, { status: 'running' },
-      null,
-      () => updateScanState(scan.id, { isPaused: true, status: 'paused' })
-    );
+    
+    const eventSuccess = await sendEvent(scan, 'resume');
+    if (!eventSuccess) {
+      updateScanState(scan.id, prevState);
+    }
   };
 
   const handleRemoveClick = (scan, e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, scan }); };
@@ -475,17 +500,11 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan }) => {
 
   const handleConfirmRemove = async () => {
     if (confirmModal.scan) {
-      const realScanId = getRealScanId(confirmModal.scan);
-      const apiBase = confirmModal.scan.api || '/api/modules/company-jobscam';
-      try {
-        await fetch(`${apiBase}?id=${realScanId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'stopped' }),
-        });
-      } catch {}
-      setScanStatuses(prev => { const n = { ...prev }; delete n[confirmModal.scan.id]; return n; });
-      onRemoveScan?.(confirmModal.scan.originalId, confirmModal.scan.moduleId);
+      const scan = confirmModal.scan;
+      await sendEvent(scan, 'delete');
+      
+      setScanStatuses(prev => { const n = { ...prev }; delete n[scan.id]; return n; });
+      onRemoveScan?.(scan.originalId, scan.moduleId);
     }
     setConfirmModal({ isOpen: false, scan: null });
   };

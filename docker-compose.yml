@@ -80,8 +80,8 @@ services:
       - MARIADB_DATABASE=${MYSQL_DATABASE}
       - MARIADB_USER=${MYSQL_USER}
       - MARIADB_PASSWORD=${MYSQL_PASSWORD}
-      - DOCKER_API_KEY=${DOCKER_API_KEY}
-      - ALLOWED_IP_RANGE=172.0.0.0/8
+      - DOCKER_API_KEY=${DOCKER_API_KEY:-your-super-secret-api-key-change-this}
+      - ALLOWED_IP_RANGE=0.0.0.0/0
     ports:
       - "8000:8000"
     depends_on:
@@ -90,14 +90,6 @@ services:
       - osint_network
     stdin_open: true
     tty: true
-    command: >
-      sh -c "
-      if [ -f /app/tools/api_server.py ]; then
-        pip install fastapi uvicorn pydantic python-multipart &&
-        uvicorn tools.api_server:app --host 0.0.0.0 --port 8000 --reload &
-      fi &&
-      tail -f /dev/null
-      "
 
   # LinkedIn Investigation Tool
   # linkedin-investigation:

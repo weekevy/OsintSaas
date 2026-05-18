@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import db from '@/database/config';
 import { verifyToken } from '@/lib/jwt';
 
-export async function GET(request) {
+export async function GET(request, { params }) {
   try {
     const origin = request.headers.get('origin') || 'http://localhost:5173';
+    const { id: teamId } = await params;
     const token = request.cookies.get('token')?.value;
-
     if (!token) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       response.headers.set('Access-Control-Allow-Origin', origin);
@@ -22,29 +22,38 @@ export async function GET(request) {
       return response;
     }
 
-    const [projects] = await db.execute(
-      'SELECT id, user_id, name, description, icon, priority, status, progress, start_date, end_date, created_at FROM projects WHERE user_id = ? ORDER BY created_at DESC',
-      [decoded.id]
+    // Verify membership
+    const [membership] = await db.execute(
+      'SELECT id FROM team_members WHERE team_id = ? AND user_id = ?',
+      [teamId, decoded.id]
     );
 
-    const response = NextResponse.json({
-      success: true,
-      projects: projects
-    });
+    if (membership.length === 0) {
+      const response = NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+      return response;
+    }
 
-    // Add CORS headers for Vite dev server
+    // Fetch messages
+    const [messages] = await db.execute(
+      `SELECT m.*, u.first_name, u.last_name, u.email, 
+       IF(m.user_id = ?, 1, 0) as is_me
+       FROM team_messages m
+       JOIN users u ON m.user_id = u.id
+       WHERE m.team_id = ?
+       ORDER BY m.created_at ASC
+       LIMIT 100`,
+      [decoded.id, teamId]
+    );
+
+    const response = NextResponse.json({ success: true, messages });
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Cache-Control', 'no-store, max-age=0');
-
     return response;
-
   } catch (error) {
-    console.error('Fetch projects error:', error);
-    const response = NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Fetch team messages error:', error);
+    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
@@ -52,11 +61,11 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
+export async function POST(request, { params }) {
   try {
     const origin = request.headers.get('origin') || 'http://localhost:5173';
+    const { id: teamId } = await params;
     const token = request.cookies.get('token')?.value;
-
     if (!token) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       response.headers.set('Access-Control-Allow-Origin', origin);
@@ -72,43 +81,39 @@ export async function POST(request) {
       return response;
     }
 
-    const body = await request.json();
-    const { name, description, priority, icon } = body;
+    // Verify membership
+    const [membership] = await db.execute(
+      'SELECT id FROM team_members WHERE team_id = ? AND user_id = ?',
+      [teamId, decoded.id]
+    );
 
-    if (!name) {
-      const response = NextResponse.json({ error: 'Project name is required' }, { status: 400 });
+    if (membership.length === 0) {
+      const response = NextResponse.json({ error: 'Access denied' }, { status: 403 });
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
     }
 
-    const [result] = await db.execute(
-      'INSERT INTO projects (user_id, name, description, priority, icon, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-      [decoded.id, name, description || '', priority || 'medium', icon || 'folder']
+    const { content } = await request.json();
+    if (!content) {
+      const response = NextResponse.json({ error: 'Content required' }, { status: 400 });
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+      return response;
+    }
+
+    await db.execute(
+      'INSERT INTO team_messages (team_id, user_id, content) VALUES (?, ?, ?)',
+      [teamId, decoded.id, content]
     );
 
-    const response = NextResponse.json({
-      success: true,
-      project: {
-        id: result.insertId,
-        name,
-        description,
-        priority,
-        icon
-      }
-    });
-
+    const response = NextResponse.json({ success: true });
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
-
     return response;
-
   } catch (error) {
-    console.error('Create project error:', error);
-    const response = NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Send team message error:', error);
+    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     const origin = request.headers.get('origin') || 'http://localhost:5173';
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
@@ -121,7 +126,7 @@ export async function OPTIONS(request) {
   const response = new NextResponse(null, { status: 200 });
   response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return response;
 }

@@ -50,7 +50,7 @@ export async function POST(request) {
     console.log(`📡 Received event: ${event_type} for scan ${scan_id} from user ${user.id}`);
     
     // In a real scenario, this might point to a different Docker container
-    const DOCKER_URL = process.env.LINKEDIN_INVESTIGATION_DOCKER_URL || 'http://localhost:8001';
+    const DOCKER_URL = process.env.LINKEDIN_INVESTIGATION_API_URL || 'http://127.0.0.1:8001';
     
     // Forward the event to Docker container
     const dockerResponse = await fetch(`${DOCKER_URL}/event/${event_type}`, {
@@ -61,10 +61,10 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         scan_id,
-        scan_name,
-        target,
+        scan_name: scan_name || 'LinkedIn Investigation',
+        target: target || 'Unknown',
         previous_state,
-        data,
+        data: data || {},
         user_id: user.id,
         timestamp: new Date().toISOString()
       }),
@@ -77,24 +77,32 @@ export async function POST(request) {
     if (dockerResponse && dockerResponse.ok) {
       dockerResult = await dockerResponse.json();
       console.log(`✅ Event ${event_type} forwarded to Docker:`, dockerResult);
+    } else if (dockerResponse) {
+      const errorText = await dockerResponse.text();
+      console.log(`⚠️ Docker responded with status ${dockerResponse.status}: ${errorText}`);
+    } else {
+      console.log(`⚠️ Docker container not reachable, event logged only`);
     }
     
     // Update the scan status in the database
-    if (event_type === 'start') {
+    if (event_type === 'start' || event_type === 'resume') {
       await pool.execute(
-        `UPDATE scans SET status = 'running', started_at = NOW() WHERE id = ?`,
+        `UPDATE scans SET status = 'running', started_at = COALESCE(started_at, NOW()), updated_at = NOW() WHERE id = ?`,
         [scan_id]
       );
+      console.log(`📊 Database updated: scan ${scan_id} status = running`);
     } else if (event_type === 'pause') {
       await pool.execute(
-        `UPDATE scans SET status = 'paused' WHERE id = ?`,
+        `UPDATE scans SET status = 'paused', updated_at = NOW() WHERE id = ?`,
         [scan_id]
       );
-    } else if (event_type === 'resume') {
+      console.log(`📊 Database updated: scan ${scan_id} status = paused`);
+    } else if (event_type === 'delete') {
       await pool.execute(
-        `UPDATE scans SET status = 'running' WHERE id = ?`,
+        `UPDATE scans SET status = 'stopped', updated_at = NOW() WHERE id = ?`,
         [scan_id]
       );
+      console.log(`📊 Database updated: scan ${scan_id} status = stopped (deleted event)`);
     }
     
     return NextResponse.json({ 

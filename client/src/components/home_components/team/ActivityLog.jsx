@@ -30,7 +30,7 @@ const ActivityLog = () => {
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm flex items-center justify-between"
           >
-            <span>{filter === 'all' ? 'All Activities' : filter.charAt(0).toUpperCase() + filter.slice(1) + 's'}</span>
+            <span>{filter === 'all' ? 'All Activities' : filter.charAt(0) + filter.slice(1) + 's'}</span>
             <svg className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -43,7 +43,7 @@ const ActivityLog = () => {
                   onClick={() => { setFilter(option); setIsFilterOpen(false); }}
                   className={`w-full px-4 py-2 text-left text-sm ${filter === option ? 'text-[#00E5FF] bg-white/10' : 'text-white/80'}`}
                 >
-                  {option === 'all' ? 'All Activities' : option.charAt(0).toUpperCase() + option.slice(1) + 's'}
+                  {option === 'all' ? 'All Activities' : option.charAt(0) + option.slice(1) + 's'}
                 </button>
               ))}
             </div>
