@@ -91,6 +91,30 @@ const Home = () => {
   const [selectedModuleId, setSelectedModuleId] = useState(() => ls('currentModules_selectedId', null));
   const [dashboardRefreshTrigger, setDashboardRefreshTrigger] = useState(0);
 
+  // ── Fetch Alerts whenever project or trigger changes ──
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        let url = '/api/dashboard/alerts';
+        if (selectedProject?.id) {
+          url += `?projectId=${selectedProject.id}`;
+        }
+        const response = await fetch(url, { credentials: 'include' });
+        const data = await response.json();
+        if (response.ok) {
+          setAlerts(data.alerts || []);
+          if (selectedProject) {
+            setProjectAlerts(data.alerts || []);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch alerts:', error);
+      }
+    };
+
+    fetchAlerts();
+  }, [selectedProject?.id, dashboardRefreshTrigger]);
+
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
     document.body.style.fontFamily = "'Inter', sans-serif";
@@ -203,11 +227,9 @@ const Home = () => {
   const handleAnalyze = () => {
     if (!searchInput.trim()) return;
     setIsAnalyzing(true);
+    // Note: Actual analysis is handled by the backend after scan start.
+    // This UI timer just provides feedback before redirecting to the scan tab.
     setTimeout(() => {
-      const randomRisk = Math.floor(Math.random() * 100);
-      setRiskScore(randomRisk);
-      setProjectRiskScore(randomRisk);
-      setRecentScans(prev => [{ id: Date.now(), target: searchInput, type: searchType, date: "Just now", risk: randomRisk }, ...prev.slice(0, 4)]);
       setIsAnalyzing(false);
       setSearchInput("");
       handleTabChange("scan");
@@ -226,11 +248,8 @@ const Home = () => {
     setSelectedProjectStatus(project.status || 'idle');
     setSelectedProjectFindings(project.findings || 0);
 
-    const priorityWeights = { critical: 90, high: 70, medium: 50, low: 30 };
-    const baseRisk = priorityWeights[project.priority] || 50;
-    const progressFactor = (100 - (project.progress || 0)) * 0.2;
-    setProjectRiskScore(Math.min(100, Math.round(baseRisk + progressFactor)));
-    setProjectAlerts(alerts.filter(alert => alert.projectId === project.id));
+    // Initial risk score before scan data is fetched
+    setProjectRiskScore(0);
   };
 
   const handleRiskDataChange = (riskData, target, name) => {
@@ -286,6 +305,7 @@ const Home = () => {
         selectedProjectFindings={selectedProjectFindings}
         onRiskDataChange={handleRiskDataChange}
         refreshTrigger={dashboardRefreshTrigger}
+        onRefresh={() => setDashboardRefreshTrigger(prev => prev + 1)}
       />;
       case "scan": return <ScanDashboard
         searchInput={searchInput}
@@ -322,6 +342,7 @@ const Home = () => {
         selectedProjectFindings={selectedProjectFindings}
         onRiskDataChange={handleRiskDataChange}
         refreshTrigger={dashboardRefreshTrigger}
+        onRefresh={() => setDashboardRefreshTrigger(prev => prev + 1)}
       />;
     }
   };

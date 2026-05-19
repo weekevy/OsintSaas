@@ -815,33 +815,40 @@ class CompanyVerifier:
         all_red_flags = []
         
         # Run all checks in parallel
+        self._print("Launching multi-source company verification...")
         with ThreadPoolExecutor(max_workers=6) as executor:
             futures = {}
             
             # Business registries
+            self._print("Querying business registries and databases...")
             futures['registries'] = executor.submit(
                 self.check_business_registries, company_name, company_number
             )
             
             # Social presence
+            self._print("Analyzing company social media presence...")
             futures['social'] = executor.submit(
                 self.check_social_presence, company_name, domain
             )
             
             # Web archive
             if domain:
+                self._print("Retrieving historical web archive snapshots...")
                 futures['web_archive'] = executor.submit(self.check_web_archive, domain)
             
             # Address verification
             if address:
+                self._print("Verifying physical office address...")
                 futures['address'] = executor.submit(self.verify_address, address, company_name)
             
             # Phone verification
             if phone:
+                self._print("Checking corporate phone number reputation...")
                 futures['phone'] = executor.submit(self.verify_phone, phone, address)
             
             # Domain reputation
             if domain:
+                self._print("Analyzing domain reputation and blocklists...")
                 futures['reputation'] = executor.submit(self.check_domain_reputation, domain)
             
             # Collect results

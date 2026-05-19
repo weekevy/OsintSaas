@@ -37,8 +37,6 @@ const RiskCircle = ({
   const isQueued    = projectStatus === 'queued';
   const hasProject  = projectName && projectName !== 'No Project Selected';
 
-  const generateRandomRiskScore = () => Math.floor(Math.random() * 80) + 15;
-
   const clearScanTimer = () => {
     if (scanTimerRef.current) {
       clearInterval(scanTimerRef.current);
@@ -84,7 +82,7 @@ const RiskCircle = ({
         if (elapsed >= duration) {
           clearScanTimer();
           setIsScanning(false);
-          setDisplayScore(generateRandomRiskScore());
+          // Score will be synced via the riskData effect once scan status changes to completed
         }
       }, 100);
 
@@ -108,15 +106,30 @@ const RiskCircle = ({
     if (typeof riskData === 'number') score = riskData;
     else if (riskData.risk_score !== undefined) score = riskData.risk_score;
     else if (riskData.score !== undefined) score = riskData.score;
-    else if (riskData.risk_level) {
+    if (riskData.risk_level) {
       const levelMap = { low: 15, medium: 45, high: 70, critical: 85 };
       score = levelMap[riskData.risk_level] ?? 15;
     }
-    if (score > 0) setDisplayScore(score);
-  }, [riskData, isScanning]);
 
-  useEffect(() => {
+    // If the module has a zero score but is completed, we'll let the findings effect handle it.
+    // Otherwise, set the display score.
+    if (score > 0) setDisplayScore(score);
+    else if (isCompleted && projectFindings === 0) setDisplayScore(0);
+
+    }, [riskData, isScanning, isCompleted, projectFindings]);
+
+    useEffect(() => {
+    if (!hasProject) {
+      setDisplayScore(0);
+      setScanProgress(0);
+      setIsScanning(false);
+      clearScanTimer();
+    }
+    }, [hasProject]);
+
+    useEffect(() => {
     if (isCompleted && !isScanning && displayScore === 0 && projectFindings > 0) {
+      // Heuristic fallback if no explicit risk score is provided but findings exist
       setDisplayScore(Math.min(projectFindings * 3, 95));
     }
   }, [isCompleted, isScanning, displayScore, projectFindings]);

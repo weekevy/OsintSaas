@@ -34,7 +34,7 @@ const getRandomAlerts = (projectId = null) => {
 };
 */
 
-const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
+const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh }) => {
   const [alerts, setAlerts] = useState([]);
 
   // COMMENTED OUT - Using externalAlerts from props instead of generating mock data
@@ -87,8 +87,7 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId }) => {
   };
 
   const handleRefresh = () => {
-    // Refresh logic - can be passed as prop or handled by parent
-    console.log('Refresh alerts');
+    if (onRefresh) onRefresh();
   };
 
   // Check if no project is selected

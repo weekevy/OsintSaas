@@ -19,7 +19,7 @@ export async function GET(request) {
     const projectId = searchParams.get('projectId');
 
     let query = `
-      SELECT f.*, s.scan_type, t.label as target_label, t.value as target_value
+      SELECT f.*, s.scan_type, t.label as target_label, t.value as target_value, p.id as project_id
       FROM findings f
       JOIN scans s ON f.scan_id = s.id
       JOIN targets t ON s.target_id = t.id

@@ -873,12 +873,25 @@ class SSLAnalyzer:
             }
         
         # Run all analyses
+        self._print("Analyzing certificate validity...")
         validity_result = self.analyze_validity(cert_info)
+        
+        self._print("Analyzing certificate chain and issuer...")
         chain_result = self.analyze_certificate_chain(cert_info)
+        
+        self._print("Analyzing Subject Alternative Names (SAN)...")
         san_result = self.analyze_san(cert_info, domain)
+        
+        self._print("Checking Certificate Transparency (CT) logs...")
         ct_logs_result = self.check_ct_logs(domain)
+        
+        self._print("Analyzing supported protocols and ciphers...")
         protocols_result = self.analyze_protocols_and_ciphers(domain, port)
+        
+        self._print("Checking revocation status...")
         revocation_result = self.check_revocation_status(cert_info)
+        
+        self._print("Checking certificate fingerprint against malicious databases...")
         fingerprint_result = self.check_certificate_fingerprint(cert_info)
         
         # Calculate overall risk (weighted)

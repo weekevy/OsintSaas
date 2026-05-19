@@ -460,18 +460,23 @@ class TyposquattingDetector:
         self._print(f"Starting typosquatting investigation for {brand_domain}")
         
         # Generate all variations
+        self._print("Generating typo variations...")
         typo_variations = self.generate_typo_variations(brand_domain)
+
+        self._print("Generating TLD variations...")
         tld_variations = self.generate_tld_variations(brand_domain)
+
+        self._print("Generating prefix/suffix variations...")
         prefix_suffix_variations = self.generate_prefix_suffix_variations(brand_domain)
-        
+
         all_variations = typo_variations | tld_variations | prefix_suffix_variations
         all_variations = {v for v in all_variations if v != brand_domain and len(v) > 3}
-        
+
         self._print(f"Generated {len(all_variations)} potential typosquatting domains")
-        
+
         # Check homograph possibilities (just for the brand name)
-        homograph_result = self.detect_homograph_attack(brand_domain, brand_domain)
-        
+        self._print("Checking for homograph attack possibilities...")
+        homograph_result = self.detect_homograph_attack(brand_domain, brand_domain)        
         # Check existing domains if requested
         existing_domains = []
         if check_existing:

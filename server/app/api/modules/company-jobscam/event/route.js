@@ -36,7 +36,16 @@ async function verifyToken(request) {
 
 export async function POST(request) {
   try {
-    const user = await verifyToken(request);
+    const apiKey = request.headers.get('X-API-Key');
+    const systemKey = process.env.DOCKER_API_KEY || 'your-super-secret-api-key-change-this';
+    
+    let user;
+    if (apiKey === systemKey) {
+      user = { id: 'system', role: 'docker' };
+    } else {
+      user = await verifyToken(request);
+    }
+
     if (!user) {
       return NextResponse.json({ 
         success: false, 
@@ -45,51 +54,54 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { event_type, scan_id, scan_name, target, previous_state, data } = body;
+    const { event_type, scan_id, scan_name, target, previous_state, data, user_id } = body;
     
-    console.log(`📡 Received event: ${event_type} for scan ${scan_id} from user ${user.id}`);
+    const effectiveUserId = user_id || user.id;
+    console.log(`📡 Received event: ${event_type} for scan ${scan_id} from user ${effectiveUserId}`);
     
     const DOCKER_URL = process.env.JOB_RECRUITMENT_API_URL || 'http://127.0.0.1:8000';
     
     // Decide which Docker endpoint to call
     let dockerEndpoint = `/event/${event_type}`;
-    if (event_type === 'start') {
+    if (event_type === 'start' || event_type === 'resume') {
       dockerEndpoint = '/scan/start';
     }
 
     // Forward the event to Docker container
-    const dockerResponse = await fetch(`${DOCKER_URL}${dockerEndpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': process.env.DOCKER_API_KEY || 'your-super-secret-api-key-change-this'
-      },
-      body: JSON.stringify({
-        scan_id,
-        scan_name: scan_name || 'Investigation',
-        target: target || 'Unknown',
-        previous_state,
-        data: data || {},
-        user_id: user.id,
-        timestamp: new Date().toISOString()
-      }),
-    }).catch(err => {
-      console.log(`⚠️ Docker connection error: ${err.message}`);
-      return null;
-    });
-    
     let dockerResult = {};
-    if (dockerResponse && dockerResponse.ok) {
-      dockerResult = await dockerResponse.json();
-      console.log(`✅ Event ${event_type} forwarded to Docker:`, dockerResult);
-    } else if (dockerResponse) {
-      const errorText = await dockerResponse.text();
-      console.log(`⚠️ Docker responded with status ${dockerResponse.status}: ${errorText}`);
-    } else {
-      console.log(`⚠️ Docker container not reachable, event logged only`);
+    if (event_type !== 'update') {
+        const dockerResponse = await fetch(`${DOCKER_URL}${dockerEndpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': process.env.DOCKER_API_KEY || 'your-super-secret-api-key-change-this'
+            },
+            body: JSON.stringify({
+                scan_id,
+                scan_name: scan_name || 'Investigation',
+                target: target || 'Unknown',
+                previous_state,
+                data: data || {},
+                user_id: user.id,
+                timestamp: new Date().toISOString()
+            }),
+        }).catch(err => {
+            console.log(`⚠️ Docker connection error: ${err.message}`);
+            return null;
+        });
+        
+        if (dockerResponse && dockerResponse.ok) {
+            dockerResult = await dockerResponse.json();
+            console.log(`✅ Event ${event_type} forwarded to Docker:`, dockerResult);
+        } else if (dockerResponse) {
+            const errorText = await dockerResponse.text();
+            console.log(`⚠️ Docker responded with status ${dockerResponse.status}: ${errorText}`);
+        } else {
+            console.log(`⚠️ Docker container not reachable, event logged only`);
+        }
     }
     
-    // Update the scan status in the database
+    // Update the scan status and progress in the database
     if (event_type === 'start' || event_type === 'resume') {
       await pool.execute(
         `UPDATE scans SET status = 'running', started_at = COALESCE(started_at, NOW()), updated_at = NOW() WHERE id = ?`,
@@ -108,6 +120,12 @@ export async function POST(request) {
         [scan_id]
       );
       console.log(`📊 Database updated: scan ${scan_id} status = stopped (deleted event)`);
+    } else if (event_type === 'update' && data?.progress !== undefined) {
+      await pool.execute(
+        `UPDATE scans SET progress = ?, updated_at = NOW() WHERE id = ?`,
+        [data.progress, scan_id]
+      );
+      console.log(`📊 Database updated: scan ${scan_id} progress = ${data.progress}%`);
     }
     
     return NextResponse.json({ 

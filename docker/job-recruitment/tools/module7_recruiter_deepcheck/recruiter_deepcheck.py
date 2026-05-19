@@ -359,7 +359,6 @@ class RecruiterVerifier:
                                 days_old = (datetime.now() - created).days
                                 if days_old < 30:
                                     result['is_recent'] = True
-                        break
         except:
             pass
         
@@ -515,16 +514,16 @@ class RecruiterVerifier:
         username = email.split('@')[0].lower()
         
         # Check if email follows company pattern
+        self._print(f"Comparing email domain with company domain ({company_domain})...")
         if company_domain:
             result['follows_company_pattern'] = (email_domain == company_domain.lower())
-            
             if result['follows_company_pattern']:
                 # Determine pattern type
                 if full_name:
                     name_parts = full_name.lower().split()
                     first_name = name_parts[0] if name_parts else ""
                     last_name = name_parts[-1] if len(name_parts) > 1 else ""
-                    
+
                     if username == f"{first_name}.{last_name}":
                         result['pattern_type'] = 'first.last'
                     elif username == f"{first_name}{last_name}":
@@ -533,15 +532,31 @@ class RecruiterVerifier:
                         result['pattern_type'] = 'firstinitial.last'
                     else:
                         result['pattern_type'] = 'custom'
-                
                 self._print(f"Email follows company pattern: {result['pattern_type']}", "SUCCESS")
             else:
                 result['is_personal_email'] = True
                 result['risk_score'] += 50
                 result['warnings'].append(f'Email domain ({email_domain}) does not match company ({company_domain})')
                 self._print(f"Email domain mismatch", "ERROR")
+            
+        # Check social presence in background
+        self._print(f"Searching for social media profiles associated with {email}...")
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            name_parts = full_name.lower().split() if full_name else []
+            first = name_parts[0] if name_parts else ""
+            last = name_parts[-1] if len(name_parts) > 1 else ""
+            
+            f_gh = executor.submit(self._search_github, first, last, email)
+            f_li = executor.submit(self._search_linkedin_passive, first, last, company_domain)
+            
+            gh_res = f_gh.result()
+            li_res = f_li.result()
+            
+            result['github_found'] = gh_res.get('found', False)
+            result['linkedin_found'] = li_res.get('found', False)
         
         # Check for suspicious username patterns
+        self._print("Checking for suspicious username patterns...")
         for pattern, description in self.suspicious_patterns:
             if re.match(pattern, username):
                 result['risk_score'] += 30
@@ -550,6 +565,7 @@ class RecruiterVerifier:
                 break
         
         # Check Gravatar
+        self._print(f"Checking Gravatar for {email}...")
         gravatar_hash = hashlib.md5(email.lower().encode()).hexdigest()
         gravatar_url = f"https://www.gravatar.com/avatar/{gravatar_hash}?d=404&s=200"
         
@@ -564,6 +580,7 @@ class RecruiterVerifier:
         
         # Check HaveIBeenPwned
         if self.hibp_api_key:
+            self._print("Checking breach status (HIBP)...")
             breach_result = self._check_hibp_breach(email)
             result['breach_found'] = breach_result.get('pwned', False)
             result['breach_count'] = breach_result.get('breach_count', 0)
@@ -575,6 +592,7 @@ class RecruiterVerifier:
         
         # Estimate email age (if domain is custom)
         if not result['is_personal_email']:
+            self._print("Estimating email account age...")
             try:
                 # Query domain age as proxy
                 import whois

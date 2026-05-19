@@ -76,40 +76,70 @@ const CurrentModules = ({
   }, [modules.length, loading, onSelectModule, onRiskDataChange, persistSelection]);
 
   const calculateRiskScore = (scan) => {
+    // Priority 1: Use actual risk score from backend if available
+    if (scan.assets && scan.assets.risk_score !== undefined && scan.assets.risk_score > 0) {
+      return scan.assets.risk_score;
+    }
+    
+    // Priority 2: Use level-based mapping if score is 0 but level is set
+    if (scan.assets && scan.assets.risk_level) {
+      const levelMap = { low: 15, medium: 45, high: 70, critical: 85 };
+      return levelMap[scan.assets.risk_level] || 15;
+    }
+
+    // Fallback: heuristic calculation based on findings
     let score = 0;
     if (scan.status === 'completed') score = Math.min(30, (scan.findings_count || 0) * 3);
     else if (scan.status === 'running' || scan.status === 'queued') score = 40 + (scan.findings_count || 0) * 2;
     else if (scan.status === 'pending') score = 60 + (scan.findings_count || 0) * 2;
     else if (scan.status === 'failed') score = 85;
-    else score = 50;
+    else score = 0;
     return Math.min(100, score);
   };
 
   const extractRiskData = useCallback((module) => {
     if (!module) return null;
-    const randomRiskScore = Math.floor(Math.random() * 80) + 15;
+    
+    // Use the riskScore already calculated in fetchScans (which now uses actual data)
+    const riskScore = module.riskScore || 0;
+    
     const riskFactors = [];
     const recommendations = [];
     if (module.status === 'failed') { riskFactors.push('SCAN FAILED TO COMPLETE'); recommendations.push('Check scan configuration and try again'); }
     if (module.findings > 10) { riskFactors.push(`HIGH FINDINGS COUNT (${module.findings})`); recommendations.push('Review findings for critical issues'); }
     if (module.progress < 50 && module.status === 'running') riskFactors.push('SLOW SCAN PROGRESS');
     if (module.status === 'pending') { riskFactors.push('SCAN QUEUED'); recommendations.push('Monitor scan status'); }
+    
     if (module.assets) {
       if (module.assets.recruiter_email?.includes('gmail.com')) { riskFactors.push('PERSONAL EMAIL DOMAIN USED'); recommendations.push('Verify recruiter identity through official channels'); }
       if (module.assets.company_website && !module.assets.company_website.startsWith('https')) riskFactors.push('MISSING SSL CERTIFICATE');
       if (module.assets.risk_score > 50) riskFactors.push(`HIGH RISK SCORE (${module.assets.risk_score})`);
+      if (module.assets.red_flags_noticed) {
+        try {
+          const flags = typeof module.assets.red_flags_noticed === 'string' 
+            ? JSON.parse(module.assets.red_flags_noticed) 
+            : module.assets.red_flags_noticed;
+          if (Array.isArray(flags)) riskFactors.push(...flags);
+        } catch (e) {}
+      }
     }
-    const randomFactors = ['UNUSUAL DOMAIN AGE','SUSPICIOUS EMAIL PATTERN','MULTIPLE FAILED LOGINS','UNUSUAL LOCATION ACCESS','OUTDATED SSL CERTIFICATE','BLACKLISTED IP DETECTED','KNOWN SCAM PATTERN','SUSPICIOUS URL SHORTENER','UNVERIFIED REGISTRATION','RECENT DOMAIN REGISTRATION'];
-    const numRandom = Math.floor(Math.random() * 3) + 1;
-    for (let i = 0; i < numRandom; i++) {
-      const f = randomFactors[Math.floor(Math.random() * randomFactors.length)];
-      if (!riskFactors.includes(f)) riskFactors.push(f);
-    }
+    
     let riskLevel = 'low';
-    if (randomRiskScore >= 75) riskLevel = 'critical';
-    else if (randomRiskScore >= 50) riskLevel = 'high';
-    else if (randomRiskScore >= 25) riskLevel = 'medium';
-    return { risk_score: randomRiskScore, risk_level: riskLevel, risk_factors: riskFactors.slice(0, 5), recommendations: recommendations.slice(0, 3), scan_id: module.id, scan_name: module.name, target: module.target, status: module.status, findings: module.findings };
+    if (riskScore >= 75) riskLevel = 'critical';
+    else if (riskScore >= 50) riskLevel = 'high';
+    else if (riskScore >= 25) riskLevel = 'medium';
+    
+    return { 
+      risk_score: riskScore, 
+      risk_level: riskLevel, 
+      risk_factors: riskFactors.slice(0, 5), 
+      recommendations: recommendations.slice(0, 3), 
+      scan_id: module.id, 
+      scan_name: module.name, 
+      target: module.target, 
+      status: module.status, 
+      findings: module.findings 
+    };
   }, []);
 
   const getTargetDisplay = (scan, moduleId) => {
@@ -186,48 +216,45 @@ const CurrentModules = ({
       setModules(sortedScans);
       setInitialLoad(false);
 
-      // ── FIX: LIVE STATUS SYNC ──
-      // Read the selected ID from the ref (always current, never stale)
-      // so polling never reverts the user's manual selection.
+      // ── LIVE STATUS SYNC & RE-SELECTION LOGIC ──
       const currentlySelectedId = selectedIdRef.current;
 
       if (currentlySelectedId) {
         const liveModule = sortedScans.find(m => m.id === currentlySelectedId);
+        
         if (liveModule) {
-          // Only propagate status/findings updates — do NOT call extractRiskData()
-          // here because that regenerates a random score and would reset RiskCircle.
-          // Instead, push a minimal update so the parent can sync status/findings
-          // without disturbing the displayed risk score.
+          // Module still exists, sync latest state
           if (onSelectModule) onSelectModule(liveModule);
-          // Pass the existing riskData shape but preserve the current risk_score by
-          // NOT randomising it — re-use whatever was last set.
-          if (onRiskDataChange) onRiskDataChange(
-            {
-              scan_id: liveModule.id,
-              scan_name: liveModule.name,
-              target: liveModule.target,
-              status: liveModule.status,
-              findings: liveModule.findings,
-              // Omit risk_score so RiskCircle keeps its current displayed value
-            },
-            liveModule.target,
-            liveModule.name
-          );
+          
+          // PROPAGATE FULL DATA: This ensures the RiskScore is calculated and 
+          // persisted in RiskCircle's internal state across refreshes.
+          if (onRiskDataChange) {
+            onRiskDataChange(
+              extractRiskData(liveModule),
+              liveModule.target,
+              liveModule.name
+            );
+          }
+        } else if (sortedScans.length > 0) {
+          // ── AUTO-RESELECT: Current selection was deleted ──
+          const nextProject = sortedScans[0];
+          persistSelection(nextProject.id);
+          if (onSelectModule) onSelectModule(nextProject);
+          if (onRiskDataChange) onRiskDataChange(extractRiskData(nextProject), nextProject.target, nextProject.name);
+        } else {
+          // ── NO PROJECTS LEFT ──
+          persistSelection(null);
+          if (onSelectModule) onSelectModule(null);
+          if (onRiskDataChange) onRiskDataChange(null, '', '');
         }
-      }
-
-      // ── AUTO-SELECT (first load only, when nothing is selected) ──
-      if (sortedScans.length > 0 && !currentlySelectedId) {
-        const firstCreated = [...sortedScans].sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-        )[0];
-
-        persistSelection(firstCreated.id);
-        if (onSelectModule) onSelectModule(firstCreated);
-        if (onRiskDataChange) onRiskDataChange(extractRiskData(firstCreated), firstCreated.target, firstCreated.name);
-      }
-
-      if (sortedScans.length === 0) {
+      } else if (sortedScans.length > 0) {
+        // ── INITIAL AUTO-SELECT (only if nothing is selected) ──
+        const firstProject = sortedScans[0];
+        persistSelection(firstProject.id);
+        if (onSelectModule) onSelectModule(firstProject);
+        if (onRiskDataChange) onRiskDataChange(extractRiskData(firstProject), firstProject.target, firstProject.name);
+      } else {
+        // No projects at all
         persistSelection(null);
         if (onSelectModule) onSelectModule(null);
         if (onRiskDataChange) onRiskDataChange(null, '', '');

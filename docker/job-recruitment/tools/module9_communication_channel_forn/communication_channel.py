@@ -630,32 +630,39 @@ class ChannelAnalyzer:
         all_warnings = []
         
         # Run analyses in parallel
+        self._print("Launching communication forensic checks...")
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = {}
-            
+
             # Channel risk assessment
+            self._print(f"Assessing risk for channel: {channel}...")
             futures['channel'] = executor.submit(self.assess_channel_risk, channel)
-            
+
             # Phone number OSINT
             if phone:
+                self._print(f"Performing OSINT on phone number: {phone}...")
                 futures['phone'] = executor.submit(self.analyze_phone_number, phone, company_country)
-            
+
             # Telegram analysis
             if telegram_username:
+                self._print(f"Analyzing Telegram profile: {telegram_username}...")
                 futures['telegram'] = executor.submit(self.analyze_telegram, telegram_username)
             elif phone:
+                self._print(f"Checking for Telegram association with phone: {phone}...")
                 futures['telegram'] = executor.submit(self.analyze_telegram, None, phone)
-            
+
             # WhatsApp analysis
             if whatsapp_phone:
+                self._print(f"Analyzing WhatsApp profile for: {whatsapp_phone}...")
                 futures['whatsapp'] = executor.submit(self.analyze_whatsapp, whatsapp_phone)
-            
+
             # Privacy app analysis (if channel is Signal/Wickr/etc)
             if 'signal' in channel.lower():
+                self._print("Performing Signal-specific forensic check...")
                 futures['privacy_app'] = executor.submit(self.analyze_privacy_app, 'Signal', None, phone)
             elif 'wickr' in channel.lower():
-                futures['privacy_app'] = executor.submit(self.analyze_privacy_app, 'Wickr', None, phone)
-            
+                self._print("Performing Wickr-specific forensic check...")
+                futures['privacy_app'] = executor.submit(self.analyze_privacy_app, 'Wickr', None, phone)            
             # Collect results
             for key, future in futures.items():
                 try:
@@ -680,7 +687,7 @@ class ChannelAnalyzer:
         
         # Generate recommendations
         recommendations = self._get_recommendations(overall_risk, red_flags)
-        
+
         final_result = {
             'channel': channel,
             'phone': phone,
@@ -691,18 +698,44 @@ class ChannelAnalyzer:
             'red_flags': red_flags[:10],
             'recommendations': recommendations
         }
-        
+
         self._print("-" * 60)
         self._print(f"Communication analysis complete")
         self._print(f"Overall Risk: {final_result['risk_level']} ({overall_risk}/100)")
-        
+
         if red_flags:
             self._print(f"Red flags found: {len(red_flags)}", "WARNING")
-        
+
         self._print("-" * 60)
-        
+
         return final_result
 
+    def _get_recommendations(self, risk_score: int, red_flags: List[str]) -> List[str]:
+        recommendations = []
+        
+        if risk_score >= 80:
+            recommendations.append("CRITICAL: Communication channel is highly suspicious")
+            recommendations.append("Avoid clicking any links or downloading files shared via this channel")
+            recommendations.append("The use of anonymous/encrypted apps like Telegram/Signal for initial job outreach is a major red flag")
+        elif risk_score >= 60:
+            recommendations.append("High risk detected in communication pattern")
+            recommendations.append("Request a formal email from a corporate domain")
+            recommendations.append("Verify the recruiter's identity through official channels")
+        elif risk_score >= 40:
+            recommendations.append("Medium risk - unusual communication channel for professional outreach")
+            recommendations.append("Be cautious when sharing personal information")
+        elif risk_score >= 20:
+            recommendations.append("Minor inconsistencies in communication channel")
+        else:
+            recommendations.append("Communication channel appears standard for the industry context")
+        
+        return recommendations
+
+    def _get_risk_level(self, risk_score: int) -> str:
+        if risk_score >= 75: return "critical"
+        if risk_score >= 50: return "high"
+        if risk_score >= 25: return "medium"
+        return "low"
 
 # Standalone test
 if __name__ == "__main__":

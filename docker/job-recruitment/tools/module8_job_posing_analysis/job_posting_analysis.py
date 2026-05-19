@@ -710,7 +710,7 @@ class JobAnalyzer:
     # 9. UNIQUE PHRASE EXTRACTION & GOOGLE SEARCH
     # =========================================================
     
-    def extract_unique_phrases(self, 1: str, min_length: int = 15) -> List[str]:
+    def extract_unique_phrases(self, description: str, min_length: int = 15) -> List[str]:
         """
         Extract unique phrases for cross-referencing
         """
@@ -789,12 +789,25 @@ class JobAnalyzer:
         all_warnings = []
         
         # Run all analyses
+        self._print("Calculating job description readability...")
         results['readability'] = self.calculate_readability(description)
+        
+        self._print("Analyzing sentiment of the job posting...")
         results['sentiment'] = self.analyze_sentiment(description)
+        
+        self._print("Searching for suspicious keywords and phrases...")
         results['keywords'] = self.analyze_keywords(description)
+        
+        self._print("Checking for generic or suspicious job titles...")
         results['generic_title'] = self.detect_generic_title(title, description)
+        
+        self._print("Detecting salary anomalies and unrealistic offers...")
         results['salary_anomaly'] = self.detect_salary_anomaly(salary_text, title)
+        
+        self._print("Comparing description with known scam templates...")
         results['template_match'] = self.check_template_match(description)
+        
+        self._print("Analyzing linguistic patterns and inconsistencies...")
         results['language_inconsistency'] = self.detect_language_inconsistency(description)
         
         # Calculate overall risk with weights

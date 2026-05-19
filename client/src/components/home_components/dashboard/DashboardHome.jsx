@@ -24,7 +24,8 @@ const DashboardHome = ({
   selectedProjectStatus,     // NEW: status of selected project (running, paused, completed, etc.)
   selectedProjectFindings,   // NEW: findings count of selected project
   onRiskDataChange,
-  refreshTrigger
+  refreshTrigger,
+  onRefresh
 }) => {
   const [selectedScanForDetail, setSelectedScanForDetail] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -106,7 +107,7 @@ const DashboardHome = ({
         </div>
 
         <section className="mb-8 md:mb-10" id="tour-alerts">
-          <AlertsSection alerts={alerts} selectedProjectId={selectedProjectId} />
+          <AlertsSection alerts={alerts} selectedProjectId={selectedProjectId} onRefresh={onRefresh} />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-10">
@@ -114,7 +115,7 @@ const DashboardHome = ({
             <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} />
           </div>
           <div id="tour-threat-feed">
-            <ThreatFeed feeds={[]} selectedProjectId={selectedProjectId} />
+            <ThreatFeed feeds={alerts} selectedProjectId={selectedProjectId} onRefresh={onRefresh} />
           </div>
         </section>
 

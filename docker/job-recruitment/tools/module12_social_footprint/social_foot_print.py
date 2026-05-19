@@ -569,32 +569,41 @@ class SocialFootprintMapper:
         platforms_found = 0
         
         # Run all platform checks in parallel
+        self._print("Launching social footprint mapping across platforms...")
         with ThreadPoolExecutor(max_workers=6) as executor:
             futures = {}
             
             # Facebook
+            self._print(f"Searching Facebook for {company_name}...")
             futures['facebook'] = executor.submit(self.check_facebook, company_name, facebook_handle)
             
             # Twitter
+            self._print(f"Searching Twitter/X for {company_name}...")
             futures['twitter'] = executor.submit(self.check_twitter, company_name, twitter_handle)
             
             # Instagram
+            self._print(f"Searching Instagram for {company_name}...")
             futures['instagram'] = executor.submit(self.check_instagram, company_name, instagram_handle)
             
             # Reddit
+            self._print(f"Searching Reddit for mentions of {company_name}...")
             futures['reddit'] = executor.submit(self.check_reddit, company_name)
             
             # Glassdoor
+            self._print(f"Checking Glassdoor reviews and ratings...")
             futures['glassdoor'] = executor.submit(self.check_glassdoor, company_name, glassdoor_handle)
             
             # Indeed
+            self._print(f"Checking Indeed company profile...")
             futures['indeed'] = executor.submit(self.check_indeed, company_name)
             
             # Trustpilot (if domain provided)
             if domain:
+                self._print(f"Analyzing Trustpilot reputation for {domain}...")
                 futures['trustpilot'] = executor.submit(self.check_trustpilot, domain)
             
             # BBB
+            self._print(f"Checking Better Business Bureau (BBB) status...")
             futures['bbb'] = executor.submit(self.check_bbb, company_name)
             
             # Collect results

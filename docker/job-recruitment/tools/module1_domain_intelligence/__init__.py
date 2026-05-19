@@ -11,7 +11,7 @@ This module provides domain investigation capabilities including:
 """
 
 from .domain_intelligence import DomainIntelligence
-from .main import investigate_domains, extract_domains_from_input
+# from .main import investigate_domains, extract_domains_from_input
 
 __version__ = "1.0.0"
 __author__ = "Job Scam Investigator"

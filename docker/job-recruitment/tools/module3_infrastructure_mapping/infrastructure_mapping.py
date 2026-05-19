@@ -588,12 +588,24 @@ class InfrastructureMapping:
             self._print(f"Cannot resolve domain", "ERROR")
         
         # Run all checks in parallel where possible
+        self._print("Launching infrastructure analysis checks...")
         with ThreadPoolExecutor(max_workers=5) as executor:
+            self._print("Detecting hosting provider...")
             future_hosting = executor.submit(self.detect_hosting_provider, domain, ip_address)
+            
+            self._print("Analyzing nameservers...")
             future_nameservers = executor.submit(self.analyze_nameservers, domain)
+            
+            self._print("Fetching ASN information...")
             future_asn = executor.submit(self.get_asn_info, ip_address) if ip_address else None
+            
+            self._print("Getting historical DNS records...")
             future_historical = executor.submit(self.get_historical_dns, domain)
+            
+            self._print("Enumerating subdomains...")
             future_subdomains = executor.submit(self.enumerate_subdomains, domain)
+            
+            self._print("Running DNS reconnaissance...")
             future_dns_recon = executor.submit(self.dns_reconnaissance, domain)
             
             hosting_result = future_hosting.result()

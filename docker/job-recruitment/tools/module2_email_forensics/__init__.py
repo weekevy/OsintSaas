@@ -4,7 +4,7 @@ SPF/DKIM/DMARC analysis, email reputation, breach detection
 """
 
 from .email_forensics import EmailForensics
-from .main import investigate_emails
+# from .main import investigate_emails
 
 __version__ = "1.0.0"
 __author__ = "Job Scam Investigator"

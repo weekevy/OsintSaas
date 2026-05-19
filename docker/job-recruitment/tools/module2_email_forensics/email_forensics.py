@@ -587,16 +587,29 @@ class EmailForensics:
         username = email.split('@')[0]
         
         # Run all checks
+        self._print(f"Checking if {domain} is a free email provider...")
         is_free = domain in self.free_email_providers
-        
+
+        self._print(f"Analyzing SPF records for {domain}...")
         spf_result = self.check_spf(domain)
+
+        self._print(f"Analyzing DKIM records for {domain}...")
         dkim_result = self.check_dkim(domain)
+
+        self._print(f"Analyzing DMARC records for {domain}...")
         dmarc_result = self.check_dmarc(domain)
+
+        self._print(f"Testing for catch-all email behavior on {domain}...")
         catch_all_result = self.check_catch_all(domain)
+
+        self._print(f"Checking email reputation for {email}...")
         reputation_result = self.check_email_reputation(email)
+
+        self._print(f"Checking breach status for {email}...")
         breach_result = self.check_breach_status(email)
-        blacklist_result = self.check_domain_blacklist(domain)
-        
+
+        self._print(f"Checking domain blacklist status for {domain}...")
+        blacklist_result = self.check_domain_blacklist(domain)        
         # Calculate overall risk
         risk_score = 0
         red_flags = []

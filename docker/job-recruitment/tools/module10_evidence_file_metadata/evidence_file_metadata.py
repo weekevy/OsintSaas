@@ -620,23 +620,28 @@ class FileForensics:
             return {'error': f'File not found: {file_path}'}
         
         # Generate hashes first
+        self._print("Calculating file hashes (MD5, SHA1, SHA256)...")
         hashes = self.generate_file_hashes(file_path)
-        
+
         # Detect file type
+        self._print("Detecting file type from magic bytes...")
         file_type = self.detect_file_type(file_path)
         self._print(f"Detected file type: {file_type}")
-        
+
         # Check hash reputation
+        self._print("Checking file hash reputation against malware databases...")
         hash_reputation = self.check_hash_reputation(hashes['sha256'])
-        
+
         # Analyze based on file type
         if file_type in ['JPEG', 'PNG', 'GIF']:
+            self._print("Performing deep image/EXIF analysis...")
             content_analysis = self.analyze_image(file_path)
         elif file_type == 'PDF':
+            self._print("Performing deep PDF structural analysis...")
             content_analysis = self.analyze_pdf(file_path)
         elif file_type == 'DOCX':
-            content_analysis = self.analyze_docx(file_path)
-        else:
+            self._print("Performing deep DOCX metadata analysis...")
+            content_analysis = self.analyze_docx(file_path)        else:
             content_analysis = {'error': f'Unsupported file type: {file_type}'}
         
         # Combine results

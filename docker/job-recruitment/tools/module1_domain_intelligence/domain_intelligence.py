@@ -408,10 +408,19 @@ class DomainIntelligence:
             }
         
         # Run all checks
+        self._print(f"Starting domain age check for {domain}...")
         age_result = self.check_domain_age(domain, whois_info)
+        
+        self._print(f"Checking WHOIS privacy settings for {domain}...")
         privacy_result = self.check_whois_privacy(domain, whois_info)
+        
+        self._print(f"Analyzing registrar reputation for {domain}...")
         registrar_result = self.check_registrar_reputation(domain, whois_info)
+        
+        self._print(f"Fetching domain history for {domain}...")
         history_result = self.get_domain_history(domain, whois_info)
+        
+        self._print(f"Analyzing MX records for {domain}...")
         mx_result = self.check_mx_records(domain)
         
         # Calculate overall risk (weighted)

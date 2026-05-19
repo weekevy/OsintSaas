@@ -28,7 +28,7 @@ const generateRandomFeeds = (projectId = null) => {
   }));
 };
 
-const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
+const ThreatFeed = ({ feeds = [], selectedProjectId, onRefresh }) => {
   const [threatFeeds, setThreatFeeds] = useState([]);
 
   useEffect(() => {
@@ -70,8 +70,12 @@ const ThreatFeed = ({ feeds = [], selectedProjectId }) => {
   };
 
   const handleRefresh = () => {
-    const newFeeds = generateRandomFeeds(selectedProjectId);
-    setThreatFeeds(newFeeds);
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      const newFeeds = generateRandomFeeds(selectedProjectId);
+      setThreatFeeds(newFeeds);
+    }
   };
 
   return (

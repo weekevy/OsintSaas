@@ -641,11 +641,13 @@ class GeoTemporalAnalyzer:
         all_warnings = []
         
         # Run analyses in parallel
+        self._print("Launching temporal and geospatial forensic checks...")
         with ThreadPoolExecutor(max_workers=6) as executor:
             futures = {}
             
             # Time-based analyses
             if analysis_data.get('job_posting_time'):
+                self._print("Analyzing job posting timestamp patterns...")
                 futures['posting_time'] = executor.submit(
                     self.analyze_job_posting_time,
                     analysis_data['job_posting_time'],
@@ -653,6 +655,7 @@ class GeoTemporalAnalyzer:
                 )
             
             if analysis_data.get('application_time') and analysis_data.get('response_time'):
+                self._print("Analyzing response time latency...")
                 futures['response_time'] = executor.submit(
                     self.analyze_response_time,
                     analysis_data['application_time'],
@@ -660,6 +663,7 @@ class GeoTemporalAnalyzer:
                 )
             
             if analysis_data.get('domain_registration_date') and analysis_data.get('job_posting_time'):
+                self._print("Comparing domain registration with job posting date...")
                 futures['domain_delta'] = executor.submit(
                     self.analyze_domain_registration_delta,
                     analysis_data['domain_registration_date'],
@@ -667,6 +671,7 @@ class GeoTemporalAnalyzer:
                 )
             
             if analysis_data.get('ssl_issue_date') and analysis_data.get('domain_registration_date'):
+                self._print("Analyzing SSL certificate issuance timing...")
                 futures['ssl_delta'] = executor.submit(
                     self.analyze_ssl_certificate_vs_domain,
                     analysis_data['ssl_issue_date'],
@@ -675,6 +680,7 @@ class GeoTemporalAnalyzer:
             
             # Location-based analyses
             if analysis_data.get('ip_address'):
+                self._print(f"Performing geolocation lookup for IP: {analysis_data['ip_address']}...")
                 futures['ip_geo'] = executor.submit(
                     self.get_ip_geolocation,
                     analysis_data['ip_address']
@@ -685,6 +691,7 @@ class GeoTemporalAnalyzer:
                 ip_future = futures['ip_geo']
             
             if analysis_data.get('recruiter_timezone') and analysis_data.get('company_timezone'):
+                self._print("Analyzing timezone consistency...")
                 futures['timezone_mismatch'] = executor.submit(
                     self.check_timezone_mismatch,
                     analysis_data['recruiter_timezone'],
@@ -692,6 +699,7 @@ class GeoTemporalAnalyzer:
                 )
             
             if analysis_data.get('company_address'):
+                self._print("Verifying corporate office location...")
                 futures['address'] = executor.submit(
                     self.verify_address,
                     analysis_data['company_address'],
