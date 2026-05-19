@@ -1,7 +1,9 @@
 import { forwardRef, useEffect, useState } from 'react';
+import dashboardScreenshot from '../../assets/images/for_welcom.png';
 
 const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
+
   useEffect(() => { setIsVisible(true); }, []);
 
   const FeatureIcon = ({ type, color, size = "w-6 h-6" }) => {
@@ -40,89 +42,11 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
     { iconType: 'api',      title: 'Modular SDK',        value: 'API-First',      desc: 'Native enterprise-grade integration with REST and GraphQL.',                 color: '#2DD4BF', stats: '10k+ Requests',    metric: 'Scalable' },
   ];
 
-  const tags = [
-    { label: 'IP TRACED',  sub: '104.21.x.x', top: '6%',  left: '2%',   delay: '0s',   color: '#00E5FF' },
-    { label: 'IDENTITY',   sub: 'LINKED',      top: '20%', right: '2%',  delay: '0.5s', color: '#2DD4BF' },
-    { label: 'DARKWEB',    sub: 'HIT ×3',      top: '60%', left: '0%',   delay: '1.0s', color: '#00E5FF' },
-    { label: 'CRYPTO TX',  sub: 'FLAGGED',     top: '72%', right: '1%',  delay: '1.5s', color: '#2DD4BF' },
-    { label: 'BREACH DB',  sub: 'MATCH',       top: '4%',  right: '14%', delay: '0.3s', color: '#00E5FF' },
-    { label: 'SOCIAL',     sub: 'UNMASKED',    top: '84%', left: '14%',  delay: '0.8s', color: '#2DD4BF' },
-  ];
-
-  const leftFeed = [
-    { time: '00:00:01', event: 'Surface scan initiated',  type: 'info'  },
-    { time: '00:00:03', event: 'IP cluster identified',   type: 'warn'  },
-    { time: '00:00:05', event: 'Dark web index hit',      type: 'alert' },
-    { time: '00:00:08', event: 'Identity node resolved',  type: 'info'  },
-    { time: '00:00:11', event: 'Crypto wallet flagged',   type: 'alert' },
-    { time: '00:00:14', event: 'Social profile mapped',   type: 'info'  },
-    { time: '00:00:17', event: 'Breach record matched',   type: 'warn'  },
-    { time: '00:00:20', event: 'Geo-fence correlation',   type: 'info'  },
-    { time: '00:00:23', event: 'OSINT layer complete',    type: 'info'  },
-    { time: '00:00:26', event: 'Target profile built',    type: 'alert' },
-  ];
-
-  const rightFeed = [
-    { key: 'SURFACE_IDX',  val: '99.2%',   label: 'Coverage' },
-    { key: 'DARK_WEB',     val: '3 hits',  label: 'Results'  },
-    { key: 'LATENCY',      val: '38ms',    label: 'Response' },
-    { key: 'THREAT_LVL',   val: 'HIGH',    label: 'Risk'     },
-    { key: 'IDENTITY',     val: 'LINKED',  label: 'Status'   },
-    { key: 'CRYPTO_TXN',   val: '7 found', label: 'Matches'  },
-    { key: 'BREACH_DB',    val: '2 hits',  label: 'Records'  },
-    { key: 'SOCIAL_NODES', val: '14',      label: 'Mapped'   },
-    { key: 'ENCRYPTION',   val: 'AES-256', label: 'Active'   },
-    { key: 'API_CALLS',    val: '1,204',   label: 'Requests' },
-  ];
-
-  const typeColor = { info: '#2DD4BF', warn: '#00E5FF', alert: '#ff6b6b' };
-  const leftDouble  = [...leftFeed,  ...leftFeed];
-  const rightDouble = [...rightFeed, ...rightFeed];
-
-  const capabilities = [
-    {
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          <path d="M11 8v6M8 11h6"/>
-        </svg>
-      ),
-      title: 'Surface & Deep Web',
-      desc: 'Continuously indexes billions of open-source data points across the visible and hidden web in real time.',
-      accent: '#00E5FF',
-    },
-    {
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      ),
-      title: 'Identity Resolution',
-      desc: 'Links fragmented digital identities across platforms, wallets, and breach databases into a single unified profile.',
-      accent: '#2DD4BF',
-    },
-    {
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      ),
-      title: 'Zero-Knowledge Ops',
-      desc: 'Military-grade encrypted enclaves ensure your investigations leave zero forensic trace on any external system.',
-      accent: '#00E5FF',
-    },
-    {
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-      ),
-      title: 'Live Threat Scoring',
-      desc: 'Every target receives a continuously updated risk score derived from cross-source behavioral pattern analysis.',
-      accent: '#2DD4BF',
-    },
+  const statusPills = [
+    { label: 'THREAT INDEX', value: '100',      color: '#ff6b6b', pulse: true  },
+    { label: 'PROJECTS',     value: '1 ACTIVE', color: '#2DD4BF', pulse: false },
+    { label: 'ALERTS',       value: '3 NEW',    color: '#00E5FF', pulse: true  },
+    { label: 'STATUS',       value: 'LIVE',     color: '#2DD4BF', pulse: true  },
   ];
 
   return (
@@ -150,7 +74,6 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
             className={`font-black tracking-tight leading-[1.05] transition-all duration-1000 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             style={{ fontSynthesis: 'none', textRendering: 'optimizeLegibility', textWrap: 'balance' }}
           >
-            {/* Static white line — unchanged */}
             <span
               className="block text-white"
               style={{ fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', willChange: 'transform, opacity' }}
@@ -158,79 +81,30 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
               Uncover the Truth
             </span>
 
-            {/*
-              ── ANIMATED GRADIENT LINE ──────────────────────────────────────
-              Android Chrome / Samsung Internet have a known bug where
-              animating `background-position` on a `background-clip: text`
-              element flickers or shows nothing when `willChange: opacity`
-              is also present on a parent. Fix:
-                1. Wrap in a `position: relative` block to isolate stacking.
-                2. Put a solid-color fallback span underneath (aria-hidden)
-                   so if clip fails, text is still readable in cyan.
-                3. Animate background-position on a 300%-wide gradient —
-                   this is the most-compatible path; avoid animating
-                   `filter`, `hue-rotate`, or `transform` on clip:text nodes.
-                4. Force GPU layer with `translate3d(0,0,0)` directly on the
-                   animated element, NOT on an ancestor (ancestor GPU layers
-                   can break clip:text on older Android WebViews).
-              ─────────────────────────────────────────────────────────────── */}
             <span
               className="block pb-2"
-              style={{
-                fontSize: 'clamp(3.5rem, 9.5vw, 6.5rem)',
-                position: 'relative',
-                display: 'block',
-              }}
+              style={{ fontSize: 'clamp(3.5rem, 9.5vw, 6.5rem)', position: 'relative', display: 'block' }}
             >
-              {/* Solid fallback — sits behind, guarantees legibility */}
               <span
                 aria-hidden="true"
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'block',
-                  color: '#00E5FF',
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  lineHeight: 'inherit',
-                  letterSpacing: 'inherit',
-                  userSelect: 'none',
-                  pointerEvents: 'none',
+                  position: 'absolute', inset: 0, display: 'block',
+                  color: '#00E5FF', fontSize: 'inherit', fontWeight: 'inherit',
+                  lineHeight: 'inherit', letterSpacing: 'inherit',
+                  userSelect: 'none', pointerEvents: 'none',
                 }}
               >
                 Break Down Scammers.
               </span>
-
-              {/* Animated clip-text layer */}
               <span
                 style={{
-                  position: 'relative',
-                  display: 'block',
-                  /*
-                   * 300%-wide gradient: cyan → teal → blue → cyan
-                   * Looping is seamless because start and end colours match.
-                   */
-                  backgroundImage:
-                    'linear-gradient(90deg, #00E5FF 0%, #2DD4BF 20%, #007AFF 45%, #00E5FF 65%, #2DD4BF 82%, #007AFF 100%)',
+                  position: 'relative', display: 'block',
+                  backgroundImage: 'linear-gradient(90deg, #00E5FF 0%, #2DD4BF 20%, #007AFF 45%, #00E5FF 65%, #2DD4BF 82%, #007AFF 100%)',
                   backgroundSize: '300% 100%',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  color: 'transparent',
-                  /*
-                   * Animate background-position: 0% → 100%.
-                   * On a 300%-wide bg this sweeps the full colour cycle.
-                   * `linear` keeps it smooth; 4 s feels energetic not frantic.
-                   */
+                  WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent', color: 'transparent',
                   animation: 'gradientSweep 4s linear infinite',
-                  /*
-                   * IMPORTANT for Android: apply translate3d directly here,
-                   * not on a parent. This promotes the element to its own
-                   * GPU layer, which fixes Samsung Internet's clip:text bug
-                   * during CSS animation.
-                   */
-                  transform: 'translate3d(0, 0, 0)',
-                  willChange: 'background-position',
+                  transform: 'translate3d(0, 0, 0)', willChange: 'background-position',
                 }}
               >
                 Break Down Scammers.
@@ -256,182 +130,75 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           </button>
         </div>
 
-        {/* ── SIGNAL BROADCAST ZONE ─────────────────────────────────────── */}
-        <div className={`relative w-full transition-all duration-1000 delay-400 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-
-          <div className="flex items-center gap-4 mb-8 w-full max-w-3xl mx-auto xl:mx-0 xl:max-w-full">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
-            <span className="text-[10px] font-mono tracking-[0.3em] text-[#00E5FF]/35 uppercase whitespace-nowrap">Live Signal Broadcast</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
-          </div>
-
-          <div className="flex flex-col xl:flex-row xl:items-center xl:gap-10">
-
-            <div className="flex items-center justify-center xl:justify-start gap-5 xl:gap-6 xl:flex-shrink-0">
-
-              <div className="hidden lg:flex flex-col" style={{ width: '160px', height: '310px' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" style={{ animation: 'blink 1.8s ease-in-out infinite' }} />
-                  <span className="text-[9px] font-mono tracking-[0.2em] text-[#2DD4BF]/50 uppercase">Threat Feed</span>
-                </div>
-                <div className="relative flex-1 overflow-hidden" style={{ maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)' }}>
-                  <div style={{ animation: 'scrollUp 18s linear infinite', willChange: 'transform' }}>
-                    {leftDouble.map((row, i) => (
-                      <div key={i} className="flex items-start gap-2 py-1.5 border-b" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                        <span className="text-[8px] font-mono shrink-0 mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>{row.time}</span>
-                        <span className="text-[9px] font-mono leading-tight" style={{ color: typeColor[row.type] + 'BB' }}>{row.event}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* ── DASHBOARD SCREENSHOT — full width, centered ───────────────── */}
+        <div
+          className={`w-full transition-all duration-1000 delay-400 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
+          <div
+            className="w-full rounded-2xl overflow-hidden"
+            style={{
+              boxShadow: '0 0 0 1px rgba(0,229,255,0.15), 0 0 80px rgba(0,229,255,0.10), 0 40px 100px rgba(0,0,0,0.7)',
+            }}
+          >
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0d1117] border-b border-white/[0.06]">
+              <div className="flex gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                <span className="w-3 h-3 rounded-full bg-[#28c840]" />
               </div>
-
-              <div className="relative flex items-center justify-center shrink-0 scale-75 sm:scale-100 transition-transform duration-700" style={{ width: '310px', height: '310px' }}>
-                {tags.map((t, i) => (
-                  <div key={i} className="absolute flex flex-col items-start px-2.5 py-1.5 rounded-lg pointer-events-none"
-                    style={{
-                      top: t.top, left: t.left, right: t.right,
-                      border: `0.5px solid ${t.color}22`,
-                      background: 'rgba(0,0,0,0.55)',
-                      animation: 'tagFloat 3.2s ease-in-out infinite',
-                      animationDelay: t.delay,
-                      willChange: 'transform',
-                    }}>
-                    <span className="text-[8px] font-mono tracking-widest" style={{ color: `${t.color}80` }}>{t.label}</span>
-                    <span className="text-[10px] font-bold text-white/65">{t.sub}</span>
-                  </div>
-                ))}
-                <div className="absolute flex items-center justify-center" style={{ width: '120px', height: '120px' }}>
-                  {[0,1,2,3].map(i => (
-                    <div key={i} className={`absolute rounded-full ${i > 1 ? 'hidden sm:block' : ''}`} style={{
-                      width: `${120 + i * 50}px`, height: `${120 + i * 50}px`,
-                      border: `0.5px solid ${i % 2 === 0 ? 'rgba(0,229,255,0.22)' : 'rgba(45,212,191,0.14)'}`,
-                      animation: 'ringPulse 3.2s ease-out infinite',
-                      animationDelay: `${i * 0.65}s`,
-                      willChange: 'transform, opacity',
-                    }} />
-                  ))}
-                  <div className="absolute rounded-full" style={{ width: '86px', height: '86px', border: '0.5px solid rgba(0,229,255,0.30)' }} />
-                  <div className="absolute rounded-full" style={{ width: '64px', height: '64px', background: 'radial-gradient(circle, rgba(0,229,255,0.10) 0%, transparent 70%)' }} />
-                  <div className="relative z-10 flex items-center justify-center rounded-full"
-                    style={{ width: '44px', height: '44px', border: '0.5px solid rgba(0,229,255,0.38)', background: 'rgba(0,229,255,0.04)', animation: 'corePulse 2.4s ease-in-out infinite', willChange: 'box-shadow' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75 }}>
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M6.3 6.3a8 8 0 0 0 0 11.4"/><path d="M17.7 6.3a8 8 0 0 1 0 11.4"/>
-                      <path d="M3.5 3.5a14 14 0 0 0 0 17"/><path d="M20.5 3.5a14 14 0 0 1 0 17"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="absolute left-0 right-0 pointer-events-none" style={{
-                  top: '50%', height: '1px',
-                  background: 'linear-gradient(to right, transparent, rgba(0,229,255,0.12), rgba(0,229,255,0.30), rgba(0,229,255,0.12), transparent)',
-                  animation: 'scanLine 2.8s ease-in-out infinite',
-                  willChange: 'opacity, transform',
-                }} />
+              <div className="flex-1 mx-3 h-6 rounded-md bg-white/[0.04] border border-white/[0.06] flex items-center px-3 gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#00E5FF]/40" style={{ animation: 'blink 2s ease-in-out infinite' }} />
+                <span className="text-[10px] font-mono text-white/25 tracking-wide">app.weekeyosint.com/dashboard</span>
               </div>
-
-              <div className="hidden lg:flex flex-col" style={{ width: '160px', height: '310px' }}>
-                <div className="flex items-center gap-2 mb-3 justify-end">
-                  <span className="text-[9px] font-mono tracking-[0.2em] text-[#00E5FF]/50 uppercase">Data Stream</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]" style={{ animation: 'blink 2.2s ease-in-out infinite' }} />
-                </div>
-                <div className="relative flex-1 overflow-hidden" style={{ maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)' }}>
-                  <div style={{ animation: 'scrollUp 22s linear infinite', willChange: 'transform' }}>
-                    {rightDouble.map((row, i) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                        <span className="text-[9px] font-mono" style={{ color: 'rgba(0,229,255,0.35)' }}>{row.key}</span>
-                        <div className="flex flex-col items-end ml-2">
-                          <span className="text-[10px] font-bold text-white/60 leading-tight">{row.val}</span>
-                          <span className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>{row.label}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-            {/* RIGHT — capability panel (xl only) */}
-            <div className="hidden xl:flex flex-col flex-1 min-w-0 pl-4">
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-[#00E5FF]/20 to-transparent" />
-                <span className="text-[10px] font-mono tracking-[0.25em] text-[#00E5FF]/40 uppercase whitespace-nowrap">What We Expose</span>
-              </div>
-
-              <div className="relative mb-4 select-none pointer-events-none overflow-hidden" style={{ height: '64px' }}>
-                <span
-                  className="absolute left-0 top-0 font-black tracking-tighter leading-none whitespace-nowrap bg-gradient-to-r from-[#00E5FF]/8 to-transparent bg-clip-text text-transparent"
-                  style={{ fontSize: '72px' }}
-                >
-                  OSINT
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {capabilities.map((c, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                    style={{ transitionDelay: `${500 + i * 80}ms` }}
-                  >
-                    <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center mt-0.5"
-                      style={{ background: `${c.accent}0D`, border: `0.5px solid ${c.accent}28` }}>
-                      {c.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-white font-bold text-sm">{c.title}</span>
-                        <div className="h-px flex-1" style={{ background: `linear-gradient(to right, ${c.accent}30, transparent)` }} />
-                      </div>
-                      <p className="text-[11px] text-white/35 leading-relaxed">{c.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-6 mt-6 pt-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                {[
-                  { v: '18,340', l: 'Active Targets'  },
-                  { v: '2,500+', l: 'Data Sources'    },
-                  { v: '42ms',   l: 'Avg Latency'     },
-                  { v: '180+',   l: 'Countries'       },
-                ].map((s, i) => (
-                  <div key={i} className="flex flex-col gap-0.5">
-                    <span className="text-base font-black text-white">{s.v}</span>
-                    <span className="text-[9px] font-mono text-white/25 tracking-wider uppercase">{s.l}</span>
-                  </div>
+              <div className="flex gap-2">
+                {['SCAN', 'LIVE'].map((t, i) => (
+                  <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded border tracking-widest"
+                    style={{ color: i === 1 ? '#00E5FF' : 'rgba(255,255,255,0.25)', borderColor: i === 1 ? 'rgba(0,229,255,0.3)' : 'rgba(255,255,255,0.08)' }}>
+                    {t}
+                  </span>
                 ))}
               </div>
             </div>
 
-          </div>
+            {/* Screenshot */}
+            <img
+              src={dashboardScreenshot}
+              alt="WeekeyOsint Dashboard"
+              className="w-full block"
+              style={{ display: 'block', userSelect: 'none', pointerEvents: 'none' }}
+            />
 
-          {/* Stats strip — visible below xl only */}
-          <div className="flex xl:hidden items-center gap-6 sm:gap-10 mt-8 justify-center">
-            {[
-              { label: 'Targets Tracked', value: '18,340' },
-              { label: 'Data Sources',    value: '2,500+' },
-              { label: 'Avg. Latency',    value: '42ms'   },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <span className="text-lg font-black text-white tracking-tight">{s.value}</span>
-                <span className="text-[10px] font-mono text-white/25 tracking-wider uppercase">{s.label}</span>
+            {/* Status bar */}
+            <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117] border-t border-white/[0.06]">
+              <div className="flex items-center gap-4">
+                {statusPills.map((pill, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    {pill.pulse && (
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pill.color, animation: 'blink 1.8s ease-in-out infinite', animationDelay: `${i * 0.3}s` }} />
+                    )}
+                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{pill.label}</span>
+                    <span className="text-[9px] font-mono font-bold" style={{ color: pill.color }}>{pill.value}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-white/20">SESSION</span>
+                <span className="text-[9px] font-mono text-[#00E5FF]/50" style={{ animation: 'blink 3s ease-in-out infinite' }}>ENCRYPTED</span>
+              </div>
+            </div>
           </div>
-
-          {/* Bottom rule */}
-          <div className="flex items-center gap-4 mt-8 w-full max-w-3xl mx-auto xl:mx-0 xl:max-w-full">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
-            <span className="text-[10px] font-mono tracking-[0.3em] text-[#00E5FF]/35 uppercase whitespace-nowrap">Intelligence Network</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
-          </div>
-
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full mt-16">
+        {/* Bottom rule */}
+        <div className="flex items-center gap-4 mt-10 w-full">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
+          <span className="text-[10px] font-mono tracking-[0.3em] text-[#00E5FF]/35 uppercase whitespace-nowrap">Intelligence Network</span>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent" />
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full mt-10">
           {features.map((feature, i) => (
             <div
               key={i}
@@ -458,41 +225,13 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
       </div>
 
       <style>{`
-        /*
-          gradientSweep — moves background-position from 0% to 100%
-          on a 300%-wide gradient. This is the most Android-compatible
-          way to animate a colour sweep on clipped text. Avoid animating
-          filter/hue-rotate or transform on the same element as
-          background-clip:text — they conflict on Samsung Internet.
-        */
         @keyframes gradientSweep {
           0%   { background-position: 0%   50%; }
           100% { background-position: 100% 50%; }
         }
-        @keyframes ringPulse {
-          0%   { opacity: 0;   transform: scale(0.88) translate3d(0,0,0); }
-          25%  { opacity: 1; }
-          100% { opacity: 0;   transform: scale(1.12) translate3d(0,0,0); }
-        }
-        @keyframes corePulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); transform: translate3d(0,0,0); }
-          50%       { box-shadow: 0 0 14px 3px rgba(0,229,255,0.13); transform: translate3d(0,0,0); }
-        }
-        @keyframes tagFloat {
-          0%, 100% { transform: translateY(0px) translate3d(0,0,0);  opacity: 0.65; }
-          50%       { transform: translateY(-6px) translate3d(0,0,0); opacity: 1; }
-        }
-        @keyframes scanLine {
-          0%, 100% { opacity: 0.35; transform: scaleX(0.55) translate3d(0,0,0); }
-          50%       { opacity: 1;   transform: scaleX(1) translate3d(0,0,0); }
-        }
         @keyframes blink {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-        @keyframes scrollUp {
-          0%   { transform: translateY(0) translate3d(0,0,0); }
-          100% { transform: translateY(-50%) translate3d(0,0,0); }
+          50%       { opacity: 0.3; }
         }
       `}</style>
     </section>
