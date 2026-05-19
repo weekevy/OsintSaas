@@ -16,7 +16,6 @@ from slowapi.errors import RateLimitExceeded
 from dotenv import load_dotenv
 
 # Import the scanner engine
-from tools.scanner import ScannerEngine as OSINTScanner
 
 # Load environment variables
 load_dotenv()
@@ -129,26 +128,6 @@ def save_event(event_data: Dict[str, Any]):
 active_engines: Dict[int, OSINTScanner] = {}
 
 # Background Scan Runner
-async def run_osint_scan(scan_id: int, target: str, user_id: int):
-    logger.info(f"Starting background scan for ID {scan_id}, target: {target}")
-    engine = None
-    try:
-        engine = OSINTScanner(scan_id, target, user_id)
-        active_engines[scan_id] = engine
-        await engine.run()
-        logger.info(f"Background scan for ID {scan_id} completed successfully")
-    except Exception as e:
-        logger.error(f"Error in background scan {scan_id}: {str(e)}", exc_info=True)
-        if engine:
-            try:
-                await engine.update_progress(0, "failed")
-            except:
-                pass
-            finally:
-                await engine._close_db()
-    finally:
-        if scan_id in active_engines:
-            del active_engines[scan_id]
 
 # Endpoints
 @app.post("/scan/start", dependencies=[Depends(verify_api_key)])
