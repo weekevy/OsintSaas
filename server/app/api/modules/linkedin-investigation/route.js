@@ -47,7 +47,10 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const [scans] = await query(`
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+
+    let sql = `
       SELECT 
         s.id as scan_id,
         s.scan_type,
@@ -74,8 +77,18 @@ export async function GET(request) {
       LEFT JOIN projects p ON t.project_id = p.id
       WHERE s.scan_type = 'linkedin'
       AND p.user_id = ?
-      ORDER BY s.created_at DESC
-    `, [user.id]);
+    `;
+
+    const params = [user.id];
+
+    if (projectId) {
+      sql += ' AND t.project_id = ?';
+      params.push(projectId);
+    }
+
+    sql += ' ORDER BY s.created_at DESC';
+
+    const [scans] = await query(sql, params);
 
     const formattedScans = scans.map(scan => ({
       id: scan.scan_id,
