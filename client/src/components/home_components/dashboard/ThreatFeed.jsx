@@ -42,10 +42,13 @@ const ThreatFeed = ({ feeds = [], selectedProjectId, onRefresh }) => {
         time: f.time || 'Unknown'
       }));
       setThreatFeeds(mapped);
-    } else {
-      // Only generate random feeds if there are absolutely no real feeds
+    } else if (!selectedProjectId) {
+      // Only generate random feeds if NO project is selected
       const newFeeds = generateRandomFeeds(selectedProjectId);
       setThreatFeeds(newFeeds);
+    } else {
+      // Project selected but no feeds
+      setThreatFeeds([]);
     }
   }, [feeds, selectedProjectId]);
 
@@ -99,8 +102,15 @@ const ThreatFeed = ({ feeds = [], selectedProjectId, onRefresh }) => {
       
       <div className="space-y-2 min-h-[200px]">
         {threatFeeds.length > 0 ? (
-          threatFeeds.map((feed) => (
-            <div key={feed.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#00E5FF]/20 transition-colors group">
+          threatFeeds.map((feed, index) => (
+            <div 
+              key={feed.id} 
+              className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#00E5FF]/20 transition-colors group animate-slideUp"
+              style={{ 
+                animationDelay: `${index * 70}ms`,
+                animationFillMode: 'both'
+              }}
+            >
               <div className={`w-2 h-2 mt-1 rounded-full flex-shrink-0 ${getSeverityColor(feed.severity)}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -119,7 +129,7 @@ const ThreatFeed = ({ feeds = [], selectedProjectId, onRefresh }) => {
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center h-[200px] text-center rounded-xl bg-white/[0.02] border border-white/[0.05]">
+          <div className="flex flex-col items-center justify-center h-[200px] text-center rounded-xl bg-white/[0.02] border border-white/[0.05] animate-fadeIn">
             <div className="w-12 h-12 mb-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center">
               <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

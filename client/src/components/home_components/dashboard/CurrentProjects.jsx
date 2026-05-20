@@ -12,6 +12,7 @@ const CurrentModules = ({
   limit = 100,
   onSelectModule,
   selectedModuleId: externalSelectedModuleId,
+  selectedProjectId,
   scanData = [],
   onRiskDataChange,
   refreshTrigger = 0
@@ -175,8 +176,11 @@ const CurrentModules = ({
 
       const allScansPromises = moduleApis.map(async (module) => {
         try {
-          const cb = forceRefresh ? `?_=${Date.now()}` : '';
-          const response = await fetch(`${module.api}${cb}`);
+          const params = new URLSearchParams();
+          if (forceRefresh) params.append('_', Date.now().toString());
+          if (selectedProjectId) params.append('projectId', selectedProjectId);
+          
+          const response = await fetch(`${module.api}${params.toString() ? '?' + params.toString() : ''}`);
           const data = await response.json();
           if (data.success && data.scans?.length > 0) {
             return data.scans.map(scan => ({
@@ -265,7 +269,7 @@ const CurrentModules = ({
       setLoading(false);
       isFetchingGlobal = false;
     }
-  }, [onSelectModule, onRiskDataChange, extractRiskData, persistSelection]);
+  }, [onSelectModule, onRiskDataChange, extractRiskData, persistSelection, selectedProjectId]);
   // ── NOTE: removed internalSelectedModuleId and externalSelectedModuleId from
   // the dep array — we read from selectedIdRef instead to avoid stale closures.
 

@@ -265,7 +265,11 @@ const ScanDashboard = ({
           filterModule === 'all' ? ALL_MODULES : ALL_MODULES.filter((m) => m.id === filterModule);
         const results = await Promise.allSettled(
           modulesToFetch.map(async (module) => {
-            const response = await api.get(`${module.api}?_=${Date.now()}`, { signal: controller.signal });
+            let url = `${module.api}?_=${Date.now()}`;
+            if (selectedProject?.id) {
+              url += `&projectId=${selectedProject.id}`;
+            }
+            const response = await api.get(url, { signal: controller.signal });
             const data = response.data;
             if (!data.success || !data.scans?.length) return [];
             return data.scans.map((scan) => ({

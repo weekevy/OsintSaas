@@ -107,7 +107,11 @@ const DashboardHome = ({
         </div>
 
         <section className="mb-8 md:mb-10" id="tour-alerts">
-          <AlertsSection alerts={alerts} selectedProjectId={selectedProjectId} onRefresh={onRefresh} />
+          <AlertsSection 
+            alerts={selectedProjectStatus === 'completed' ? alerts : []} 
+            selectedProjectId={selectedProjectId} 
+            onRefresh={onRefresh} 
+          />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-10">
@@ -115,7 +119,11 @@ const DashboardHome = ({
             <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} />
           </div>
           <div id="tour-threat-feed">
-            <ThreatFeed feeds={alerts} selectedProjectId={selectedProjectId} onRefresh={onRefresh} />
+            <ThreatFeed 
+              feeds={selectedProjectStatus === 'completed' ? alerts : []} 
+              selectedProjectId={selectedProjectId} 
+              onRefresh={onRefresh} 
+            />
           </div>
         </section>
 

@@ -91,7 +91,7 @@ const Home = () => {
   const [selectedModuleId, setSelectedModuleId] = useState(() => ls('currentModules_selectedId', null));
   const [dashboardRefreshTrigger, setDashboardRefreshTrigger] = useState(0);
 
-  // ── Fetch Alerts whenever project or trigger changes ──
+  // ── Fetch Alerts and Scans whenever project or trigger changes ──
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
@@ -112,7 +112,24 @@ const Home = () => {
       }
     };
 
+    const fetchScans = async () => {
+      try {
+        let url = '/api/dashboard/scans';
+        if (selectedProject?.id) {
+          url += `?projectId=${selectedProject.id}`;
+        }
+        const response = await fetch(url, { credentials: 'include' });
+        const data = await response.json();
+        if (response.ok) {
+          setRecentScans(data.scans || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch scans:', error);
+      }
+    };
+
     fetchAlerts();
+    fetchScans();
   }, [selectedProject?.id, dashboardRefreshTrigger]);
 
   useEffect(() => {
@@ -241,9 +258,15 @@ const Home = () => {
       setSelectedProject(null);
       setProjectRiskScore(0);
       setProjectAlerts([]);
+      setRecentScans([]);
       resetRiskData();
       return;
     }
+    
+    // Clear current project data while loading the new one
+    setProjectAlerts([]);
+    setRecentScans([]);
+    
     setSelectedProject(project);
     setSelectedProjectStatus(project.status || 'idle');
     setSelectedProjectFindings(project.findings || 0);
