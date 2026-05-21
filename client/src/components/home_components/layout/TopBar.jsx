@@ -173,7 +173,7 @@ const TopBar = ({
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <header className="sticky top-0 z-[9998] flex flex-col font-sans border-b border-white/[0.08] bg-[#080a0d] max-md:backdrop-blur-none md:bg-[#080a0d]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
+    <header className="sticky top-0 z-[9998] flex flex-col font-sans border-b border-white/[0.08] bg-[#000000] max-md:backdrop-blur-none md:bg-[#000000]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
       {/* Top row */}
       <div className={`${shellMax} flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 sm:px-5 lg:px-8 py-2 sm:py-3.5`}>
         {/* Brand + project - LEFT SIDE (always on left) */}
@@ -236,7 +236,7 @@ const TopBar = ({
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 md:right-0 z-[10000] mt-4 w-[min(calc(100vw-1.5rem),24rem)] max-md:fixed max-md:top-16 max-md:left-3 max-md:right-3 max-md:w-auto max-md:mt-0 rounded-3xl border border-white/10 bg-[#0c0e12] shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:w-96 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 md:right-0 z-[10000] mt-4 w-[min(calc(100vw-1.5rem),24rem)] max-md:fixed max-md:top-16 max-md:left-3 max-md:right-3 max-md:w-auto max-md:mt-0 rounded-3xl border border-white/10 bg-[#000000] shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:w-96 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="border-b border-white/[0.08] px-6 py-4 flex justify-between items-center bg-white/[0.02]">
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/90">Intelligence Feed</h3>
                   <span className="text-[9px] font-bold text-[#00E5FF] bg-[#00E5FF]/10 px-2 py-0.5 rounded-full uppercase">{unreadCount} New</span>
@@ -324,9 +324,9 @@ const TopBar = ({
           'max-md:left-1/2 max-md:-translate-x-1/2 max-md:w-max max-md:max-w-[min(calc(100vw-1.25rem),42rem)]',
           'max-md:bottom-[max(0.65rem,env(safe-area-inset-bottom,0.45rem))]',
           'max-md:rounded-[2rem] max-md:border max-md:border-white/[0.12]',
-          'max-md:bg-[#0c0e12] max-md:shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
+          'max-md:bg-[#000000] max-md:shadow-[0_10px_40px_rgba(0,0,0,0.5)]',
           'max-md:px-1.5 max-md:py-1',
-          'md:border-t md:border-white/[0.08] md:bg-[#080a0d] md:py-2.5',
+          'md:border-t md:border-white/[0.08] md:bg-[#000000] md:py-2.5',
         ].join(' ')}
       >
         <nav

@@ -7,7 +7,7 @@ const Navbar = ({ location, navItems, hasAnimated, onNavClick, onLoginClick, onR
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl">
       <div className={`glass-nav px-6 py-3 rounded-2xl flex items-center justify-between transition-all duration-700 ${hasAnimated ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'}`}>
-        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => onNavClick(navItems[0])}>
           <span className="text-white font-bold tracking-tight text-[22px]
           group-hover:text-[#00E5FF] transition-colors"><span className='text-[#00E5FF]'>Weeky</span>Osint</span>
         </div>

@@ -25,9 +25,9 @@ export async function GET(request) {
       JOIN targets t ON s.target_id = t.id
       JOIN projects p ON t.project_id = p.id
       LEFT JOIN job_recruitment_scans j ON s.id = j.scan_id
-      WHERE p.user_id = ?
+      WHERE (p.user_id = ? OR p.team_id IN (SELECT team_id FROM team_members WHERE user_id = ?))
     `;
-    const params = [decoded.id];
+    const params = [decoded.id, decoded.id];
 
     if (projectId) {
       query += ' AND p.id = ?';

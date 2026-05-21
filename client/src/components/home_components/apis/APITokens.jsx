@@ -74,16 +74,16 @@ const APITokens = () => {
   };
 
   return (
-    <div className="space-y-5 font-['Poppins']">
+    <div className="space-y-5 font-sans">
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-white/10">
         <div>
-          <h3 className="text-white font-['Poppins'] text-base font-bold">API Tokens</h3>
+          <h3 className="text-white font-sans text-base font-bold">API Tokens</h3>
           <p className="text-white/30 text-xs mt-0.5">Manage authentication tokens for API access</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="px-4 py-2 border border-[#00E5FF]/30 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors duration-150 text-xs font-['Poppins'] font-semibold flex items-center gap-2"
+          className="px-4 py-2 border border-[#00E5FF]/30 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors duration-150 text-xs font-sans font-semibold flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -94,8 +94,8 @@ const APITokens = () => {
 
       {/* Create Token Form */}
       {showCreateForm && (
-        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
-          <h4 className="text-white font-['Poppins'] text-sm font-bold mb-4">Generate New API Token</h4>
+        <div className="rounded-xl border border-white/10 bg-black p-5">
+          <h4 className="text-white font-sans text-sm font-bold mb-4">Generate New API Token</h4>
           <div className="space-y-3">
             <div>
               <label className="block text-white/40 text-xs mb-1">Token Name</label>
@@ -149,14 +149,14 @@ const APITokens = () => {
             <div className="flex gap-2 pt-3">
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="flex-1 px-3 py-2 border border-white/10 rounded-lg text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-xs font-['Poppins']"
+                className="flex-1 px-3 py-2 border border-white/10 rounded-lg text-white/60 hover:text-white hover:border-white/20 transition-colors duration-150 text-xs font-sans"
               >
                 Cancel
               </button>
               <button
                 onClick={createToken}
                 disabled={!newTokenName}
-                className="flex-1 px-3 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs font-['Poppins'] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs font-sans disabled:opacity-50"
               >
                 Generate
               </button>
@@ -175,8 +175,8 @@ const APITokens = () => {
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h4 className="text-white font-['Poppins'] font-semibold text-sm">{token.name}</h4>
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-['Poppins'] font-bold border ${getStatusColor(token.status)}`}>
+                  <h4 className="text-white font-sans font-semibold text-sm">{token.name}</h4>
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-sans font-bold border ${getStatusColor(token.status)}`}>
                     {token.status}
                   </span>
                 </div>
@@ -203,7 +203,7 @@ const APITokens = () => {
                     <div className="flex items-center gap-1.5">
                       <span className="text-white/40">Permissions:</span>
                       {token.permissions.map((perm) => (
-                        <span key={perm} className="px-2 py-0.5 rounded border border-[#00E5FF]/30 text-[#00E5FF] text-[9px] font-['Poppins'] font-semibold">
+                        <span key={perm} className="px-2 py-0.5 rounded border border-[#00E5FF]/30 text-[#00E5FF] text-[9px] font-sans font-semibold">
                           {perm}
                         </span>
                       ))}
@@ -233,7 +233,7 @@ const APITokens = () => {
       </div>
 
       {/* Security Best Practices */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-4">
+      <div className="rounded-xl border border-white/10 bg-black p-4">
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 rounded-lg border border-[#00E5FF]/30 flex items-center justify-center bg-[#00E5FF]/5">
             <svg className="w-4 h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -241,7 +241,7 @@ const APITokens = () => {
             </svg>
           </div>
           <div>
-            <h4 className="text-white font-['Poppins'] text-xs font-bold mb-1">Security Best Practices</h4>
+            <h4 className="text-white font-sans text-xs font-bold mb-1">Security Best Practices</h4>
             <ul className="space-y-1 text-[11px] text-white/50">
               <li className="flex items-start gap-1.5"><span className="text-[#00E5FF]">•</span> Never share your API tokens or commit them to version control</li>
               <li className="flex items-start gap-1.5"><span className="text-[#00E5FF]">•</span> Use different tokens for different applications and environments</li>

@@ -86,7 +86,7 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
   };
 
   return (
-    <div className="space-y-6 font-['Poppins']">
+    <div className="space-y-6 font-sans">
       {/* Change Password Section */}
       <form onSubmit={handlePasswordSubmit} className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
@@ -96,45 +96,45 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
                 strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h3 className="text-white font-['Poppins'] text-base font-semibold">Change Password</h3>
+          <h3 className="text-white font-sans text-base font-semibold">Change Password</h3>
         </div>
         
         <div>
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold mb-1.5">Current Password</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold mb-1.5">Current Password</label>
           <input
             type="password"
             name="currentPassword"
             value={passwordData.currentPassword}
             onChange={handlePasswordChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="Enter current password"
             required
           />
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold mb-1.5">New Password</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold mb-1.5">New Password</label>
           <input
             type="password"
             name="newPassword"
             value={passwordData.newPassword}
             onChange={handlePasswordChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="Enter new password"
             required
             minLength={8}
           />
-          <p className="text-white/30 text-[10px] font-['Poppins'] mt-1">Minimum 8 characters</p>
+          <p className="text-white/30 text-[10px] font-sans mt-1">Minimum 8 characters</p>
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold mb-1.5">Confirm New Password</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold mb-1.5">Confirm New Password</label>
           <input
             type="password"
             name="confirmPassword"
             value={passwordData.confirmPassword}
             onChange={handlePasswordChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="Confirm new password"
             required
           />
@@ -143,7 +143,7 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
         <button
           type="submit"
           disabled={isLoading}
-          className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-sm font-['Poppins'] disabled:opacity-50"
+          className="px-5 py-2 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-sm font-sans disabled:opacity-50"
         >
           Update Password
         </button>
@@ -160,8 +160,8 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
               </svg>
             </div>
             <div>
-              <h3 className="text-white font-['Poppins'] text-base font-semibold">Two-Factor Authentication</h3>
-              <p className="text-white/40 text-[11px] font-['Poppins']">Add an extra layer of security to your account</p>
+              <h3 className="text-white font-sans text-base font-semibold">Two-Factor Authentication</h3>
+              <p className="text-white/40 text-[11px] font-sans">Add an extra layer of security to your account</p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -177,7 +177,7 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
         
         {twoFactorEnabled && (
           <div className="mt-4 p-4 bg-[#00E5FF]/5 border border-[#00E5FF]/20 rounded-lg">
-            <p className="text-white/70 text-xs font-['Poppins']">Scan this QR code with your authenticator app</p>
+            <p className="text-white/70 text-xs font-sans">Scan this QR code with your authenticator app</p>
             <div className="mt-3 flex justify-center">
               <div className="w-28 h-28 bg-white/5 rounded-lg flex items-center justify-center border border-white/10">
                 <svg className="w-14 h-14 text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -200,11 +200,11 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
                   strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <h3 className="text-white font-['Poppins'] text-base font-semibold">Active Sessions</h3>
+            <h3 className="text-white font-sans text-base font-semibold">Active Sessions</h3>
           </div>
           <button
             onClick={handleLogoutAll}
-            className="text-xs text-[#00E5FF] hover:text-[#2DD4BF] transition-colors duration-150 font-['Poppins'] font-semibold"
+            className="text-xs text-[#00E5FF] hover:text-[#2DD4BF] transition-colors duration-150 font-sans font-semibold"
           >
             Log out all other devices
           </button>
@@ -222,8 +222,8 @@ const SecurityTab = ({ isLoading, setIsLoading }) => {
                   {getDeviceIcon(session.device)}
                 </div>
                 <div>
-                  <p className="text-white font-['Poppins'] text-sm font-semibold">{session.device}</p>
-                  <p className="text-white/40 text-[10px] font-['Poppins'] flex flex-wrap items-center gap-2">
+                  <p className="text-white font-sans text-sm font-semibold">{session.device}</p>
+                  <p className="text-white/40 text-[10px] font-sans flex flex-wrap items-center gap-2">
                     <span className="flex items-center gap-1">
                       <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

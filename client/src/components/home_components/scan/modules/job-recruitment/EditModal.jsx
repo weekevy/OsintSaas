@@ -89,7 +89,7 @@ const EditModal = ({ isOpen, onClose, scan, onUpdate }) => {
     >
       {error && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm font-['Poppins'] text-center">{error}</p>
+          <p className="text-red-400 text-sm font-sans text-center">{error}</p>
         </div>
       )}
       

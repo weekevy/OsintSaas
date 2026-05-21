@@ -107,28 +107,28 @@ const PerformanceMetrics = ({ timeRange }) => {
   ];
 
   return (
-    <div className="space-y-6 font-['Poppins']">
+    <div className="space-y-6 font-sans">
       {/* System Health */}
-      <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-5">
+      <div className="rounded-2xl border border-white/10 bg-black p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h3 className="text-white font-['Poppins'] text-base font-bold">System Performance</h3>
+            <h3 className="text-white font-sans text-base font-bold">System Performance</h3>
             <p className="text-white/40 text-xs mt-1">Real-time performance metrics</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-[#2DD4BF] rounded-full" />
-            <span className="text-white/70 text-xs font-['Poppins']">All systems operational</span>
+            <span className="text-white/70 text-xs font-sans">All systems operational</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {systemHealth.map((item, idx) => (
             <div key={idx} className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="text-white/40 text-[10px] font-['Poppins'] font-semibold mb-1">{item.label}</div>
-              <div className={`text-xl font-bold font-['Poppins']`} style={{ color: item.color }}>
+              <div className="text-white/40 text-[10px] font-sans font-semibold mb-1">{item.label}</div>
+              <div className={`text-xl font-bold font-sans`} style={{ color: item.color }}>
                 {item.value}
               </div>
-              <div className="text-[#2DD4BF] text-[9px] font-['Poppins'] font-semibold mt-1">
+              <div className="text-[#2DD4BF] text-[9px] font-sans font-semibold mt-1">
                 {item.trend} vs yesterday
               </div>
             </div>
@@ -138,7 +138,7 @@ const PerformanceMetrics = ({ timeRange }) => {
         {/* Performance Chart - Simplified */}
         <div className="relative h-40 rounded-xl bg-white/5 border border-white/10 p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white/40 text-[9px] font-['Poppins']">Response Time Trend</span>
+            <span className="text-white/40 text-[9px] font-sans">Response Time Trend</span>
             <div className="flex gap-3">
               <div className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-[#00E5FF]" />
@@ -181,19 +181,19 @@ const PerformanceMetrics = ({ timeRange }) => {
       {/* Service Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {serviceCategories.map((service, idx) => (
-          <div key={idx} className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-5">
+          <div key={idx} className="rounded-2xl border border-white/10 bg-black p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl border border-[#00E5FF]/30 bg-[#00E5FF]/10 flex items-center justify-center">
                 {service.icon}
               </div>
-              <h4 className="text-white font-['Poppins'] text-sm font-bold">{service.title}</h4>
+              <h4 className="text-white font-sans text-sm font-bold">{service.title}</h4>
             </div>
 
             <div className="space-y-2">
               {service.metrics.map((metric, mIdx) => (
                 <div key={mIdx} className="flex justify-between items-center p-2.5 rounded-lg bg-white/5">
-                  <span className="text-white/50 text-[10px] font-['Poppins']">{metric.label}</span>
-                  <span className={`text-xs font-['Poppins'] font-semibold ${metric.positive ? 'text-[#2DD4BF]' : 'text-white'}`}>
+                  <span className="text-white/50 text-[10px] font-sans">{metric.label}</span>
+                  <span className={`text-xs font-sans font-semibold ${metric.positive ? 'text-[#2DD4BF]' : 'text-white'}`}>
                     {metric.value}
                   </span>
                 </div>
@@ -204,13 +204,13 @@ const PerformanceMetrics = ({ timeRange }) => {
       </div>
 
       {/* System Resources */}
-      <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-5">
-        <h3 className="text-white font-['Poppins'] text-base font-bold mb-4">System Resources</h3>
+      <div className="rounded-2xl border border-white/10 bg-black p-5">
+        <h3 className="text-white font-sans text-base font-bold mb-4">System Resources</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {resources.map((resource, idx) => (
             <div key={idx}>
-              <div className="flex justify-between text-[11px] font-['Poppins'] mb-1">
+              <div className="flex justify-between text-[11px] font-sans mb-1">
                 <span className="text-white/50">{resource.label}</span>
                 <span className="text-white font-semibold">{resource.value}</span>
               </div>
@@ -220,7 +220,7 @@ const PerformanceMetrics = ({ timeRange }) => {
                   style={{ width: resource.value }}
                 />
               </div>
-              <span className="text-white/30 text-[9px] font-['Poppins'] mt-1 block">{resource.details}</span>
+              <span className="text-white/30 text-[9px] font-sans mt-1 block">{resource.details}</span>
             </div>
           ))}
         </div>

@@ -4,7 +4,10 @@ import dashboardScreenshot from '../../assets/images/for_welcom.png';
 const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => { setIsVisible(true); }, []);
+  useEffect(() => { 
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const FeatureIcon = ({ type, color, size = "w-6 h-6" }) => {
     switch(type) {
@@ -71,8 +74,8 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
           style={{ minHeight: '1.2em', contain: 'layout' }}
         >
           <h1
-            className={`font-black tracking-tight leading-[1.05] transition-all duration-1000 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-            style={{ fontSynthesis: 'none', textRendering: 'optimizeLegibility', textWrap: 'balance' }}
+            className={`font-black tracking-tight leading-[1.15] transition-all duration-1000 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ fontSynthesis: 'none', textRendering: 'optimizeLegibility' }}
           >
             <span
               className="block text-white"
@@ -141,7 +144,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
             }}
           >
             {/* Browser chrome */}
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0d1117] border-b border-white/[0.06]">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-black border-b border-white/[0.06]">
               <div className="flex gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
                 <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
@@ -170,7 +173,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
             />
 
             {/* Status bar */}
-            <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117] border-t border-white/[0.06]">
+            <div className="flex items-center justify-between px-4 py-2 bg-black border-t border-white/[0.06]">
               <div className="flex items-center gap-4">
                 {statusPills.map((pill, i) => (
                   <div key={i} className="flex items-center gap-1.5">
@@ -205,7 +208,7 @@ const HomeSection = forwardRef(({ onRegisterClick, onServicesClick }, ref) => {
               className={`group transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
               style={{ transitionDelay: `${600 + i * 100}ms` }}
             >
-              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#050505] rounded-2xl p-5 h-full transition-all duration-500 hover:scale-105 hover:shadow-2xl border border-white/10 hover:border-[#00E5FF]/30">
+              <div className="bg-black rounded-2xl p-5 h-full transition-all duration-500 hover:scale-105 hover:shadow-2xl border border-white/10 hover:border-[#00E5FF]/30">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-500 group-hover:scale-110"
                   style={{ background: `linear-gradient(135deg, ${feature.color}20, ${feature.color}05)`, border: `1px solid ${feature.color}30` }}>
                   <FeatureIcon type={feature.iconType} color={feature.color} size="w-6 h-6" />

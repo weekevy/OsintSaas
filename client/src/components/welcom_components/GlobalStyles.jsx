@@ -1,8 +1,6 @@
 const GlobalStyles = () => {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap&font-display=swap');
-
       :root {
         --accent: #00E5FF;
         --accent-secondary: #007AFF;
@@ -62,6 +60,10 @@ const GlobalStyles = () => {
       }
 
       /* Base Styles */
+      html {
+        scroll-behavior: smooth;
+      }
+      
       body {
         font-family: 'Inter', sans-serif;
         background-color: var(--bg-black);
@@ -72,6 +74,7 @@ const GlobalStyles = () => {
       }
 
       section {
+        scroll-margin-top: 120px;
         content-visibility: auto;
         contain-intrinsic-size: 800px;
       }

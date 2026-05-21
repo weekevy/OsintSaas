@@ -61,7 +61,7 @@ export async function GET(request) {
         phone: user.phone,
         location: user.location,
         website: user.website,
-        social: user.social ? JSON.parse(user.social) : {},
+        social: user.social ? (typeof user.social === 'string' ? JSON.parse(user.social) : user.social) : {},
         createdAt: user.created_at,
         stats: stats[0]
       }
@@ -87,7 +87,6 @@ export async function PUT(request) {
       );
     }
 
-
     const decoded = verifyToken(token);
     if (!decoded) {
       return NextResponse.json(
@@ -99,27 +98,43 @@ export async function PUT(request) {
     const { 
       firstName, 
       lastName, 
+      bio,
       title, 
       phone, 
       location, 
+      website,
+      social
     } = await request.json();
 
-    // Update user profile
+    // Update user profile - strictly using decoded.id from token to prevent IDOR
     await db.execute(
       `UPDATE users SET 
         first_name = ?,
         last_name = ?,
+        bio = ?,
         title = ?,
         phone = ?,
-        location = ?
+        location = ?,
+        website = ?,
+        social = ?
        WHERE id = ?`,
-      [firstName || null, lastName || null, title || null, phone || null, location || null, decoded.id]
+      [
+        firstName || null, 
+        lastName || null, 
+        bio || null,
+        title || null, 
+        phone || null, 
+        location || null, 
+        website || null,
+        social ? JSON.stringify(social) : null,
+        decoded.id
+      ]
     );
 
     // Get updated user
     const [users] = await db.execute(
-      `SELECT id, email, first_name, last_name, title, phone, 
-              location, created_at
+      `SELECT id, email, first_name, last_name, bio, title, phone, 
+              location, website, social, created_at
        FROM users WHERE id = ?`,
       [decoded.id]
     );
@@ -133,9 +148,12 @@ export async function PUT(request) {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
+        bio: user.bio,
         title: user.title,
         phone: user.phone,
         location: user.location,
+        website: user.website,
+        social: user.social ? (typeof user.social === 'string' ? JSON.parse(user.social) : user.social) : {},
         createdAt: user.created_at
       }
     });

@@ -59,7 +59,7 @@ export async function GET(request, { params }) {
 
     // Fetch team projects
     const [projects] = await db.execute(
-      `SELECT p.id, p.name, p.description, p.icon, p.priority, p.status, p.created_at, u.email as owner_email
+      `SELECT p.id, p.name, p.description, p.icon, p.priority, p.status, p.created_at, p.shared_at, u.email as owner_email, u.first_name, u.last_name
        FROM projects p
        JOIN users u ON p.user_id = u.id
        WHERE p.team_id = ?`,

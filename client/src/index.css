@@ -1,11 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
-/* In your global CSS file */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
    --font-rubik: "Rubik", sans-serif;
-   --font-sans: "Poppins", "Inter", sans-serif;
+   --font-sans: "Inter", "Plus Jakarta Sans", "Poppins", sans-serif;
 }
 
 /* ===== Phase 1: Visual Depth (Lightweight) ===== */
@@ -52,7 +49,7 @@
 /* Dashboard page — solid background (no smoky / cloudy gradients) */
 .dashboard-ambient {
   position: relative;
-  background-color: #050608;
+  background-color: #000000;
 }
 
 .glass-reflective {

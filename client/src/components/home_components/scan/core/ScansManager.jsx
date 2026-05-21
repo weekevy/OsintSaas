@@ -58,7 +58,7 @@ const InvestigationPopup = ({ isOpen, onClose, scan }) => {
 
   return (
     <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden shadow-2xl shadow-black/60" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-2xl max-h-[90vh] border border-white/10 rounded-2xl bg-black overflow-hidden shadow-2xl shadow-black/60" onClick={(e) => e.stopPropagation()}>
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00E5FF]/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
 
@@ -196,7 +196,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = fal
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80" onClick={onClose}>
       <div
-        className="relative w-full max-w-sm sm:max-w-md border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden shadow-2xl shadow-black/60"
+        className="relative w-full max-w-sm sm:max-w-md border border-white/10 rounded-2xl bg-black overflow-hidden shadow-2xl shadow-black/60"
         onClick={e => e.stopPropagation()}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
@@ -259,7 +259,7 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl sm:max-w-4xl max-h-[92vh] border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden my-4 sm:my-8 shadow-2xl shadow-black/60"
+        className="relative w-full max-w-2xl sm:max-w-4xl max-h-[92vh] border border-white/10 rounded-2xl bg-black overflow-hidden my-4 sm:my-8 shadow-2xl shadow-black/60"
         onClick={e => e.stopPropagation()}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
@@ -398,16 +398,22 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
     try { localStorage.setItem(SCAN_STATES_KEY, JSON.stringify(scanStatuses)); } catch {}
   }, [scanStatuses]);
 
-  // Stagger each card's fade-in when the list first appears
+  // Stagger each card's fade-in when the list first appears or updates
   useEffect(() => {
-    if (!runningScans || runningScans.length === 0) return;
+    if (!runningScans || runningScans.length === 0) {
+      setVisibleCards(new Set());
+      return;
+    }
+    
     runningScans.forEach((scan, i) => {
-      const t = setTimeout(() => {
-        setVisibleCards(prev => new Set([...prev, scan.id]));
-      }, i * 70);
-      return () => clearTimeout(t);
+      if (!visibleCards.has(scan.id)) {
+        const t = setTimeout(() => {
+          setVisibleCards(prev => new Set([...prev, scan.id]));
+        }, i * 35); // Snappier stagger (35ms)
+        return () => clearTimeout(t);
+      }
     });
-  }, []);   // intentionally run only once on mount
+  }, [runningScans]);
 
   if (!runningScans || runningScans.length === 0) return null;
 
@@ -497,7 +503,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
 
   const handleRemoveClick = (scan, e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, scan }); };
   const handleOverviewClick = (scan, e) => { e.stopPropagation(); setProgressModal({ isOpen: true, scan }); };
-  const handleInvestigationClick = (scan, e) => { e.stopPropagation(); setInvestigationModal({ isOpen: true, scan }); };
+  const handleInvestigationClick = (scan, e) => { e.stopPropagation(); setInvestigationModal({ isOpen: false, scan: null }); setTimeout(() => setInvestigationModal({ isOpen: true, scan }), 10); };
   const handleEditClick = (scan, e) => { e?.stopPropagation(); onEditScan(scan); };
 
   const handleConfirmRemove = async () => {
@@ -549,9 +555,6 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
           const module = { color: scan.moduleColor, icon: scan.moduleIcon, textColor: scan.moduleTextColor };
           const s = getScanState(scan.id);
           
-          // ── FIX: Status Priority Logic ──
-          // If the prop says 'pending'/'queued' but local state says 'running', 
-          // we prefer 'running' (optimistic update).
           let currentStatus = scan.status;
           if ((currentStatus === 'pending' || currentStatus === 'queued') && s.status === 'running') {
             currentStatus = 'running';
@@ -565,19 +568,16 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
           const isCompleted = currentStatus === 'completed';
           const isFailed = currentStatus === 'failed';
           
-          // Use live progress from scan object if available
           const progress = isCompleted ? 100 : (scan.progress !== undefined ? scan.progress : (s.progress || 0));
           const isVisible = visibleCards.has(scan.id);
 
           return (
             <div
               key={scan.id}
-              className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
-              style={{
-                opacity: isVisible ? 1 : 0,
-                transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
-                transition: 'opacity 320ms ease, transform 320ms ease',
-              }}
+              className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-all duration-300 bg-black overflow-hidden ${
+                isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >
               {/* Atmospheric inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.04] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
@@ -778,14 +778,20 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
 
   // Stagger history cards in on mount
   useEffect(() => {
-    if (!scanHistory || scanHistory.length === 0) return;
-    scanHistory.slice(0, 3).forEach((scan, i) => {
-      const t = setTimeout(() => {
-        setVisibleCards(prev => new Set([...prev, scan.id]));
-      }, i * 80);
-      return () => clearTimeout(t);
+    if (!scanHistory || scanHistory.length === 0) {
+      setVisibleCards(new Set());
+      return;
+    }
+    
+    scanHistory.slice(0, 5).forEach((scan, i) => {
+      if (!visibleCards.has(scan.id)) {
+        const t = setTimeout(() => {
+          setVisibleCards(prev => new Set([...prev, scan.id]));
+        }, i * 30); // Ultra-snappy stagger (30ms)
+        return () => clearTimeout(t);
+      }
     });
-  }, []);
+  }, [scanHistory]);
 
   if (!scanHistory || scanHistory.length === 0) return null;
 
@@ -827,12 +833,10 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
             return (
               <div
                 key={scan.id}
-                className="relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-colors duration-200 bg-[#0a0a0a] overflow-hidden"
-                style={{
-                  opacity: isVisible ? 1 : 0,
-                  transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
-                  transition: 'opacity 320ms ease, transform 320ms ease',
-                }}
+                className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-all duration-300 bg-black overflow-hidden ${
+                  isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
+                }`}
+                style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
                 <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-gradient-to-b from-[#00E5FF]/40 to-[#2DD4BF]/40 rounded-full" />
@@ -916,7 +920,7 @@ export const ScheduledScans = ({ scanHistory, runningScans }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 font-sans">
       <div className="lg:col-span-2">
-        <div className="relative border border-white/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center bg-[#0a0a0a] overflow-hidden">
+        <div className="relative border border-white/10 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center bg-black overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
           <div
             className="absolute inset-0 opacity-[0.025]"
@@ -945,7 +949,7 @@ export const ScheduledScans = ({ scanHistory, runningScans }) => {
         </div>
       </div>
 
-      <div className="relative border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 bg-[#0a0a0a] overflow-hidden">
+      <div className="relative border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 bg-black overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-transparent pointer-events-none" />
         <div
           className="absolute inset-0 opacity-[0.02]"

@@ -43,9 +43,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Only the project owner can share it' }, { status: 403 });
     }
 
-    // Update project with team_id
+    // Update project with team_id and shared_at
     await db.execute(
-      'UPDATE projects SET team_id = ? WHERE id = ?',
+      'UPDATE projects SET team_id = ?, shared_at = NOW() WHERE id = ?',
       [teamId, projectId]
     );
 

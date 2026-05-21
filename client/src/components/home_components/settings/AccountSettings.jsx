@@ -95,7 +95,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-4xl rounded-2xl bg-[#0a0a0a] overflow-hidden border border-white/10 shadow-2xl"
+        className="relative w-full max-w-4xl rounded-2xl bg-black overflow-hidden border border-white/10 shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/5">
@@ -107,8 +107,8 @@ const AccountSettings = ({ isOpen, onClose }) => {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white font-['Poppins']">Account Settings</h2>
-              <p className="text-white/40 text-xs font-['Poppins']">Manage your profile and preferences</p>
+              <h2 className="text-xl font-bold text-white font-sans">Account Settings</h2>
+              <p className="text-white/40 text-xs font-sans">Manage your profile and preferences</p>
             </div>
           </div>
           <button
@@ -127,7 +127,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-2 rounded-lg font-['Poppins'] font-semibold transition-colors duration-150 flex items-center justify-center gap-2 text-sm
+              className={`flex-1 px-4 py-2 rounded-lg font-sans font-semibold transition-colors duration-150 flex items-center justify-center gap-2 text-sm
                 ${activeTab === tab.id 
                   ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
                   : 'text-white/40 hover:text-white hover:bg-white/5'

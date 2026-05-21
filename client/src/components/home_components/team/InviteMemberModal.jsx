@@ -84,7 +84,7 @@ const InviteMemberModal = ({ isOpen, onClose, teamId, onMemberAdded }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Team Member" size="md">
-      <div className="space-y-6 font-['Poppins']">
+      <div className="space-y-6 font-sans">
         {/* Tab Selection */}
         <div className="flex p-1 bg-white/5 rounded-xl border border-white/10">
           <button

@@ -47,7 +47,7 @@ const TeamSettings = ({ team, onUpdate }) => {
   };
 
   return (
-    <div className="space-y-6 font-['Poppins']">
+    <div className="space-y-6 font-sans">
       {error && <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-xs">{error}</div>}
       {success && <div className="p-3 bg-[#00E5FF]/10 border border-[#00E5FF]/30 rounded-xl text-[#00E5FF] text-xs">{success}</div>}
 
@@ -86,9 +86,9 @@ const TeamSettings = ({ team, onUpdate }) => {
                 onChange={(e) => setVisibility(e.target.value)}
                 className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors"
               >
-                <option value="private" className="bg-[#0a0a0a]">Private</option>
-                <option value="public" className="bg-[#0a0a0a]">Public</option>
-                <option value="hidden" className="bg-[#0a0a0a]">Hidden</option>
+                <option value="private" className="bg-black">Private</option>
+                <option value="public" className="bg-black">Public</option>
+                <option value="hidden" className="bg-black">Hidden</option>
               </select>
             </div>
             <div className="p-4 rounded-xl border border-white/10 bg-white/5">

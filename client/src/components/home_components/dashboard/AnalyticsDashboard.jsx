@@ -23,11 +23,11 @@ const AnalyticsDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen font-['Poppins'] text-white bg-black">
+    <div className="min-h-screen font-sans text-white bg-black">
       <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-8 pb-12 md:pb-10">
         
         {/* Header */}
-        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] mb-6 md:mb-8">
+        <div className="rounded-2xl border border-white/10 bg-black mb-6 md:mb-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 md:p-8">
             <div>
               <div className="flex items-center gap-4 mb-2">
@@ -36,11 +36,11 @@ const AnalyticsDashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h1 className="font-['Poppins'] text-3xl md:text-4xl font-bold text-white">
+                <h1 className="font-sans text-3xl md:text-4xl font-bold text-white">
                   Analytics
                 </h1>
               </div>
-              <p className="text-base font-['Poppins'] text-white/40 ml-[4.5rem]">
+              <p className="text-base font-sans text-white/40 ml-[4.5rem]">
                 Insights and metrics about your OSINT operations
               </p>
             </div>
@@ -51,7 +51,7 @@ const AnalyticsDashboard = () => {
                 <button
                   key={range.id}
                   onClick={() => setTimeRange(range.id)}
-                  className={`px-5 py-2 rounded-lg text-sm font-['Poppins'] font-semibold transition-colors duration-150
+                  className={`px-5 py-2 rounded-lg text-sm font-sans font-semibold transition-colors duration-150
                     ${timeRange === range.id 
                       ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
                       : 'text-white/40 hover:text-white'
@@ -70,13 +70,13 @@ const AnalyticsDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-1 mb-8">
+        <div className="rounded-xl border border-white/10 bg-black p-1 mb-8">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 sm:flex-none px-8 py-3 text-sm md:text-base font-['Poppins'] font-bold rounded-lg transition-colors duration-150 whitespace-nowrap
+                className={`flex-1 sm:flex-none px-8 py-3 text-sm md:text-base font-sans font-bold rounded-lg transition-colors duration-150 whitespace-nowrap
                   ${activeTab === tab.id 
                     ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
                     : 'text-white/40 hover:text-white hover:bg-white/5'
@@ -91,19 +91,19 @@ const AnalyticsDashboard = () => {
         {/* Content Sections */}
         <div className="mt-8">
           {activeTab === 'overview' && (
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6">
+            <div className="rounded-2xl border border-white/10 bg-black p-6">
               <ThreatTrends timeRange={timeRange} />
             </div>
           )}
 
           {activeTab === 'threats' && (
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6">
+            <div className="rounded-2xl border border-white/10 bg-black p-6">
               <ThreatTrends timeRange={timeRange} detailed />
             </div>
           )}
 
           {activeTab === 'performance' && (
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6">
+            <div className="rounded-2xl border border-white/10 bg-black p-6">
               <PerformanceMetrics timeRange={timeRange} />
             </div>
           )}

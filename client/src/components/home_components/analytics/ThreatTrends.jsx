@@ -48,10 +48,10 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
 
   if (!detailed) {
     return (
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-4">
+      <div className="rounded-xl border border-white/10 bg-black p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white font-['Poppins'] text-xs font-bold">Threat Trends</h3>
-          <select className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white/60 text-[9px] font-['Poppins']">
+          <h3 className="text-white font-sans text-xs font-bold">Threat Trends</h3>
+          <select className="px-2 py-1 rounded bg-white/5 border border-white/10 text-white/60 text-[9px] font-sans">
             {periods.map(p => (
               <option key={p.id} value={p.id}>{p.label}</option>
             ))}
@@ -83,19 +83,19 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-center">
-            <div className="text-white/40 text-[8px] font-['Poppins'] font-semibold">Critical</div>
-            <div className="text-[#f87171] text-lg font-bold font-['Poppins']">85</div>
-            <div className="text-[#2DD4BF] text-[7px] font-['Poppins'] font-semibold">+12%</div>
+            <div className="text-white/40 text-[8px] font-sans font-semibold">Critical</div>
+            <div className="text-[#f87171] text-lg font-bold font-sans">85</div>
+            <div className="text-[#2DD4BF] text-[7px] font-sans font-semibold">+12%</div>
           </div>
           <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-center">
-            <div className="text-white/40 text-[8px] font-['Poppins'] font-semibold">High</div>
-            <div className="text-[#f97316] text-lg font-bold font-['Poppins']">108</div>
-            <div className="text-[#2DD4BF] text-[7px] font-['Poppins'] font-semibold">+8%</div>
+            <div className="text-white/40 text-[8px] font-sans font-semibold">High</div>
+            <div className="text-[#f97316] text-lg font-bold font-sans">108</div>
+            <div className="text-[#2DD4BF] text-[7px] font-sans font-semibold">+8%</div>
           </div>
           <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-center">
-            <div className="text-white/40 text-[8px] font-['Poppins'] font-semibold">Medium</div>
-            <div className="text-[#fbbf24] text-lg font-bold font-['Poppins']">168</div>
-            <div className="text-[#f87171] text-[7px] font-['Poppins'] font-semibold">-3%</div>
+            <div className="text-white/40 text-[8px] font-sans font-semibold">Medium</div>
+            <div className="text-[#fbbf24] text-lg font-bold font-sans">168</div>
+            <div className="text-[#f87171] text-[7px] font-sans font-semibold">-3%</div>
           </div>
         </div>
       </div>
@@ -103,12 +103,12 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
   }
 
   return (
-    <div className="space-y-5 font-['Poppins']">
+    <div className="space-y-5 font-sans">
       {/* Chart Controls */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
+      <div className="rounded-xl border border-white/10 bg-black p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-white font-['Poppins'] text-sm font-bold">Threat Intelligence Trends</h3>
+            <h3 className="text-white font-sans text-sm font-bold">Threat Intelligence Trends</h3>
             <p className="text-white/30 text-[10px] mt-0.5">Analysis of threat patterns over time</p>
           </div>
           <div className="flex gap-1">
@@ -116,7 +116,7 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
               <button 
                 key={type} 
                 onClick={() => setChartType(type.toLowerCase())} 
-                className={`px-3 py-1 rounded-lg text-[9px] font-['Poppins'] font-semibold transition-colors duration-150 ${chartType === type.toLowerCase() ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' : 'text-white/40 hover:text-white'}`}
+                className={`px-3 py-1 rounded-lg text-[9px] font-sans font-semibold transition-colors duration-150 ${chartType === type.toLowerCase() ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' : 'text-white/40 hover:text-white'}`}
               >
                 {type}
               </button>
@@ -156,7 +156,7 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
 
             {/* X-axis labels */}
             {threatData.labels.slice(0, 8).map((label, i) => (
-              <text key={i} x={35 + i * 90} y="155" textAnchor="middle" className="text-[8px] fill-white/30 font-['Poppins']">{label}</text>
+              <text key={i} x={35 + i * 90} y="155" textAnchor="middle" className="text-[8px] fill-white/30 font-sans">{label}</text>
             ))}
           </svg>
         </div>
@@ -165,22 +165,22 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
         <div className="flex flex-wrap items-center justify-center gap-4">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#f87171]" />
-            <span className="text-white/50 text-[9px] font-['Poppins']">Critical</span>
+            <span className="text-white/50 text-[9px] font-sans">Critical</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#f97316]" />
-            <span className="text-white/50 text-[9px] font-['Poppins']">High</span>
+            <span className="text-white/50 text-[9px] font-sans">High</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#fbbf24]" />
-            <span className="text-white/50 text-[9px] font-['Poppins']">Medium</span>
+            <span className="text-white/50 text-[9px] font-sans">Medium</span>
           </div>
         </div>
       </div>
 
       {/* Threat Type Breakdown */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
-        <h3 className="text-white font-['Poppins'] text-sm font-bold mb-4">Threat Type Breakdown</h3>
+      <div className="rounded-xl border border-white/10 bg-black p-5">
+        <h3 className="text-white font-sans text-sm font-bold mb-4">Threat Type Breakdown</h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {threatTypes.map((threat, i) => (
@@ -189,10 +189,10 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
                 {getThreatIcon(threat.icon)}
               </div>
               <div className="flex-1">
-                <div className="text-white text-[10px] font-['Poppins'] font-semibold">{threat.name}</div>
-                <div className="text-lg font-bold font-['Poppins']" style={{ color: threat.color }}>{threat.count.toLocaleString()}</div>
+                <div className="text-white text-[10px] font-sans font-semibold">{threat.name}</div>
+                <div className="text-lg font-bold font-sans" style={{ color: threat.color }}>{threat.count.toLocaleString()}</div>
               </div>
-              <div className={`text-[11px] font-['Poppins'] font-semibold ${threat.change.startsWith('+') ? 'text-[#f87171]' : 'text-[#2DD4BF]'}`}>
+              <div className={`text-[11px] font-sans font-semibold ${threat.change.startsWith('+') ? 'text-[#f87171]' : 'text-[#2DD4BF]'}`}>
                 {threat.change}
               </div>
             </div>
@@ -201,19 +201,19 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
       </div>
 
       {/* Top IOCs */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
-        <h3 className="text-white font-['Poppins'] text-sm font-bold mb-4">Top Indicators of Compromise</h3>
+      <div className="rounded-xl border border-white/10 bg-black p-5">
+        <h3 className="text-white font-sans text-sm font-bold mb-4">Top Indicators of Compromise</h3>
         
         <div className="overflow-x-auto">
           <table className="w-full text-[10px]">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">IOC</th>
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Type</th>
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Level</th>
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold hidden md:table-cell">First Seen</th>
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold hidden md:table-cell">Last Seen</th>
-                <th className="text-left py-2 px-3 text-white/40 font-['Poppins'] font-semibold">Count</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold">IOC</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold">Type</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold">Level</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold hidden md:table-cell">First Seen</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold hidden md:table-cell">Last Seen</th>
+                <th className="text-left py-2 px-3 text-white/40 font-sans font-semibold">Count</th>
               </tr>
             </thead>
             <tbody>
@@ -227,13 +227,13 @@ const ThreatTrends = ({ timeRange, detailed = false }) => {
                   <td className="py-2 px-3"><code className="text-[#00E5FF] text-[9px] font-mono">{ioc.ioc}</code></td>
                   <td className="py-2 px-3 text-white/60 text-[9px]">{ioc.type}</td>
                   <td className="py-2 px-3">
-                    <span className="px-1.5 py-0.5 rounded text-[8px] font-['Poppins'] font-semibold" style={{ color: ioc.levelColor, backgroundColor: `${ioc.levelColor}10`, border: `1px solid ${ioc.levelColor}30` }}>
+                    <span className="px-1.5 py-0.5 rounded text-[8px] font-sans font-semibold" style={{ color: ioc.levelColor, backgroundColor: `${ioc.levelColor}10`, border: `1px solid ${ioc.levelColor}30` }}>
                       {ioc.level}
                     </span>
                   </td>
                   <td className="py-2 px-3 text-white/40 text-[9px] hidden md:table-cell">{ioc.first}</td>
                   <td className="py-2 px-3 text-white/40 text-[9px] hidden md:table-cell">{ioc.last}</td>
-                  <td className="py-2 px-3 text-white font-['Poppins'] font-bold text-[11px]">{ioc.count}</td>
+                  <td className="py-2 px-3 text-white font-sans font-bold text-[11px]">{ioc.count}</td>
                 </tr>
               ))}
             </tbody>

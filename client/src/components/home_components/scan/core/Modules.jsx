@@ -34,7 +34,7 @@ const ModuleCardSkeleton = ({ index }) => {
 
   return (
     <div 
-      className={`relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-700 ease-out ${
+      className={`relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden transition-all duration-700 ease-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
       style={{ minHeight: 220 }}
@@ -104,7 +104,7 @@ const PlatformCardSkeleton = ({ index }) => {
 
   return (
     <div 
-      className={`border border-white/10 rounded-xl p-4 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
+      className={`border border-white/10 rounded-xl p-4 bg-black overflow-hidden transition-all duration-500 ease-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
       style={{ minHeight: 100 }}
@@ -503,9 +503,12 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Immediate loading
-    setIsLoading(false);
-    setShowContent(true);
+    // Small delay before showing content for a smoother feel
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setShowContent(true);
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -518,10 +521,13 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
         ].map(({ label, value, color, sub }, idx) => (
           <div 
             key={label} 
-            className={`relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden transition-all duration-500 ease-out ${
-              !isLoading && showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            className={`relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden transition-all duration-300 ${
+              showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
             }`}
-            style={{ transitionDelay: `${idx * 100}ms` }}
+            style={{ 
+              transitionDelay: `${idx * 40}ms`,
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 to-transparent pointer-events-none"/>
             <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00E5FF]/30"/>
@@ -534,8 +540,8 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
       {/* ── Investigation Modules ── */}
       <div>
-        <div className={`flex items-center gap-3 mb-5 transition-all duration-500 ease-out ${
-          !isLoading && showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+        <div className={`flex items-center gap-3 mb-5 transition-all duration-700 ease-out ${
+          showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
         }`}>
           <div className="w-0.5 h-7 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF]"/>
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.14em]">Investigation Modules</h3>
@@ -559,11 +565,11 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     onClick={() => !isUnderConstruction && onStartScan(module, selectedTarget)}
                     onMouseEnter={() => setHoveredId(module.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-500 ease-out ${
-                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-700 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.97]'
                     } ${isUnderConstruction ? 'cursor-default' : ''}`}
                     style={{ 
-                      transitionDelay: `${idx * 80}ms`,
+                      transitionDelay: `${300 + idx * 80}ms`,
                       background: isHovered
                         ? `linear-gradient(135deg, ${meta.accentBg} 0%, #0a0a0a 60%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, #0a0a0a 60%)',
@@ -725,11 +731,11 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     onClick={() => !isUnderConstruction && onStartScan(platform, selectedTarget)}
                     onMouseEnter={() => setHoveredId(platform.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-500 ease-out ${
-                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-700 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-[0.98]'
                     } ${isUnderConstruction ? 'cursor-default' : ''}`}
                     style={{ 
-                      transitionDelay: `${400 + idx * 60}ms`,
+                      transitionDelay: `${800 + idx * 60}ms`,
                       background: isH
                         ? `linear-gradient(135deg, ${pm.bg} 0%, #0a0a0a 70%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, #0a0a0a 70%)',
@@ -824,7 +830,7 @@ export const CustomScanConfig = ({
     <div className="grid lg:grid-cols-3 gap-6 font-sans">
       <div className="lg:col-span-2 space-y-6">
         {savedConfigs.length > 0 && (
-          <div className="border border-white/10 rounded-2xl p-5 bg-[#0a0a0a]">
+          <div className="border border-white/10 rounded-2xl p-5 bg-black">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.12em] flex items-center gap-2">
                 <svg className="w-3.5 h-3.5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -846,7 +852,7 @@ export const CustomScanConfig = ({
           </div>
         )}
 
-        <div className="relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden">
+        <div className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden">
           <span className="absolute top-3 left-3 w-3 h-3 border-t border-l border-[#00E5FF]/20"/>
           <span className="absolute top-3 right-3 w-3 h-3 border-t border-r border-[#00E5FF]/20"/>
           <div className="flex items-center justify-between mb-5">
@@ -871,7 +877,7 @@ export const CustomScanConfig = ({
           </div>
         </div>
 
-        <div className="relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden">
+        <div className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden">
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.12em] mb-5 flex items-center gap-2">
             <svg className="w-3.5 h-3.5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
@@ -902,7 +908,7 @@ export const CustomScanConfig = ({
       </div>
 
       <div className="space-y-5">
-        <div className="relative border border-white/10 rounded-2xl p-5 bg-[#0a0a0a] overflow-hidden">
+        <div className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden">
           <span className="absolute top-3 left-3 w-4 h-4 border-t border-l border-[#00E5FF]/25"/>
           <span className="absolute top-3 right-3 w-4 h-4 border-t border-r border-[#00E5FF]/25"/>
           <span className="absolute bottom-3 left-3 w-4 h-4 border-b border-l border-[#00E5FF]/25"/>
@@ -959,7 +965,7 @@ export const CustomScanConfig = ({
           </div>
         </div>
 
-        <div className="border border-white/10 rounded-2xl p-5 bg-[#0a0a0a]">
+        <div className="border border-white/10 rounded-2xl p-5 bg-black">
           <h3 className="text-white text-[12px] font-bold uppercase tracking-[0.14em] mb-4">Recent Custom Scans</h3>
           <div className="space-y-2">
             {[1, 2, 3].map((_, i) => (
@@ -977,7 +983,7 @@ export const CustomScanConfig = ({
 
       {showSaveDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div className="relative border border-white/10 rounded-2xl p-6 max-w-md w-full bg-[#0a0a0a]">
+          <div className="relative border border-white/10 rounded-2xl p-6 max-w-md w-full bg-black">
             <span className="absolute top-3 left-3 w-4 h-4 border-t border-l border-[#00E5FF]/30"/>
             <span className="absolute top-3 right-3 w-4 h-4 border-t border-r border-[#00E5FF]/30"/>
             <span className="absolute bottom-3 left-3 w-4 h-4 border-b border-l border-[#00E5FF]/30"/>

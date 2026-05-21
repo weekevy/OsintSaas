@@ -43,18 +43,18 @@ const APIUsageStats = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-['Poppins']">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-sans">
       {statItems.map((item, idx) => (
         <div
           key={idx}
-          className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5 transition-colors duration-150"
+          className="rounded-xl border border-white/10 bg-black p-5 transition-colors duration-150"
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white/40 text-[11px] font-['Poppins'] font-semibold mb-1">
+              <div className="text-white/40 text-[11px] font-sans font-semibold mb-1">
                 {item.label}
               </div>
-              <div className={`text-2xl md:text-3xl font-bold font-['Poppins'] ${item.color}`}>
+              <div className={`text-2xl md:text-3xl font-bold font-sans ${item.color}`}>
                 {item.value}
               </div>
             </div>

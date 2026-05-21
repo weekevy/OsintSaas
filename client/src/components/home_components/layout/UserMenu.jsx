@@ -57,7 +57,7 @@ const UserMenu = ({ onLogout }) => {
   const fullName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : displayName;
 
   return (
-    <div className="relative z-[9999] font-['Poppins']" ref={menuRef}>
+    <div className="relative z-[9999] font-sans" ref={menuRef}>
       {/* User Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -94,7 +94,7 @@ const UserMenu = ({ onLogout }) => {
           
           {/* Mobile Menu - 90% width, centered, glassmorphism */}
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[10002] w-[90%] max-w-sm md:absolute md:left-auto md:right-0 md:top-full md:translate-x-0 md:translate-y-0 md:w-72">
-            <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl overflow-hidden md:bg-[#0a0a0a] md:backdrop-blur-none">
+            <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl overflow-hidden md:bg-black md:backdrop-blur-none">
               
               {/* User Info Section */}
               <div className="p-5 border-b border-white/10 bg-white/5">

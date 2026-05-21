@@ -51,14 +51,14 @@ const AnalyticsOverview = ({ timeRange }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-['Poppins']">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-sans">
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5 transition-colors duration-150"
+          className="rounded-xl border border-white/10 bg-black p-5 transition-colors duration-150"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="text-white/40 text-[11px] font-['Poppins'] font-semibold">
+            <div className="text-white/40 text-[11px] font-sans font-semibold">
               {stat.label}
             </div>
             <div className="w-9 h-9 rounded-lg border border-[#00E5FF]/30 flex items-center justify-center bg-[#00E5FF]/5">
@@ -66,15 +66,15 @@ const AnalyticsOverview = ({ timeRange }) => {
             </div>
           </div>
           
-          <div className="text-2xl md:text-3xl font-bold font-['Poppins'] text-white mb-2">
+          <div className="text-2xl md:text-3xl font-bold font-sans text-white mb-2">
             {stat.value}
           </div>
           
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-['Poppins'] font-semibold ${stat.trendUp ? 'text-[#2DD4BF]' : 'text-red-500'}`}>
+            <span className={`text-xs font-sans font-semibold ${stat.trendUp ? 'text-[#2DD4BF]' : 'text-red-500'}`}>
               {stat.trend}
             </span>
-            <span className="text-white/30 text-[10px] font-['Poppins']">
+            <span className="text-white/30 text-[10px] font-sans">
               vs last period
             </span>
           </div>

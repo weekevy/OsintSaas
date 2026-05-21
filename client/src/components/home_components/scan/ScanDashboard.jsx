@@ -81,7 +81,7 @@ const getTargetDisplay = (scan, moduleId) => {
 // We match that precisely so there is zero layout shift when data arrives.
 const RunningScansSkeleton = () => (
   <div
-    className="relative border border-white/10 rounded-xl sm:rounded-2xl bg-[#0a0a0a] overflow-hidden"
+    className="relative border border-white/10 rounded-xl sm:rounded-2xl bg-black overflow-hidden"
     style={{ minHeight: 88 }}
   >
     {/* inner glow to match real card feel */}
@@ -113,7 +113,7 @@ const RunningScansSkeleton = () => (
 // ─── Empty State ──────────────────────────────────────────────────────────────
 const EmptyState = () => (
   <div
-    className="relative rounded-xl sm:rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden"
+    className="relative rounded-xl sm:rounded-2xl border border-white/10 bg-black overflow-hidden"
     style={{ minHeight: 88 }}
   >
     {/* Subtle inner atmospheric glow */}
@@ -139,7 +139,7 @@ const EmptyState = () => (
 
 // ─── Main Header ──────────────────────────────────────────────────────────────
 const DashboardHeader = ({ filterLabel, selectedProject, onRefresh, isLoading, isRefreshing, stats, lastUpdated }) => (
-  <header className="relative mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
+  <header className="relative mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-white/10 bg-black overflow-hidden">
     {/* Top edge glow */}
     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/30 to-transparent" />
     {/* Inner atmospheric glow */}
@@ -154,7 +154,7 @@ const DashboardHeader = ({ filterLabel, selectedProject, onRefresh, isLoading, i
               Scan Operations
             </span>
           </div>
-          <h1 className="text-[22px] sm:text-[28px] lg:text-[32px] font-bold tracking-tight text-white leading-none">
+          <h1 className="text-[22px] sm:text-[28px] lg:text-[32px] font-bold tracking-tight text-white leading-tight">
             Scan Dashboard
           </h1>
           <p className="text-white/40 text-[11px] sm:text-[13px] leading-relaxed mt-1.5 sm:mt-2">
@@ -350,7 +350,6 @@ const ScanDashboard = ({
     let intervalId = null;
 
     if (hasActiveScans) {
-      console.log('🔄 Active scans detected, starting auto-refresh...');
       intervalId = setInterval(() => {
         fetchAllScans({ silent: true, useCache: false });
       }, 3000); // 3 seconds
@@ -358,7 +357,6 @@ const ScanDashboard = ({
 
     return () => {
       if (intervalId) {
-        console.log('🛑 Stopping auto-refresh...');
         clearInterval(intervalId);
       }
     };
@@ -563,18 +561,21 @@ const ScanDashboard = ({
           </div>
 
           {/* Content area — fixed structure regardless of state */}
-          <div className="space-y-2 sm:space-y-3">
+          <div className={`space-y-2 sm:space-y-3 transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) ${initialLoadDone ? 'opacity-100' : 'opacity-90'}`}>
             {showSkeleton ? (
-              Array.from({ length: skeletonCount }).map((_, i) => (
-                <RunningScansSkeleton key={i} />
-              ))
+              <div className="space-y-2 sm:space-y-3 animate-in fade-in duration-300">
+                {Array.from({ length: skeletonCount }).map((_, i) => (
+                  <RunningScansSkeleton key={i} />
+                ))}
+              </div>
             ) : showEmpty ? (
-              <EmptyState />
+              <div className="animate-in fade-in zoom-in-95 duration-300">
+                <EmptyState />
+              </div>
             ) : (
-              annotatedRunningScans.map((scan) => (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                 <RunningScans
-                  key={scan.id}
-                  runningScans={[scan]}
+                  runningScans={annotatedRunningScans}
                   onEditScan={handleEditScan}
                   onRemoveScan={handleRemoveScan}
                   onRefresh={() => fetchAllScans({ silent: true, useCache: false })}
@@ -584,7 +585,7 @@ const ScanDashboard = ({
                     )
                   }
                 />
-              ))
+              </div>
             )}
           </div>
         </section>

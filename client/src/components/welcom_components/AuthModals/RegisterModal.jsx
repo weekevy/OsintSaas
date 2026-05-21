@@ -41,9 +41,17 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     const newOtp = [...otpCode];
     newOtp[index] = value.slice(0, 1);
     setOtpCode(newOtp);
+    
+    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`reg-otp-${index + 1}`);
       if (nextInput) nextInput.focus();
+    }
+
+    // Auto-submit if all digits are filled
+    const otpValue = newOtp.join('');
+    if (otpValue.length === 6) {
+      handleOTPSubmit(null, otpValue);
     }
   };
 
@@ -72,19 +80,29 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     setIsLoading(false);
   };
 
-  const handleOTPSubmit = async (e) => {
-    e.preventDefault();
-    const otpValue = otpCode.join('');
+  const handleOTPSubmit = async (e, providedOtp = null) => {
+    if (e) e.preventDefault();
+    const otpValue = providedOtp || otpCode.join('');
     if (otpValue.length !== 6) {
       setOtpError('Enter 6-digit code');
       return;
     }
     setIsLoading(true);
+    // Simulate verification delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     if (otpValue === '000000') {
       onClose();
       finalizeLogin();
     } else {
-      setOtpError('Invalid code. Use 000000 for testing.');
+      setOtpError('Validation failed. Resetting registration...');
+      // After a short delay, go back to register form as requested
+      setTimeout(() => {
+        setShowOTP(false);
+        setOtpCode(['', '', '', '', '', '']);
+        setOtpError('');
+        setError('Email verification failed. Please start over.');
+      }, 1500);
     }
     setIsLoading(false);
   };
@@ -96,53 +114,57 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
         <p className="text-white/40 text-sm font-medium">Join the intelligence network</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Email Identity</label>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">New Email Address</label>
             <input 
               type="email" 
               required 
               value={formData.email} 
               onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
-              placeholder="agent@osintsaas.com" 
+              placeholder="Email"
+              autoComplete="off"
             />
           </div>
           <div>
-            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Nexus Username</label>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Unique Username</label>
             <input 
               type="text" 
               required 
               value={formData.username} 
               onChange={(e) => setFormData({ ...formData, username: e.target.value })} 
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
-              placeholder="operator_7" 
+              placeholder="Username"
+              autoComplete="off"
             />
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Password</label>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Create Password</label>
             <input 
               type="password" 
               required 
               value={formData.password} 
               onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
-              placeholder="••••••••" 
+              placeholder="Password" 
+              autoComplete="new-password"
             />
           </div>
           <div>
-            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Confirm</label>
+            <label className="block text-white/50 text-[10px] font-bold uppercase tracking-widest mb-2">Confirm Password</label>
             <input 
               type="password" 
               required 
               value={formData.confirmPassword} 
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} 
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200" 
-              placeholder="••••••••" 
+              placeholder="Repeat Password" 
+              autoComplete="new-password"
             />
           </div>
         </div>
@@ -219,7 +241,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleOtpKeyDown(index, e)}
-              className="w-12 h-14 text-center text-xl font-black bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-200"
+              className="w-12 h-14 text-center text-xl font-black bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all duration-200 caret-transparent"
               placeholder="•"
             />
           ))}
@@ -239,13 +261,11 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
         
         {otpError && <p className="text-red-400 text-xs font-bold text-center">{otpError}</p>}
         
-        <button 
-          type="submit" 
-          disabled={isLoading} 
-          className="w-full py-3.5 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
-        >
-          {isLoading ? 'Verifying...' : 'Complete Registration'}
-        </button>
+        <div className="h-10 flex items-center justify-center">
+          {isLoading && (
+            <div className="w-6 h-6 border-2 border-[#00E5FF]/30 border-t-[#00E5FF] rounded-full animate-spin" />
+          ) }
+        </div>
 
         <p className="text-center text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
           Demo: Use 000000

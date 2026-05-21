@@ -231,7 +231,7 @@ const RiskCircle = ({
   const progressLabel = spinning ? 'SCANNING' : showScore ? `${activeScore}%` : isPaused ? 'PAUSED' : isQueued ? 'QUEUED' : '—';
 
   return (
-    <div className="relative font-['Poppins']">
+    <div className="relative font-sans">
       <div
         className="relative rounded-2xl overflow-hidden flex flex-col border border-white/[0.08]"
         style={{ background: '#090b0e', minHeight: '562px' }}

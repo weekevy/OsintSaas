@@ -30,7 +30,7 @@ const RateLimits = () => {
   const currentLimits = limits[plan];
 
   return (
-    <div className="space-y-6 font-['Poppins']">
+    <div className="space-y-6 font-sans">
       {/* Plan Selector */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {['free', 'pro', 'enterprise'].map((planType) => (
@@ -40,7 +40,7 @@ const RateLimits = () => {
             className={`p-5 rounded-xl border-2 transition-colors duration-150 text-left
               ${plan === planType
                 ? 'border-[#00E5FF] bg-[#00E5FF]/10'
-                : 'border-white/10 hover:border-white/20 bg-[#0a0a0a]'
+                : 'border-white/10 hover:border-white/20 bg-black'
               }`}
           >
             {plan === planType && (
@@ -69,8 +69,8 @@ const RateLimits = () => {
       </div>
 
       {/* Current Usage */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-6">
-        <h3 className="text-white font-['Poppins'] text-base font-bold mb-6">Current Usage</h3>
+      <div className="rounded-xl border border-white/10 bg-black p-6">
+        <h3 className="text-white font-sans text-base font-bold mb-6">Current Usage</h3>
         
         <div className="space-y-6">
           <div>
@@ -105,8 +105,8 @@ const RateLimits = () => {
       </div>
 
       {/* Rate Limit Headers */}
-      <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-6">
-        <h3 className="text-white font-['Poppins'] text-base font-bold mb-4">Rate Limit Headers</h3>
+      <div className="rounded-xl border border-white/10 bg-black p-6">
+        <h3 className="text-white font-sans text-base font-bold mb-4">Rate Limit Headers</h3>
         
         <div className="rounded-lg border border-white/10 bg-black/30 p-4 mb-6">
           <pre className="text-white/60 text-xs font-mono overflow-x-auto">
@@ -137,7 +137,7 @@ Retry-After: 45`}
         <div className="rounded-xl border border-[#00E5FF]/30 bg-[#00E5FF]/5 p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h4 className="text-white font-['Poppins'] text-sm font-bold mb-1">Need higher limits?</h4>
+              <h4 className="text-white font-sans text-sm font-bold mb-1">Need higher limits?</h4>
               <p className="text-white/40 text-xs">Upgrade to Pro for 10x more requests and priority support</p>
             </div>
             <button className="px-6 py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs">

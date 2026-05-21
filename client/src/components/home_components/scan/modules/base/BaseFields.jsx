@@ -65,7 +65,7 @@ const getSectionIcon = (iconName, colorClass) => {
 // Input Field - Clean Poppins
 export const InputField = ({ id, label, value, onChange, placeholder, type = 'text', required, help, error }) => (
   <div className="space-y-1.5">
-    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
+    <label className="block font-sans text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
       {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
@@ -73,48 +73,48 @@ export const InputField = ({ id, label, value, onChange, placeholder, type = 'te
       type={type}
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 ${
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-sans text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 ${
         error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       placeholder={placeholder}
     />
-    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
-    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
+    {help && <p className="font-sans text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-sans text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
 // Textarea Field - Clean Poppins
 export const TextareaField = ({ id, label, value, onChange, placeholder, rows = 3, required, help, error }) => (
   <div className="space-y-1.5">
-    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
+    <label className="block font-sans text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
       {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
     <textarea
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 resize-vertical ${
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-sans text-sm placeholder-white/20 focus:outline-none transition-colors duration-150 resize-vertical ${
         error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       placeholder={placeholder}
       rows={rows}
     />
-    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
-    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
+    {help && <p className="font-sans text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-sans text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
 // Select Field - Clean Poppins
 export const SelectField = ({ id, label, value, onChange, options, required, help, error }) => (
   <div className="space-y-1.5">
-    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
+    <label className="block font-sans text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">
       {label}
       {required && <span className="text-[#00E5FF] ml-1">*</span>}
     </label>
     <select
       value={value || ''}
       onChange={(e) => onChange(id, e.target.value)}
-      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-['Poppins'] text-sm focus:outline-none transition-colors duration-150 appearance-none cursor-pointer ${
+      className={`w-full px-4 py-2.5 bg-white/5 border rounded-xl text-white font-sans text-sm focus:outline-none transition-colors duration-150 appearance-none cursor-pointer ${
         error ? 'border-[#f87171]' : 'border-white/10 focus:border-[#00E5FF]/50'
       }`}
       style={{
@@ -124,18 +124,18 @@ export const SelectField = ({ id, label, value, onChange, options, required, hel
         backgroundSize: '14px'
       }}
     >
-      <option value="" className="bg-[#0a0a0a]">Select {label}</option>
-      {options?.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0a]">{opt}</option>)}
+      <option value="" className="bg-black">Select {label}</option>
+      {options?.map(opt => <option key={opt} value={opt} className="bg-black">{opt}</option>)}
     </select>
-    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
-    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
+    {help && <p className="font-sans text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-sans text-[10px] text-[#f87171] mt-1">{error}</p>}
   </div>
 );
 
 // File Upload Field - Clean Poppins
 export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, isDragging, onDragEvents, help, error }) => (
   <div className="space-y-1.5">
-    <label className="block font-['Poppins'] text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">{label}</label>
+    <label className="block font-sans text-[11px] font-semibold text-white/60 uppercase tracking-[0.08em]">{label}</label>
     <div 
       onClick={() => onDragEvents.fileInputRef.current?.click()}
       onDragEnter={onDragEvents.handleDragEnter}
@@ -149,10 +149,10 @@ export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, 
       <svg className="w-8 h-8 mx-auto text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
-      <p className="font-['Poppins'] text-white/50 text-[10px] font-semibold uppercase tracking-[0.1em] mb-1">
+      <p className="font-sans text-white/50 text-[10px] font-semibold uppercase tracking-[0.1em] mb-1">
         {isDragging ? 'DROP FILES HERE' : 'CLICK OR DRAG FILES TO UPLOAD'}
       </p>
-      <p className="font-['Poppins'] text-white/25 text-[8px] uppercase tracking-[0.08em]">
+      <p className="font-sans text-white/25 text-[8px] uppercase tracking-[0.08em]">
         SUPPORTED: JPEG, PNG, GIF, PDF, DOC, TXT, EML, MSG (MAX 10MB)
       </p>
       <input
@@ -163,14 +163,14 @@ export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, 
         className="hidden"
       />
     </div>
-    {help && <p className="font-['Poppins'] text-[10px] text-white/30 mt-1">{help}</p>}
-    {error && <p className="font-['Poppins'] text-[10px] text-[#f87171] mt-1">{error}</p>}
+    {help && <p className="font-sans text-[10px] text-white/30 mt-1">{help}</p>}
+    {error && <p className="font-sans text-[10px] text-[#f87171] mt-1">{error}</p>}
     
     {files.length > 0 && (
       <div className="mt-3 space-y-1 max-h-32 overflow-y-auto custom-scroll">
         {files.map((file, idx) => (
           <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-            <span className="font-['Poppins'] text-white/60 text-[11px] truncate flex-1">{file.name}</span>
+            <span className="font-sans text-white/60 text-[11px] truncate flex-1">{file.name}</span>
             <button onClick={() => onFileRemove(idx)} className="text-[#f87171] hover:text-[#f87171]/80 transition-colors duration-150 text-[12px] ml-2">✕</button>
           </div>
         ))}
@@ -181,14 +181,14 @@ export const FileUploadField = ({ id, label, files, onFileChange, onFileRemove, 
 
 // Section Component - Clean headers
 export const Section = ({ title, description, iconName, iconColor, children }) => (
-  <div className="border border-white/10 rounded-xl overflow-hidden bg-[#0a0a0a] mb-5">
+  <div className="border border-white/10 rounded-xl overflow-hidden bg-black mb-5">
     <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
       <div className="flex items-center gap-2">
         {iconName && getSectionIcon(iconName, iconColor || 'text-[#00E5FF]')}
-        <h3 className="font-['Poppins'] text-[13px] font-bold text-white uppercase tracking-[0.08em]">{title}</h3>
+        <h3 className="font-sans text-[13px] font-bold text-white uppercase tracking-[0.08em]">{title}</h3>
       </div>
       {description && (
-        <p className="font-['Poppins'] text-[10px] text-white/40 mt-1">{description}</p>
+        <p className="font-sans text-[10px] text-white/40 mt-1">{description}</p>
       )}
     </div>
     <div className="p-4 space-y-4">

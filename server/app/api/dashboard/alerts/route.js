@@ -24,9 +24,9 @@ export async function GET(request) {
       JOIN scans s ON f.scan_id = s.id
       JOIN targets t ON s.target_id = t.id
       JOIN projects p ON t.project_id = p.id
-      WHERE p.user_id = ?
+      WHERE (p.user_id = ? OR p.team_id IN (SELECT team_id FROM team_members WHERE user_id = ?))
     `;
-    const params = [decoded.id];
+    const params = [decoded.id, decoded.id];
 
     if (projectId) {
       query += ' AND p.id = ?';

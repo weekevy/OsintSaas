@@ -28,7 +28,7 @@ const TeamCard = ({ team, onClick, onAction }) => {
   return (
     <div 
       onClick={onClick}
-      className="group relative rounded-3xl border border-white/[0.08] bg-[#0a0a0a] p-1 hover:border-[#00E5FF]/20 transition-all duration-300 cursor-pointer overflow-hidden shadow-xl"
+      className="group relative rounded-3xl border border-white/[0.08] bg-black p-1 hover:border-[#00E5FF]/20 transition-all duration-300 cursor-pointer overflow-hidden shadow-xl"
     >
       {/* Delete/Leave Action - "X" Button */}
       <button

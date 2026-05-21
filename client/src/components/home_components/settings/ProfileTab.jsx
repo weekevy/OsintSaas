@@ -76,13 +76,13 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 font-['Poppins'] py-2">
+    <form onSubmit={handleSubmit} className="space-y-6 font-sans py-2">
       <button type="submit" id="save-settings" className="hidden" />
 
       {/* Success/Error Messages */}
       {error && (
         <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
-          <p className="text-red-400 text-xs font-['Poppins'] flex items-center gap-2">
+          <p className="text-red-400 text-xs font-sans flex items-center gap-2">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             {error}
           </p>
@@ -91,7 +91,7 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
 
       {success && (
         <div className="p-3 bg-[#00E5FF]/10 border border-[#00E5FF]/30 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
-          <p className="text-[#00E5FF] text-xs font-['Poppins'] flex items-center gap-2">
+          <p className="text-[#00E5FF] text-xs font-sans flex items-center gap-2">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             {success}
           </p>
@@ -112,7 +112,7 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
           </button>
         </div>
         <div>
-          <h3 className="text-white font-['Poppins'] text-base font-semibold">Identity Profile</h3>
+          <h3 className="text-white font-sans text-base font-semibold">Identity Profile</h3>
           <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Operative Credentials</p>
         </div>
       </div>
@@ -120,38 +120,38 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
       {/* Form Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">First Name</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">First Name</label>
           <input
             type="text"
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="John"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">Last Name</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">Last Name</label>
           <input
             type="text"
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="Doe"
           />
         </div>
 
         <div className="md:col-span-2 space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">Primary Email (Secured)</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">Primary Email (Secured)</label>
           <div className="relative group">
             <input
               type="email"
               name="email"
               value={formData.email}
               disabled
-              className="w-full px-3 py-2 bg-white/[0.02] border border-white/5 rounded-lg text-white/30 text-sm font-['Poppins'] cursor-not-allowed"
+              className="w-full px-3 py-2 bg-white/[0.02] border border-white/5 rounded-lg text-white/30 text-sm font-sans cursor-not-allowed"
               placeholder="john@example.com"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -161,37 +161,37 @@ const ProfileTab = ({ isLoading, setIsLoading }) => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">Professional Title</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">Professional Title</label>
           <input
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="Security Analyst"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">Secure Phone</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">Secure Phone</label>
           <input
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="+1 (555) 000-0000"
           />
         </div>
 
         <div className="md:col-span-2 space-y-1.5">
-          <label className="block text-white/60 text-xs font-['Poppins'] font-semibold ml-1">Operational Base (Location)</label>
+          <label className="block text-white/60 text-xs font-sans font-semibold ml-1">Operational Base (Location)</label>
           <input
             type="text"
             name="location"
             value={formData.location}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             placeholder="New York, NY"
           />
         </div>

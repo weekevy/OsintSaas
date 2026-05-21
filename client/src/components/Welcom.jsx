@@ -29,26 +29,39 @@ const Welcome = () => {
   const servicesRef = useRef(null);
   const faqRef = useRef(null);
 
-  useEffect(() => {
-    document.body.style.backgroundColor = '#000000';
-    setHasAnimated(true);
-  }, []);
-
-  const scrollToSection = (sectionRef, path) => {
-    navigate(path, { replace: true });
-    setTimeout(() => {
-      if (sectionRef?.current) {
-        sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 50);
-  };
-
   const navItems = [
     { name: "Start", path: "/", ref: homeRef },
     { name: "Vision", path: "/about", ref: aboutRef },
     { name: "Solutions", path: "/services", ref: servicesRef },
     { name: "Answers", path: "/faq", ref: faqRef }
   ];
+
+  useEffect(() => {
+    document.body.style.backgroundColor = '#000000';
+    setHasAnimated(true);
+
+    // Handle initial scroll if path is not root
+    if (location.pathname !== '/') {
+      const item = navItems.find(i => i.path === location.pathname);
+      if (item) {
+        setTimeout(() => {
+          item.ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
+      }
+    }
+  }, []);
+
+  const scrollToSection = (sectionRef, path) => {
+    if (location.pathname !== path) {
+      navigate(path, { replace: true });
+    }
+    
+    setTimeout(() => {
+      if (sectionRef?.current) {
+        sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
 
   // FIXED: Correctly named functions
   const handleSwitchToRegister = () => {

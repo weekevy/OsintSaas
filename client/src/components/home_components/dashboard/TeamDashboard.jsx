@@ -13,7 +13,7 @@ import api from '../../../services/api';
 
 const shellMax = 'max-w-[1680px] mx-auto w-full';
 
-const TeamDashboard = () => {
+const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
   const [activeTab, setActiveTab] = useState('members');
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teams, setTeams] = useState([]);
@@ -94,17 +94,9 @@ const TeamDashboard = () => {
     { id: 'settings', label: 'Settings' }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[60vh]">
-        <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   if (!selectedTeam) {
     return (
-      <div className={`${shellMax} px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-['Poppins'] text-white`}>
+      <div className={`${shellMax} px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-sans text-white`}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 mb-8 lg:mb-12">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-1 lg:mb-2">Collaboration Hub</h1>
@@ -118,16 +110,22 @@ const TeamDashboard = () => {
           </button>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-          {teams.map(team => (
-            <TeamCard key={team.id} team={team} onClick={() => handleTeamClick(team)} onAction={handleAction} />
-          ))}
-          {teams.length === 0 && (
-            <div className="col-span-full py-20 text-center rounded-[32px] border border-dashed border-white/10">
-              <p className="text-white/20 font-bold tracking-widest uppercase">No Active Squads Found</p>
-            </div>
-          )}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+            {teams.map(team => (
+              <TeamCard key={team.id} team={team} onClick={() => handleTeamClick(team)} onAction={handleAction} />
+            ))}
+            {teams.length === 0 && (
+              <div className="col-span-full py-20 text-center rounded-[32px] border border-dashed border-white/10">
+                <p className="text-white/20 font-bold tracking-widest uppercase">No Active Squads Found</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <CreateTeamModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onTeamCreated={fetchTeams} />
       </div>
@@ -135,9 +133,9 @@ const TeamDashboard = () => {
   }
 
   return (
-    <div className={`flex-1 flex flex-col lg:h-full font-['Poppins'] text-white ${shellMax}`}>
+    <div className={`flex-1 flex flex-col lg:h-full font-sans text-white ${shellMax}`}>
       {/* Mobile Top Navigation - Professional Sticky Header */}
-      <div className="lg:hidden sticky top-0 z-30 bg-[#080b0d]/90 backdrop-blur-md border-b border-white/5 px-4 py-4 flex flex-col gap-4">
+      <div className="lg:hidden sticky top-0 z-30 bg-black/90 backdrop-blur-md border-b border-white/5 px-4 py-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
@@ -189,7 +187,7 @@ const TeamDashboard = () => {
         
         {/* Sidebar: Navigation - Fixed on Large Screens (Hidden on Mobile) */}
         <aside className="hidden lg:flex w-[320px] flex-col gap-4 flex-shrink-0 lg:overflow-y-auto no-scrollbar pb-4 lg:pb-0">
-          <div className="bg-[#0f0f0f] border border-white/5 rounded-[28px] overflow-hidden flex flex-col shadow-xl">
+          <div className="bg-black border border-white/5 rounded-[28px] overflow-hidden flex flex-col shadow-xl">
             <div className="p-6 bg-gradient-to-br from-white/[0.03] to-transparent border-b border-white/5">
               <button 
                 onClick={() => setSelectedTeam(null)}
@@ -238,7 +236,7 @@ const TeamDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-white/5 rounded-[28px] p-4 space-y-2">
+          <div className="bg-black border border-white/5 rounded-[28px] p-4 space-y-2">
             <button
               onClick={() => setIsShareModalOpen(true)}
               className="w-full py-3.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-[#2DD4BF] hover:border-[#2DD4BF]/40 transition-all text-[10px] font-bold tracking-widest uppercase"
@@ -255,7 +253,7 @@ const TeamDashboard = () => {
         </aside>
 
         {/* Main Workspace: Fills remaining height and width */}
-        <main className="flex-1 bg-[#0a0a0a] lg:border border-white/5 rounded-t-[32px] lg:rounded-[32px] shadow-2xl flex flex-col lg:overflow-hidden relative min-h-[500px] lg:min-h-0">
+        <main className="flex-1 bg-black lg:border border-white/5 rounded-t-[32px] lg:rounded-[32px] shadow-2xl flex flex-col lg:overflow-hidden relative min-h-[500px] lg:min-h-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.01] via-transparent to-transparent pointer-events-none" />
           
           <header className="hidden lg:flex px-6 lg:px-8 py-6 border-b border-white/5 items-center justify-between relative z-10 bg-white/[0.01]">
@@ -283,13 +281,35 @@ const TeamDashboard = () => {
                           <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/5 border border-white/10 flex items-center justify-center">
                             <span className="text-[#00E5FF] font-bold text-lg">{project.name[0]}</span>
                           </div>
-                          <span className="text-[8px] font-bold text-white/20 tracking-widest bg-white/5 px-2.5 py-1 rounded-full uppercase">{project.status}</span>
+                          <span className={`text-[8px] font-bold tracking-widest bg-white/5 px-2.5 py-1 rounded-full uppercase ${
+                            project.status === 'completed' ? 'text-green-400 border-green-500/20' : 'text-white/20 border-white/10'
+                          }`}>{project.status}</span>
                         </div>
                         <h4 className="text-base font-bold text-white mb-1.5 group-hover:text-[#00E5FF] transition-colors">{project.name}</h4>
-                        <p className="text-[11px] text-white/40 leading-relaxed mb-4 line-clamp-2">{project.description}</p>
+                        <p className="text-[11px] text-white/40 leading-relaxed mb-4 line-clamp-2">{project.description || 'No intelligence briefing.'}</p>
+                        
+                        <div className="flex flex-col gap-2 mb-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
+                          <div className="flex items-center justify-between text-[9px] font-bold tracking-widest uppercase">
+                            <span className="text-white/20">Shared By</span>
+                            <span className="text-[#00E5FF]">{project.first_name} {project.last_name}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[9px] font-bold tracking-widest uppercase">
+                            <span className="text-white/20">Shared On</span>
+                            <span className="text-white/40">{project.shared_at ? new Date(project.shared_at).toLocaleString() : new Date(project.created_at).toLocaleString()}</span>
+                          </div>
+                        </div>
+
                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                          <span className="text-[8px] font-bold text-white/20 tracking-widest uppercase">Owner: {project.owner_email.split('@')[0]}</span>
-                          <button className="text-[9px] font-bold text-[#00E5FF] hover:underline tracking-widest uppercase">Open →</button>
+                          <span className="text-[8px] font-bold text-white/20 tracking-widest uppercase">ID: {project.id}</span>
+                          <button 
+                            onClick={() => {
+                              onProjectSelect(project);
+                              onTabChange('dashboard');
+                            }}
+                            className="text-[9px] font-bold text-[#00E5FF] hover:underline tracking-widest uppercase"
+                          >
+                            Access Intelligence →
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -311,7 +331,12 @@ const TeamDashboard = () => {
 
       <InviteMemberModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} teamId={selectedTeam.id} onMemberAdded={() => fetchTeamDetails(selectedTeam.id)} />
       <CreateTeamModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onTeamCreated={fetchTeams} />
-      <ShareProjectModal isOpen={isShareModalOpen} onClose={() => { setIsShareModalOpen(false); if (selectedTeam) fetchTeamDetails(selectedTeam.id); }} teamId={selectedTeam.id} />
+      <ShareProjectModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => { setIsShareModalOpen(false); if (selectedTeam) fetchTeamDetails(selectedTeam.id); }} 
+        teamId={selectedTeam.id}
+        currentProject={selectedProject}
+      />
     </div>
   );
 };

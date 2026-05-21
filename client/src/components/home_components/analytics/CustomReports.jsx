@@ -125,29 +125,29 @@ const CustomReports = () => {
   const getRandomValue = () => Math.floor(Math.random() * 1000);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-['Poppins']">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
       {/* Report Builder */}
       <div className="lg:col-span-2 space-y-6">
-        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
-          <h3 className="text-white font-['Poppins'] text-base font-bold mb-5">Custom Report Builder</h3>
+        <div className="rounded-xl border border-white/10 bg-black p-5">
+          <h3 className="text-white font-sans text-base font-bold mb-5">Custom Report Builder</h3>
           
           {/* Report Name */}
           <div className="mb-5">
-            <label className="block text-white/40 text-xs font-['Poppins'] font-semibold mb-2">
+            <label className="block text-white/40 text-xs font-sans font-semibold mb-2">
               Report Name
             </label>
             <input
               type="text"
               value={reportName}
               onChange={(e) => setReportName(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2.5 text-sm font-['Poppins'] focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2.5 text-sm font-sans focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
               placeholder="e.g., Executive Security Summary"
             />
           </div>
 
           {/* Date Range */}
           <div className="mb-5">
-            <label className="block text-white/40 text-xs font-['Poppins'] font-semibold mb-2">
+            <label className="block text-white/40 text-xs font-sans font-semibold mb-2">
               Date Range
             </label>
             <div className="flex flex-wrap gap-2">
@@ -155,7 +155,7 @@ const CustomReports = () => {
                 <button
                   key={range.id}
                   onClick={() => setDateRange(range.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-['Poppins'] font-semibold transition-colors duration-150
+                  className={`px-3 py-1.5 rounded-lg text-xs font-sans font-semibold transition-colors duration-150
                     ${dateRange === range.id
                       ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30'
                       : 'border border-white/10 text-white/40 hover:text-white hover:bg-white/5'
@@ -169,13 +169,13 @@ const CustomReports = () => {
 
           {/* Metrics Selection */}
           <div className="mb-5">
-            <label className="block text-white/40 text-xs font-['Poppins'] font-semibold mb-3">
+            <label className="block text-white/40 text-xs font-sans font-semibold mb-3">
               Select Metrics
             </label>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-1 custom-scroll">
               {availableMetrics.map((category) => (
                 <div key={category.category} className="rounded-lg border border-white/10 bg-white/5 p-3">
-                  <h4 className="text-white font-['Poppins'] text-[11px] font-bold mb-2">{category.category}</h4>
+                  <h4 className="text-white font-sans text-[11px] font-bold mb-2">{category.category}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                     {category.items.map((metric) => (
                       <label
@@ -189,7 +189,7 @@ const CustomReports = () => {
                           className="w-4 h-4 border border-white/20 bg-transparent text-[#00E5FF] rounded focus:ring-0"
                         />
                         <span className="shrink-0">{getMetricIcon(metric.icon, selectedMetrics.includes(metric.id))}</span>
-                        <span className="text-white/70 text-[10px] font-['Poppins'] font-medium">{metric.name}</span>
+                        <span className="text-white/70 text-[10px] font-sans font-medium">{metric.name}</span>
                       </label>
                     ))}
                   </div>
@@ -203,13 +203,13 @@ const CustomReports = () => {
             <button
               onClick={saveReport}
               disabled={!reportName || selectedMetrics.length === 0}
-              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs font-['Poppins'] disabled:opacity-50"
+              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-lg hover:opacity-90 transition-opacity duration-150 text-xs font-sans disabled:opacity-50"
             >
               Save Report Template
             </button>
             <button
               disabled={selectedMetrics.length === 0}
-              className="px-5 py-2.5 border border-white/10 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors duration-150 text-xs font-['Poppins'] font-semibold disabled:opacity-50"
+              className="px-5 py-2.5 border border-white/10 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors duration-150 text-xs font-sans font-semibold disabled:opacity-50"
             >
               Preview
             </button>
@@ -218,10 +218,10 @@ const CustomReports = () => {
 
         {/* Report Preview */}
         {selectedMetrics.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
+          <div className="rounded-xl border border-white/10 bg-black p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-['Poppins'] text-base font-bold">Report Preview</h3>
-              <span className="text-white/30 text-[9px] font-['Poppins']">Sample data for {dateRange.toUpperCase()}</span>
+              <h3 className="text-white font-sans text-base font-bold">Report Preview</h3>
+              <span className="text-white/30 text-[9px] font-sans">Sample data for {dateRange.toUpperCase()}</span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -235,11 +235,11 @@ const CustomReports = () => {
                     <div className="flex items-center justify-center mb-1">
                       <span className="shrink-0">{getMetricIcon(metric?.icon || '📊', true)}</span>
                     </div>
-                    <div className="text-white/50 text-[8px] font-['Poppins'] font-semibold mt-1 mb-1">{metric?.name || metricId}</div>
+                    <div className="text-white/50 text-[8px] font-sans font-semibold mt-1 mb-1">{metric?.name || metricId}</div>
                     <div className="text-xl font-bold text-white">
                       {getRandomValue()}
                     </div>
-                    <div className="text-[#2DD4BF] text-[8px] font-['Poppins'] font-semibold mt-1">+12% vs previous</div>
+                    <div className="text-[#2DD4BF] text-[8px] font-sans font-semibold mt-1">+12% vs previous</div>
                   </div>
                 );
               })}
@@ -250,8 +250,8 @@ const CustomReports = () => {
 
       {/* Saved Reports */}
       <div className="lg:col-span-1">
-        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5 sticky top-6">
-          <h3 className="text-white font-['Poppins'] text-base font-bold mb-5">Saved Reports</h3>
+        <div className="rounded-xl border border-white/10 bg-black p-5 sticky top-6">
+          <h3 className="text-white font-sans text-base font-bold mb-5">Saved Reports</h3>
           
           <div className="space-y-3">
             {savedReports.map((report) => (
@@ -260,22 +260,22 @@ const CustomReports = () => {
                 className="rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors duration-150 p-4 cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-white font-['Poppins'] text-xs font-bold">{report.name}</h4>
-                  <span className="text-white/30 text-[8px] font-['Poppins'] font-semibold">{report.schedule}</span>
+                  <h4 className="text-white font-sans text-xs font-bold">{report.name}</h4>
+                  <span className="text-white/30 text-[8px] font-sans font-semibold">{report.schedule}</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mb-2">
                   {report.metrics.slice(0, 3).map((metric) => (
-                    <span key={metric} className="px-1.5 py-0.5 rounded border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF] text-[8px] font-['Poppins'] font-semibold">
+                    <span key={metric} className="px-1.5 py-0.5 rounded border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF] text-[8px] font-sans font-semibold">
                       {metric}
                     </span>
                   ))}
                   {report.metrics.length > 3 && (
-                    <span className="px-1.5 py-0.5 rounded border border-white/10 text-white/40 text-[8px] font-['Poppins'] font-semibold">
+                    <span className="px-1.5 py-0.5 rounded border border-white/10 text-white/40 text-[8px] font-sans font-semibold">
                       +{report.metrics.length - 3}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-[9px] font-['Poppins']">
+                <div className="flex items-center justify-between text-[9px] font-sans">
                   <span className="text-white/30">Last run: <span className="text-white/50">{report.lastRun}</span></span>
                   <button className="text-[#00E5FF] hover:text-[#2DD4BF] transition-colors duration-150 text-xs font-semibold">
                     Run Now
@@ -285,7 +285,7 @@ const CustomReports = () => {
             ))}
           </div>
 
-          <button className="w-full mt-5 pt-4 text-[#00E5FF] hover:text-[#2DD4BF] text-xs font-['Poppins'] font-semibold flex items-center justify-center gap-2 border-t border-white/10 transition-colors duration-150">
+          <button className="w-full mt-5 pt-4 text-[#00E5FF] hover:text-[#2DD4BF] text-xs font-sans font-semibold flex items-center justify-center gap-2 border-t border-white/10 transition-colors duration-150">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>

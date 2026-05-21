@@ -15,9 +15,25 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
+    bio TEXT,
+    title VARCHAR(255),
+    phone VARCHAR(50),
+    location VARCHAR(255),
+    website VARCHAR(255),
+    social JSON,
     role ENUM('user', 'admin', 'premium') DEFAULT 'user',
     is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
+    -- Notification Preferences
+    email_alerts BOOLEAN DEFAULT TRUE,
+    email_frequency VARCHAR(50) DEFAULT 'instant',
+    push_notifications BOOLEAN DEFAULT TRUE,
+    scan_complete_notify BOOLEAN DEFAULT TRUE,
+    threat_detected_notify BOOLEAN DEFAULT TRUE,
+    weekly_report_notify BOOLEAN DEFAULT TRUE,
+    marketing_emails BOOLEAN DEFAULT FALSE,
+    slack_webhook TEXT,
+    discord_webhook TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
@@ -26,16 +42,45 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- 1.5 INVESTIGATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS investigations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 1.6 REPORTS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(50),
+    file_path VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- 2. PROJECTS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    team_id INT DEFAULT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     icon VARCHAR(50) DEFAULT 'folder',
     priority ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
-    status ENUM('active', 'completed', 'archived') DEFAULT 'active',
+    status ENUM('active', 'completed', 'archived', 'planning', 'review') DEFAULT 'active',
     progress INT DEFAULT 0,
     start_date DATE,
     end_date DATE,
@@ -43,7 +88,9 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
+    INDEX idx_team_id (team_id),
     INDEX idx_status (status),
     INDEX idx_priority (priority)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

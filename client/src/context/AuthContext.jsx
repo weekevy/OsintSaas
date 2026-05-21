@@ -64,9 +64,8 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Set user but DON'T navigate immediately - let OTP handle it
+        // Set user but DON'T set isAuthenticated yet - wait for OTP
         setUser(data.user);
-        setIsAuthenticated(true);
         // Return success with user data without redirecting
         return { success: true, user: data.user };
       } else {
@@ -80,6 +79,7 @@ export const AuthProvider = ({ children }) => {
 
   // New function to finalize login after OTP verification
   const finalizeLogin = () => {
+    setIsAuthenticated(true);
     navigate('/home');
   };
 
@@ -97,8 +97,8 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // Set user but wait for OTP to set isAuthenticated
         setUser(data.user);
-        setIsAuthenticated(true);
         // Don't redirect immediately for registration either
         return { success: true, user: data.user };
       } else {

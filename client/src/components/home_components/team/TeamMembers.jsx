@@ -25,7 +25,7 @@ const TeamMembers = ({ members = [] }) => {
   }
 
   return (
-    <div className="font-['Poppins']">
+    <div className="font-sans">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {members.map((member) => (
           <div

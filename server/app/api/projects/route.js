@@ -23,8 +23,11 @@ export async function GET(request) {
     }
 
     const [projects] = await db.execute(
-      'SELECT id, user_id, name, description, icon, priority, status, progress, start_date, end_date, created_at FROM projects WHERE user_id = ? ORDER BY created_at DESC',
-      [decoded.id]
+      `SELECT id, user_id, name, description, icon, priority, status, progress, start_date, end_date, created_at 
+       FROM projects 
+       WHERE user_id = ? OR team_id IN (SELECT team_id FROM team_members WHERE user_id = ?)
+       ORDER BY created_at DESC`,
+      [decoded.id, decoded.id]
     );
 
     const response = NextResponse.json({

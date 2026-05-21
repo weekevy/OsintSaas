@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const NotificationsTab = ({ isLoading, setIsLoading }) => {
   const [settings, setSettings] = useState({
@@ -12,6 +12,21 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
     slackWebhook: '',
     discordWebhook: '',
   });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/user/notifications');
+        const data = await response.json();
+        if (response.ok && data.settings) {
+          setSettings(data.settings);
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -42,7 +57,7 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 font-['Poppins']">
+    <form onSubmit={handleSubmit} className="space-y-5 font-sans">
       <button type="submit" id="save-settings" className="hidden" />
 
       {/* Email Notifications */}
@@ -53,13 +68,13 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
               <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h3 className="text-white font-['Poppins'] text-sm font-semibold">Email Notifications</h3>
+          <h3 className="text-white font-sans text-sm font-semibold">Email Notifications</h3>
         </div>
         
         <div className="flex items-center justify-between py-2">
           <div>
-            <p className="text-white text-[13px] font-['Poppins']">Email Alerts</p>
-            <p className="text-white/40 text-[10px] font-['Poppins']">Receive alerts via email</p>
+            <p className="text-white text-[13px] font-sans">Email Alerts</p>
+            <p className="text-white/40 text-[10px] font-sans">Receive alerts via email</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -75,12 +90,12 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
 
         {settings.emailAlerts && (
           <div className="mt-2 pt-2">
-            <label className="block text-white/50 text-[10px] font-['Poppins'] font-semibold uppercase tracking-wider mb-1.5">Email Frequency</label>
+            <label className="block text-white/50 text-[10px] font-sans font-semibold uppercase tracking-wider mb-1.5">Email Frequency</label>
             <select
               name="emailFrequency"
               value={settings.emailFrequency}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
             >
               <option value="instant">Instant</option>
               <option value="daily">Daily Digest</option>
@@ -100,8 +115,8 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-white font-['Poppins'] text-sm font-semibold">Push Notifications</h3>
-            <p className="text-white/40 text-[10px] font-['Poppins']">In-app notifications</p>
+            <h3 className="text-white font-sans text-sm font-semibold">Push Notifications</h3>
+            <p className="text-white/40 text-[10px] font-sans">In-app notifications</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -118,7 +133,7 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
         {settings.pushNotifications && (
           <div className="space-y-2 ml-8">
             <div className="flex items-center justify-between">
-              <span className="text-white/70 text-[12px] font-['Poppins']">Scan Complete</span>
+              <span className="text-white/70 text-[12px] font-sans">Scan Complete</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -132,7 +147,7 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-white/70 text-[12px] font-['Poppins']">Threat Detected</span>
+              <span className="text-white/70 text-[12px] font-sans">Threat Detected</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -146,7 +161,7 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-white/70 text-[12px] font-['Poppins']">Weekly Report</span>
+              <span className="text-white/70 text-[12px] font-sans">Weekly Report</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -170,30 +185,30 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
               <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h3 className="text-white font-['Poppins'] text-sm font-semibold">Integrations</h3>
+          <h3 className="text-white font-sans text-sm font-semibold">Integrations</h3>
         </div>
         
         <div className="space-y-3">
           <div>
-            <label className="block text-white/50 text-[10px] font-['Poppins'] font-semibold uppercase tracking-wider mb-1.5">Slack Webhook URL</label>
+            <label className="block text-white/50 text-[10px] font-sans font-semibold uppercase tracking-wider mb-1.5">Slack Webhook URL</label>
             <input
               type="url"
               name="slackWebhook"
               value={settings.slackWebhook}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
               placeholder="https://hooks.slack.com/services/..."
             />
           </div>
 
           <div>
-            <label className="block text-white/50 text-[10px] font-['Poppins'] font-semibold uppercase tracking-wider mb-1.5">Discord Webhook URL</label>
+            <label className="block text-white/50 text-[10px] font-sans font-semibold uppercase tracking-wider mb-1.5">Discord Webhook URL</label>
             <input
               type="url"
               name="discordWebhook"
               value={settings.discordWebhook}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-['Poppins'] placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-sans placeholder-white/30 focus:outline-none focus:border-[#00E5FF]/50 transition-colors duration-150"
               placeholder="https://discord.com/api/webhooks/..."
             />
           </div>
@@ -204,8 +219,8 @@ const NotificationsTab = ({ isLoading, setIsLoading }) => {
       <div className="border-t border-white/10 pt-4">
         <div className="flex items-center justify-between py-2">
           <div>
-            <p className="text-white text-[13px] font-['Poppins']">Marketing Emails</p>
-            <p className="text-white/40 text-[10px] font-['Poppins']">Receive updates about new features</p>
+            <p className="text-white text-[13px] font-sans">Marketing Emails</p>
+            <p className="text-white/40 text-[10px] font-sans">Receive updates about new features</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input

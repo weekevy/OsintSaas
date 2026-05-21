@@ -348,7 +348,7 @@ const CurrentModules = ({
   }, [getStatusConfig]);
 
   const LoadingSkeleton = () => (
-    <div className="glass-card rounded-xl overflow-hidden font-['Poppins'] w-full flex flex-col relative min-h-[400px] border border-white/10 shadow-xl">
+    <div className="glass-card rounded-xl overflow-hidden font-sans w-full flex flex-col relative min-h-[400px] border border-white/10 shadow-xl">
       <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/5 to-transparent pointer-events-none" />
       <div className="p-[14px_16px_12px] border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -404,7 +404,7 @@ const CurrentModules = ({
                 module.status === 'pending'   ? 'bg-[#fbbf24]' :
                 'bg-white/30'
               }`} />
-              <span className={`text-sm sm:text-base font-bold tracking-wide truncate font-['Poppins'] ${isSelected ? 'text-[#00E5FF]' : 'text-white'}`}>
+              <span className={`text-sm sm:text-base font-bold tracking-wide truncate font-sans ${isSelected ? 'text-[#00E5FF]' : 'text-white'}`}>
                 {module.name}
               </span>
             </div>
@@ -412,20 +412,20 @@ const CurrentModules = ({
           </div>
 
           {/* Target */}
-          <p className={`text-[10px] sm:text-xs truncate mb-2 sm:mb-3 font-['Poppins'] ${isSelected ? tc.color : 'text-white/40'}`}>
+          <p className={`text-[10px] sm:text-xs truncate mb-2 sm:mb-3 font-sans ${isSelected ? tc.color : 'text-white/40'}`}>
             {module.target}
           </p>
 
           {/* Meta row */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <span className="text-[8px] sm:text-[10px] text-white/30 flex items-center gap-1 sm:gap-1.5 font-['Poppins']">
+            <span className="text-[8px] sm:text-[10px] text-white/30 flex items-center gap-1 sm:gap-1.5 font-sans">
               <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
               </svg>
               {module.startTime}
             </span>
             {module.findings > 0 && (
-              <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[8px] sm:text-[10px] tracking-wider font-bold font-['Poppins'] ${
+              <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[8px] sm:text-[10px] tracking-wider font-bold font-sans ${
                 module.findings > 10
                   ? 'bg-red-500/15 border border-red-500/30 text-red-400'
                   : 'bg-yellow-500/15 border border-yellow-500/30 text-yellow-400'
@@ -468,7 +468,7 @@ const CurrentModules = ({
   return (
     <div
       id="tour-project-list"
-      className="relative rounded-2xl font-['Poppins'] w-full border border-white/[0.09] shadow-xl shadow-black/30 ring-1 ring-white/[0.04]"
+      className="relative rounded-2xl font-sans w-full border border-white/[0.09] shadow-xl shadow-black/30 ring-1 ring-white/[0.04]"
       style={{ height: '408px', display: 'flex', flexDirection: 'column' }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#0c0e12]/95 via-[#080a0d] to-[#050608] pointer-events-none rounded-2xl max-md:backdrop-blur-none md:backdrop-blur-md" />
@@ -489,14 +489,14 @@ const CurrentModules = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase font-['Poppins']">ACTIVE PROJECTS</h3>
-              <p className="text-[8px] sm:text-[9px] text-white/30 tracking-widest uppercase mt-0.5 font-['Poppins']">REAL-TIME MONITOR</p>
+              <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase font-sans">ACTIVE PROJECTS</h3>
+              <p className="text-[8px] sm:text-[9px] text-white/30 tracking-widest uppercase mt-0.5 font-sans">REAL-TIME MONITOR</p>
             </div>
           </div>
           <div className="flex gap-1.5 sm:gap-2 items-center">
             <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-[4px_10px] rounded bg-[#00E5FF]/15 border border-[#00E5FF]/30 mr-0.5 sm:mr-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] md:animate-pulse" />
-              <span className="text-[7px] sm:text-[8px] text-[#00E5FF] tracking-[0.12em] font-bold font-['Poppins']">LIVE</span>
+              <span className="text-[7px] sm:text-[8px] text-[#00E5FF] tracking-[0.12em] font-bold font-sans">LIVE</span>
             </div>
             <button
               onClick={forceRefresh}
@@ -526,8 +526,8 @@ const CurrentModules = ({
         <div className="grid grid-cols-4 p-2 sm:p-[10px_14px] gap-1 sm:gap-[7px] border-b border-white/10 flex-shrink-0 bg-white/[0.005]">
           {statCells.map(s => (
             <div key={s.label} className={`rounded-lg p-1.5 sm:p-[8px_6px] text-center ${s.bg} border ${s.border}`}>
-              <div className={`text-lg sm:text-2xl font-bold ${s.color} leading-none tabular-nums font-['Poppins']`}>{s.value}</div>
-              <div className="text-[7px] sm:text-[8px] text-white/40 tracking-wider mt-0.5 sm:mt-1 font-bold font-['Poppins']">{s.label}</div>
+              <div className={`text-lg sm:text-2xl font-bold ${s.color} leading-none tabular-nums font-sans`}>{s.value}</div>
+              <div className="text-[7px] sm:text-[8px] text-white/40 tracking-wider mt-0.5 sm:mt-1 font-bold font-sans">{s.label}</div>
             </div>
           ))}
         </div>
@@ -542,8 +542,8 @@ const CurrentModules = ({
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
                   </svg>
                 </div>
-                <p className="text-[10px] sm:text-xs font-bold text-white/40 tracking-wider uppercase font-['Poppins']">NO ACTIVE PROJECTS</p>
-                <p className="text-[8px] sm:text-[10px] text-white/20 tracking-wider uppercase font-['Poppins']">START A SCAN TO BEGIN</p>
+                <p className="text-[10px] sm:text-xs font-bold text-white/40 tracking-wider uppercase font-sans">NO ACTIVE PROJECTS</p>
+                <p className="text-[8px] sm:text-[10px] text-white/20 tracking-wider uppercase font-sans">START A SCAN TO BEGIN</p>
               </div>
             ) : (
               modules.slice(0, limit).map(m => (

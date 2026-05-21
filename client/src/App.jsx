@@ -20,14 +20,17 @@ const AppRoutes = () => {
       <ToastContainer />
       <SessionManager />
       <Routes>
-        <Route 
-          path="/" 
-          element={
-            isAuthenticated ? 
-              <Navigate to="/home" replace /> : 
-              <Welcom />
-          } 
-        />
+        {['/', '/about', '/services', '/faq'].map(path => (
+          <Route 
+            key={path}
+            path={path} 
+            element={
+              isAuthenticated ? 
+                <Navigate to="/home" replace /> : 
+                <Welcom />
+            } 
+          />
+        ))}
         
         <Route 
           path="/home" 

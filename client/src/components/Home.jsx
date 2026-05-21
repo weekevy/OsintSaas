@@ -238,7 +238,10 @@ const Home = () => {
     localStorage.removeItem('currentModules_selectedId');
     try { localStorage.removeItem('riskCircle_lastState'); } catch (e) {}
     
-    navigate('/');
+    // Use requestAnimationFrame to ensure the clear operations are processed before navigation
+    requestAnimationFrame(() => {
+      navigate('/');
+    });
   };
 
   const handleAnalyze = () => {
@@ -343,7 +346,11 @@ const Home = () => {
       />;
       case "projects": return <ProjectsDashboard />;
       case "reports": return <ReportsDashboard />;
-      case "team": return <TeamDashboard />;
+      case "team": return <TeamDashboard 
+        selectedProject={selectedProject} 
+        onProjectSelect={handleProjectSelect}
+        onTabChange={handleTabChange}
+      />;
       case "integrations": return <IntegrationsDashboard />;
       case "apis": return <APIsDashboard />;
       case "analytics": return <AnalyticsDashboard />;
@@ -372,8 +379,8 @@ const Home = () => {
 
   return (
     <>
-      <div className="flex h-screen bg-[#080b0d] text-white overflow-hidden font-mono">
-        <main className="flex-1 flex flex-col overflow-hidden bg-[#080b0d] w-full">
+      <div className="flex h-screen bg-[#000000] text-white overflow-hidden font-mono">
+        <main className="flex-1 flex flex-col overflow-hidden bg-[#000000] w-full">
           <TopBar
             onMenuClick={() => setIsSidebarOpen(true)}
             searchInput={searchInput}
