@@ -200,9 +200,39 @@ export async function POST(request) {
 
       await connection.execute(
         `INSERT INTO job_recruitment_scans (
-          scan_id, job_url, job_title, job_description, company_name, company_website, risk_score, risk_level, analysis_status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, "low", "pending", NOW())`,
-        [scanId, body.job_url || null, body.job_title || null, body.job_description || null, body.company_name || null, body.company_website || null]
+          scan_id, job_url, job_title, job_description, 
+          company_name, company_website, company_linkedin, 
+          company_email_domain, company_phone, company_address, 
+          company_email, recruiter_name, recruiter_email, 
+          recruiter_phone, recruiter_linkedin, recruiter_title,
+          suspicious_message, communication_channel, red_flags_noticed,
+          notes, risk_score, risk_level, analysis_status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          scanId, 
+          body.job_url || null, 
+          body.job_title || null, 
+          body.job_description || null, 
+          body.company_name || null, 
+          body.company_website || null,
+          body.company_linkedin || null,
+          body.company_email_domain || null,
+          body.company_phone || null,
+          body.company_address || null,
+          body.company_email || null,
+          body.recruiter_name || null,
+          body.recruiter_email || null,
+          body.recruiter_phone || null,
+          body.recruiter_linkedin || null,
+          body.recruiter_title || null,
+          body.suspicious_message || null,
+          body.communication_channel || null,
+          body.red_flags_noticed || null,
+          body.notes || null,
+          body.risk_score || 0,
+          body.risk_level || 'low',
+          body.analysis_status || 'pending'
+        ]
       );
 
       await connection.commit();
@@ -214,10 +244,22 @@ export async function POST(request) {
 
     } catch (error) {
       if (connection) await connection.rollback();
+      console.error('POST Inner Error:', error);
       throw error;
     }
   } catch (error) {
     if (connection) connection.release();
+    console.error('POST Outer Error:', error);
+    
+    // Check for common errors
+    if (error.message.includes('foreign key constraint fails')) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Session expired or user not found. Please logout and login again.',
+        details: 'Foreign key constraint failed'
+      }, { status: 401 });
+    }
+    
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

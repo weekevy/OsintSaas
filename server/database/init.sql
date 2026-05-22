@@ -12,6 +12,7 @@ USE osint_db;
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
@@ -38,11 +39,44 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
     INDEX idx_email (email),
+    INDEX idx_username (username),
     INDEX idx_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 1.5 INVESTIGATIONS TABLE
+-- 2. TEAMS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS teams (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    owner_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    max_members INT DEFAULT 10,
+    visibility ENUM('public', 'private', 'hidden') DEFAULT 'private',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_owner_id (owner_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 3. TEAM MEMBERS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS team_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    team_id INT NOT NULL,
+    user_id INT NOT NULL,
+    role ENUM('owner', 'admin', 'member', 'viewer') DEFAULT 'member',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_team_user (team_id, user_id),
+    INDEX idx_team_id (team_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 4. INVESTIGATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS investigations (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,7 +90,7 @@ CREATE TABLE IF NOT EXISTS investigations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 1.6 REPORTS TABLE
+-- 5. REPORTS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS reports (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,7 +104,7 @@ CREATE TABLE IF NOT EXISTS reports (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 2. PROJECTS TABLE
+-- 6. PROJECTS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,14 +130,14 @@ CREATE TABLE IF NOT EXISTS projects (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 3. TARGETS TABLE
+-- 7. TARGETS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS targets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT,
-    type VARCHAR(50) NOT NULL COMMENT 'url, email, phone, company',
+    type VARCHAR(50) NOT NULL COMMENT 'url, email, phone, company, crypto, social',
     value TEXT NOT NULL,
-    label VARCHAR(255),
+    label VARCHAR(500),
     status ENUM('pending', 'active', 'completed', 'failed') DEFAULT 'pending',
     priority ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -115,7 +149,7 @@ CREATE TABLE IF NOT EXISTS targets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 4. SCANS TABLE
+-- 8. SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -137,26 +171,35 @@ CREATE TABLE IF NOT EXISTS scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 5. JOB RECRUITMENT SCANS TABLE
+-- 9. JOB RECRUITMENT SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS job_recruitment_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     scan_id INT NOT NULL UNIQUE,
     job_url TEXT,
-    company_name VARCHAR(255),
-    company_website VARCHAR(255),
     job_title VARCHAR(255),
     job_description TEXT,
+    salary_offered VARCHAR(255),
+    company_name VARCHAR(255),
+    company_website VARCHAR(255),
     company_linkedin VARCHAR(255),
-    company_address TEXT,
+    company_email_domain VARCHAR(255),
     company_phone VARCHAR(50),
+    company_address TEXT,
     company_email VARCHAR(255),
     recruiter_name VARCHAR(255),
-    recruiter_linkedin VARCHAR(255),
     recruiter_email VARCHAR(255),
     recruiter_phone VARCHAR(50),
+    recruiter_linkedin VARCHAR(255),
+    recruiter_title VARCHAR(255),
+    suspicious_message TEXT,
+    communication_channel VARCHAR(255),
+    red_flags_noticed TEXT,
+    notes TEXT,
     risk_score INT DEFAULT 0,
     risk_level ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low',
+    analysis_status VARCHAR(50),
+    findings_summary TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE,
@@ -166,7 +209,7 @@ CREATE TABLE IF NOT EXISTS job_recruitment_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 6. LINKEDIN SCANS TABLE
+-- 10. LINKEDIN SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS linkedin_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -184,20 +227,21 @@ CREATE TABLE IF NOT EXISTS linkedin_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 7. SOCIAL MEDIA SCANS TABLE
+-- 11. SOCIAL MEDIA SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS social_media_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     scan_id INT NOT NULL UNIQUE,
-    twitter_url VARCHAR(500),
-    facebook_url VARCHAR(500),
-    instagram_url VARCHAR(500),
-    tiktok_url VARCHAR(500),
-    youtube_url VARCHAR(500),
-    reddit_url VARCHAR(500),
+    platform VARCHAR(50),
+    profile_url VARCHAR(500),
+    username VARCHAR(255),
     display_name VARCHAR(255),
-    username_variations TEXT,
-    profile_pictures TEXT,
+    bio TEXT,
+    post_count INT DEFAULT 0,
+    follower_count VARCHAR(50),
+    following_count VARCHAR(50),
+    suspicious_posts TEXT,
+    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE,
@@ -205,19 +249,23 @@ CREATE TABLE IF NOT EXISTS social_media_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 8. SCAM WEBSITE SCANS TABLE
+-- 12. SCAM WEBSITE SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS scam_website_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     scan_id INT NOT NULL UNIQUE,
     website_url VARCHAR(500),
-    website_name VARCHAR(255),
+    domain_name VARCHAR(255),
     ip_address VARCHAR(45),
-    hosting_provider VARCHAR(255),
+    red_flags_list TEXT,
+    fake_reviews TEXT,
+    payment_requests TEXT,
+    registrar VARCHAR(255),
     registration_date DATE,
-    suspicious_patterns TEXT,
-    fake_testimonials TEXT,
-    payment_methods TEXT,
+    expiry_date DATE,
+    registrant_country VARCHAR(100),
+    is_private_registration BOOLEAN DEFAULT FALSE,
+    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE,
@@ -225,7 +273,7 @@ CREATE TABLE IF NOT EXISTS scam_website_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 9. EMAIL LEAK SCANS TABLE
+-- 13. EMAIL LEAK SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS email_leak_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -242,7 +290,7 @@ CREATE TABLE IF NOT EXISTS email_leak_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 10. SCAM EMAIL SCANS TABLE
+-- 14. SCAM EMAIL SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS scam_email_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -263,7 +311,7 @@ CREATE TABLE IF NOT EXISTS scam_email_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 11. PHONE NUMBER SCANS TABLE
+-- 15. PHONE NUMBER SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS phone_number_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -281,7 +329,7 @@ CREATE TABLE IF NOT EXISTS phone_number_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 12. CRYPTO WALLET SCANS TABLE
+-- 16. CRYPTO WALLET SCANS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS crypto_wallet_scans (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -301,7 +349,7 @@ CREATE TABLE IF NOT EXISTS crypto_wallet_scans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 13. FINDINGS TABLE
+-- 17. FINDINGS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS findings (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -327,7 +375,7 @@ CREATE TABLE IF NOT EXISTS findings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 14. SESSIONS TABLE (JWT token management)
+-- 18. SESSIONS TABLE (JWT token management)
 -- ============================================
 CREATE TABLE IF NOT EXISTS sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -342,7 +390,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 15. PASSWORD RESETS TABLE
+-- 19. PASSWORD RESETS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS password_resets (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -355,7 +403,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 16. EMAIL VERIFICATIONS TABLE
+-- 20. EMAIL VERIFICATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS email_verifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -368,7 +416,7 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 17. ACTIVITY LOGS TABLE
+-- 21. ACTIVITY LOGS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS activity_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -384,60 +432,8 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- LinkedIn scans table
-CREATE TABLE IF NOT EXISTS linkedin_scans (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    scan_id INT NOT NULL UNIQUE,
-    profile_url VARCHAR(500),
-    profile_name VARCHAR(255),
-    profile_headline TEXT,
-    profile_location VARCHAR(255),
-    connections_list TEXT,
-    mutual_connections TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE,
-    INDEX idx_scan_id (scan_id)
-);
-
-
-
-
 -- ============================================
--- 18. TEAMS TABLE
--- ============================================
-CREATE TABLE IF NOT EXISTS teams (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    owner_id INT NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    max_members INT DEFAULT 10,
-    visibility ENUM('public', 'private', 'hidden') DEFAULT 'private',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_owner_id (owner_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- 19. TEAM MEMBERS TABLE
--- ============================================
-CREATE TABLE IF NOT EXISTS team_members (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    team_id INT NOT NULL,
-    user_id INT NOT NULL,
-    role ENUM('owner', 'admin', 'member', 'viewer') DEFAULT 'member',
-    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_team_user (team_id, user_id),
-    INDEX idx_team_id (team_id),
-    INDEX idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- 20. TEAM INVITATIONS TABLE
+-- 22. TEAM INVITATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS team_invitations (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -456,29 +452,7 @@ CREATE TABLE IF NOT EXISTS team_invitations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- CREATE DEFAULT PROJECTS FOR EXISTING USERS
--- ============================================
-INSERT INTO projects (user_id, name, description, status, created_at)
-SELECT id, 'Default Project', 'Default project for investigations', 'active', NOW()
-FROM users
-WHERE NOT EXISTS (
-    SELECT 1 FROM projects WHERE projects.user_id = users.id AND projects.name = 'Default Project'
-);
-
--- ============================================
--- INSERT DEFAULT ADMIN USER (password: Admin123!)
--- NOTE: Replace with actual bcrypt hash
--- ============================================
--- INSERT INTO users (email, password, first_name, last_name, role, email_verified) 
--- VALUES ('admin@osintweekeyv.com', '$2a$10$YourHashedPasswordHere', 'Admin', 'User', 'admin', TRUE)
--- ON DUPLICATE KEY UPDATE email = email;
-
--- INSERT INTO users (email, password, first_name, last_name, role, email_verified) 
--- VALUES ('test@osintweekeyv.com', '$2a$10$YourHashedPasswordHere', 'Test', 'User', 'user', TRUE)
--- ON DUPLICATE KEY UPDATE email = email;
-
--- ============================================
--- 21. NOTIFICATIONS TABLE
+-- 23. NOTIFICATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -502,3 +476,13 @@ CREATE INDEX idx_scans_user_project ON scans(target_id);
 CREATE INDEX idx_targets_project_user ON targets(project_id);
 CREATE INDEX idx_findings_scan_severity ON findings(scan_id, severity);
 CREATE INDEX idx_activity_logs_user_date ON activity_logs(user_id, created_at DESC);
+
+-- ============================================
+-- CREATE DEFAULT PROJECTS FOR EXISTING USERS
+-- ============================================
+INSERT INTO projects (user_id, name, description, status, created_at)
+SELECT id, 'Default Project', 'Default project for investigations', 'active', NOW()
+FROM users
+WHERE NOT EXISTS (
+    SELECT 1 FROM projects WHERE projects.user_id = users.id AND projects.name = 'Default Project'
+);
