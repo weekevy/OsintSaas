@@ -14,6 +14,7 @@ class ConfigManager:
     def __init__(self):
         self.docker_key = os.getenv("DOCKER_API_KEY", "your-super-secret-api-key-change-this")
         self.backend_url = os.getenv("BACKEND_URL", "http://172.19.0.1:4000")
+        self.ws_notify_url = os.getenv("WS_NOTIFY_URL", "http://172.19.0.1:4005/notify")
         
         # Database Direct Connection
         self.db_host = os.getenv("MARIADB_HOST", "mariadb")
@@ -58,18 +59,42 @@ class DatabaseManager:
                     maxsize=10
                 )
 
-    async def update_progress(self, scan_id: int, progress: int):
+    async def update_progress(self, scan_id: int, progress: int, user_id: int = 0):
         await self.ensure_pool()
         async with self.lock:
-            if progress <= self.last_progress: return
-            self.last_progress = progress
+            # We still update the DB only if progress increased
+            if progress > self.last_progress:
+                self.last_progress = progress
+                try:
+                    async with self.pool.acquire() as conn:
+                        async with conn.cursor() as cur:
+                            await cur.execute("UPDATE scans SET progress = %s, updated_at = NOW() WHERE id = %s", (progress, scan_id))
+                except Exception as e:
+                    loud_log(f"DB PROGRESS UPDATE ERROR: {e}", "ERROR")
+            
+            # ALWAYS send WebSocket notification to ensure the UI stays updated
+            # Even if progress didn't change, it acts as a heartbeat
             try:
-                async with self.pool.acquire() as conn:
-                    async with conn.cursor() as cur:
-                        await cur.execute("UPDATE scans SET progress = %s, updated_at = NOW() WHERE id = %s", (progress, scan_id))
+                await self.send_ws_notification("scan_progress", user_id, {
+                    "scan_id": scan_id,
+                    "progress": progress,
+                    "status": "running"
+                })
             except: pass
 
-    async def finalize_scan(self, scan_id: int, analysis: Dict):
+    async def send_ws_notification(self, event_type: str, user_id: int, data: Dict):
+        if not user_id: return
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(config.ws_notify_url, json={
+                    "type": event_type,
+                    "userId": user_id,
+                    "data": data
+                }, timeout=5.0) # Increased timeout
+        except Exception as e:
+            loud_log(f"WS NOTIFY ERROR: {e}", "DEBUG")
+
+    async def finalize_scan(self, scan_id: int, analysis: Dict, user_id: int = 0):
         """Persists the final analyzed results to the database."""
         await self.ensure_pool()
         async with self.lock:
@@ -104,17 +129,43 @@ class DatabaseManager:
                             )
                         
                         # 4. Create notification
-                        await cur.execute(
-                            "SELECT p.user_id FROM scans s JOIN targets t ON s.target_id = t.id JOIN projects p ON t.project_id = p.id WHERE s.id = %s",
-                            (scan_id,)
-                        )
-                        res = await cur.fetchone()
-                        if res:
-                            user_id = res[0]
+                        if not user_id:
+                            await cur.execute(
+                                "SELECT p.user_id FROM scans s JOIN targets t ON s.target_id = t.id JOIN projects p ON t.project_id = p.id WHERE s.id = %s",
+                                (scan_id,)
+                            )
+                            res = await cur.fetchone()
+                            if res: user_id = res[0]
+                        
+                        if user_id:
+                            # Ensure we have project_id for the completion notification
+                            if not self.project_id:
+                                await cur.execute("SELECT t.project_id FROM scans s JOIN targets t ON s.target_id = t.id WHERE s.id = %s", (scan_id,))
+                                res_pid = await cur.fetchone()
+                                if res_pid: self.project_id = res_pid[0]
+
                             await cur.execute(
                                 "INSERT INTO notifications (user_id, title, message, type, scan_id, created_at) VALUES (%s, %s, %s, %s, %s, NOW())",
                                 (user_id, f"Investigation Ready #{scan_id}", f"Risk Score: {score}% - {len(findings)} red flags found", "threat" if score > 70 else "warning", scan_id)
                             )
+                            
+                            # Send WebSocket notification for completion
+                            await self.send_ws_notification("scan_completed", user_id, {
+                                "scan_id": scan_id,
+                                "score": score,
+                                "level": level,
+                                "findings_count": len(findings),
+                                "projectId": self.project_id
+                            })
+
+                            # ALSO send new_notification event to trigger real-time alert UI
+                            await self.send_ws_notification("new_notification", user_id, {
+                                "type": "success" if score < 25 else "threat" if score > 70 else "warning",
+                                "title": f"Scan Completed #{scan_id}",
+                                "message": f"Risk Score: {score}% - Findings: {len(findings)}",
+                                "scan_id": scan_id,
+                                "projectId": self.project_id
+                            })
 
                 loud_log(f"DB FINALIZED: Score {score}%", scan_id=scan_id)
             except Exception as e:
@@ -204,6 +255,7 @@ class OSINTOrchestrator:
         self.scan_id = scan_id
         self.target = target.strip()
         self.user_id = user_id
+        self.project_id = 0
         self.results = {
             "metadata": {"scan_id": scan_id, "target": target, "user_id": user_id, "timestamp": datetime.now().isoformat()},
             "modules": {},
@@ -232,6 +284,15 @@ class OSINTOrchestrator:
         async with semaphore:
             loud_log(f"INVOKING: {mname}", scan_id=self.scan_id)
             try:
+                # Ensure we have project_id for notifications
+                if not self.project_id:
+                    await self.db.ensure_pool()
+                    async with self.db.pool.acquire() as conn:
+                        async with conn.cursor() as cur:
+                            await cur.execute("SELECT t.project_id FROM scans s JOIN targets t ON s.target_id = t.id WHERE s.id = %s", (self.scan_id,))
+                            res = await cur.fetchone()
+                            if res: self.project_id = res[0]
+
                 cls = MODULES_MAP.get(mclass)
                 if not cls: raise Exception("Class not registered")
                 
@@ -255,8 +316,36 @@ class OSINTOrchestrator:
                 self.results["modules"][mname] = {"module_id": mid, "class": mclass, "timestamp": datetime.now().isoformat(), "data": raw_data, "success": True}
                 self.completed_ids.append(mid)
                 
+                # --- LIVE DETECTION: Push notification if red flags found ---
+                if isinstance(raw_data, dict):
+                    red_flags = raw_data.get("red_flags", [])
+                    if red_flags:
+                        message = red_flags[0]
+                        # 1. Save to DB for persistence
+                        try:
+                            await self.db.ensure_pool()
+                            async with self.db.pool.acquire() as conn:
+                                async with conn.cursor() as cur:
+                                    await cur.execute(
+                                        "INSERT INTO notifications (user_id, title, message, type, scan_id, created_at) VALUES (%s, %s, %s, 'threat', %s, NOW())",
+                                        (self.user_id, f"Live Threat: {mname}", message, self.scan_id)
+                                    )
+                        except Exception as e:
+                            loud_log(f"DB LIVE NOTIFY ERROR: {e}", "DEBUG")
+
+                        # 2. Push immediate WebSocket notification for the finding
+                        await self.db.send_ws_notification("new_notification", self.user_id, {
+                            "type": "threat",
+                            "title": f"Live Threat: {mname}",
+                            "message": message,
+                            "scan_id": self.scan_id,
+                            "projectId": self.project_id,
+                            "created_at": datetime.now().isoformat()
+                        })
+
                 progress = int((len(self.completed_ids) / len(self.execution_plan)) * 100)
-                await self.db.update_progress(self.scan_id, progress)
+                # await is crucial here to ensure the notification is sent BEFORE moving to next step
+                await self.db.update_progress(self.scan_id, progress, self.user_id)
                 
             except Exception as e:
                 self.results["modules"][mname] = {"module_id": mid, "success": False, "error": str(e)}
@@ -279,7 +368,7 @@ class OSINTOrchestrator:
         self.save_to_file()
 
         # 3. UPDATE DATABASE WITH REAL SCORE AND FINDINGS
-        await self.db.finalize_scan(self.scan_id, analysis_result)
+        await self.db.finalize_scan(self.scan_id, analysis_result, self.user_id)
         await self.db.close()
 
     def save_to_file(self):
