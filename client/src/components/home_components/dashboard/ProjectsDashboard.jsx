@@ -3,7 +3,7 @@ import { ProjectCard, CreateProjectModal, ProjectStats } from '../projects';
 import ProjectDetailsModal from '../projects/ProjectDetailsModal';
 import DeleteConfirmationModal from '../projects/DeleteConfirmationModal';
 
-const ProjectsDashboard = () => {
+const ProjectsDashboard = ({ onProjectSelect, onTabChange }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +70,12 @@ const ProjectsDashboard = () => {
         await fetchProjects();
         setIsCreateModalOpen(false);
         setEditingProject(null);
+        
+        // Auto-select the new project and go to scan tab
+        if (data.project && onProjectSelect) {
+          onProjectSelect(data.project);
+          if (onTabChange) onTabChange('scan');
+        }
       } else {
         setError(data.error || 'Failed to create project');
       }
@@ -157,8 +163,9 @@ const ProjectsDashboard = () => {
   };
 
   const handleViewClick = (project) => {
-    console.log('👁️ Opening view modal for:', project.name);
-    setViewingProject(project);
+    console.log('👁️ Selecting project and navigating:', project.name);
+    if (onProjectSelect) onProjectSelect(project);
+    if (onTabChange) onTabChange('scan');
   };
 
   const handleDeleteClick = (project) => {

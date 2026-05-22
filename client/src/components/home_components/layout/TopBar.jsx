@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import UserMenu from './UserMenu';
 import api from '../../../services/api';
+import { useSocket } from '../../../context/SocketContext';
 
 const shellMax = 'max-w-[1680px] mx-auto w-full';
 
@@ -25,23 +26,13 @@ const TopBar = ({
   const [credits, setCredits] = useState(250);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);
+  const { socket, isConnected } = useSocket();
 
   const searchTypeRef = useRef(null);
   const notificationsRef = useRef(null);
   const mobileSearchRef = useRef(null);
 
-  useEffect(() => {
-    fetchNotifications();
-    
-    // Set up polling for notifications every 30 seconds
-    const interval = setInterval(() => {
-      fetchNotifications();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [selectedProject?.id]); // Re-fetch when project changes
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setNotifLoading(true);
       const projectId = selectedProject?.id;
@@ -55,7 +46,55 @@ const TopBar = ({
     } finally {
       setNotifLoading(false);
     }
-  };
+  }, [selectedProject?.id]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // WebSocket for real-time notifications
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleNewNotification = (data) => {
+      console.log('WS: new_notification', data);
+      
+      // Prepend to local state for instant "Live" detection
+      const newNotif = {
+        id: `ws_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, 
+        title: data.title,
+        message: data.message,
+        type: data.type || 'threat',
+        created_at: data.created_at || new Date().toISOString(),
+        is_read: 0,
+        scan_id: data.scan_id
+      };
+
+      // Ensure we only show if it belongs to current project OR all projects selected
+      // Using loosely equal (==) to handle string vs number comparison
+      if (!selectedProject?.id || !data.projectId || String(data.projectId) === String(selectedProject.id)) {
+        setNotifications(prev => {
+          // Prevent duplicates if re-fetch already happened
+          if (prev.some(n => n.scan_id === data.scan_id && n.title === data.title)) return prev;
+          return [newNotif, ...prev];
+        });
+      }
+
+      // Small delay to let DB finish then re-sync
+      setTimeout(() => fetchNotifications(), 500);
+    };
+
+    socket.on('new_notification', handleNewNotification);
+    socket.on('scan_completed', () => {
+      // Re-fetch when a scan completes to get the result notification
+      fetchNotifications();
+    });
+
+    return () => {
+      socket.off('new_notification', handleNewNotification);
+      socket.off('scan_completed');
+    };
+  }, [socket, isConnected, fetchNotifications, selectedProject?.id]);
 
   const handleInviteResponse = async (notificationId, action) => {
     try {

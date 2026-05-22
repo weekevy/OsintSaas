@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getIcon } from '../utils/icons';
 import { getModuleAddModal, getModuleEditModal } from '../modules';
 import api from '../../../../services/api';
+import { useSocket } from '../../../../context/SocketContext';
 
 const SCAN_STATES_KEY = 'osint_scan_states';
 
@@ -381,6 +382,7 @@ const extractScanId = (compositeId) => {
 // RunningScans
 // ──────────────────────────────────────────────────────────────
 export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh }) => {
+  const { socket, isConnected } = useSocket();
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, scan: null });
   const [progressModal, setProgressModal] = useState({ isOpen: false, scan: null });
   const [investigationModal, setInvestigationModal] = useState({ isOpen: false, scan: null });
@@ -397,6 +399,41 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
   useEffect(() => {
     try { localStorage.setItem(SCAN_STATES_KEY, JSON.stringify(scanStatuses)); } catch {}
   }, [scanStatuses]);
+
+  // WebSocket listeners for real-time progress
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleProgress = (data) => {
+      // Find which scan in runningScans matches this progress update
+      const matchingScan = runningScans.find(s => s.originalId === data.scan_id);
+      if (matchingScan) {
+        updateScanState(matchingScan.id, {
+          progress: data.progress,
+          status: data.status || 'running'
+        });
+      }
+    };
+
+    const handleCompleted = (data) => {
+      const matchingScan = runningScans.find(s => s.originalId === data.scan_id);
+      if (matchingScan) {
+        updateScanState(matchingScan.id, {
+          progress: 100,
+          status: 'completed'
+        });
+        if (onRefresh) onRefresh();
+      }
+    };
+
+    socket.on('scan_progress', handleProgress);
+    socket.on('scan_completed', handleCompleted);
+
+    return () => {
+      socket.off('scan_progress', handleProgress);
+      socket.off('scan_completed', handleCompleted);
+    };
+  }, [socket, isConnected, runningScans, onRefresh]);
 
   // Stagger each card's fade-in when the list first appears or updates
   useEffect(() => {

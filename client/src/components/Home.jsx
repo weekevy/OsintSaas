@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import {
   TopBar,
   DashboardHome,
@@ -90,47 +91,70 @@ const Home = () => {
   });
   const [selectedModuleId, setSelectedModuleId] = useState(() => ls('currentModules_selectedId', null));
   const [dashboardRefreshTrigger, setDashboardRefreshTrigger] = useState(0);
+  const { socket, isConnected } = useSocket();
+
+  const fetchDashboardData = useCallback(async () => {
+    // ── Fetch Alerts ──
+    try {
+      let url = '/api/dashboard/alerts';
+      if (selectedProject?.id) {
+        url += `?projectId=${selectedProject.id}`;
+      }
+      const response = await fetch(url, { credentials: 'include' });
+      const data = await response.json();
+      if (response.ok) {
+        setAlerts(data.alerts || []);
+        if (selectedProject) {
+          setProjectAlerts(data.alerts || []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+    }
+
+    // ── Fetch Scans ──
+    try {
+      let url = '/api/dashboard/scans';
+      if (selectedProject?.id) {
+        url += `?projectId=${selectedProject.id}`;
+      }
+      const response = await fetch(url, { credentials: 'include' });
+      const data = await response.json();
+      if (response.ok) {
+        setRecentScans(data.scans || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch scans:', error);
+    }
+  }, [selectedProject?.id]);
 
   // ── Fetch Alerts and Scans whenever project or trigger changes ──
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        let url = '/api/dashboard/alerts';
-        if (selectedProject?.id) {
-          url += `?projectId=${selectedProject.id}`;
-        }
-        const response = await fetch(url, { credentials: 'include' });
-        const data = await response.json();
-        if (response.ok) {
-          setAlerts(data.alerts || []);
-          if (selectedProject) {
-            setProjectAlerts(data.alerts || []);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch alerts:', error);
+    fetchDashboardData();
+  }, [fetchDashboardData, dashboardRefreshTrigger]);
+
+  // WebSocket for real-time dashboard updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleUpdate = (data) => {
+      console.log('WS: Dashboard Refreshing...', data);
+      
+      // Only refresh if it belongs to current project OR no project selected
+      if (!selectedProject?.id || !data?.projectId || String(data.projectId) === String(selectedProject.id)) {
+        // Small delay to let DB finish
+        setTimeout(() => fetchDashboardData(), 500);
       }
     };
 
-    const fetchScans = async () => {
-      try {
-        let url = '/api/dashboard/scans';
-        if (selectedProject?.id) {
-          url += `?projectId=${selectedProject.id}`;
-        }
-        const response = await fetch(url, { credentials: 'include' });
-        const data = await response.json();
-        if (response.ok) {
-          setRecentScans(data.scans || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch scans:', error);
-      }
-    };
+    socket.on('new_notification', handleUpdate);
+    socket.on('scan_completed', handleUpdate);
 
-    fetchAlerts();
-    fetchScans();
-  }, [selectedProject?.id, dashboardRefreshTrigger]);
+    return () => {
+      socket.off('new_notification', handleUpdate);
+      socket.off('scan_completed', handleUpdate);
+    };
+  }, [socket, isConnected, fetchDashboardData]);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
@@ -343,8 +367,12 @@ const Home = () => {
         recentScans={recentScans}
         alerts={projectAlerts}
         selectedProject={selectedProject}
+        onProjectSelect={handleProjectSelect}
       />;
-      case "projects": return <ProjectsDashboard />;
+      case "projects": return <ProjectsDashboard 
+        onProjectSelect={handleProjectSelect}
+        onTabChange={handleTabChange}
+      />;
       case "reports": return <ReportsDashboard />;
       case "team": return <TeamDashboard 
         selectedProject={selectedProject} 
