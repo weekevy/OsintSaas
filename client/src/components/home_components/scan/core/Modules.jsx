@@ -503,11 +503,11 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Small delay before showing content for a smoother feel
+    // Small delay before showing content for a smoother visual handover
     const timer = setTimeout(() => {
       setIsLoading(false);
       setShowContent(true);
-    }, 100);
+    }, 150);
     return () => clearTimeout(timer);
   }, []);
 
@@ -521,13 +521,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
         ].map(({ label, value, color, sub }, idx) => (
           <div 
             key={label} 
-            className={`relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden transition-all duration-300 ${
-              showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
-            }`}
-            style={{ 
-              transitionDelay: `${idx * 40}ms`,
-              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)'
-            }}
+            className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 to-transparent pointer-events-none"/>
             <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00E5FF]/30"/>
@@ -718,10 +712,13 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {isLoading
-            ? [0,1,2,3,4,5].map(i => <PlatformCardSkeleton key={i} index={i}/>)
-            : platforms.map((platform, idx) => {
-                const pm = PLATFORM_META[platform.id] || { color: '#00E5FF', border: 'rgba(0,229,255,0.2)', bg: 'rgba(0,229,255,0.07)', label: 'Intel' };
+          {isLoading ? (
+            <div className="contents animate-in fade-in duration-500">
+              {[0,1,2,3,4,5].map(i => <PlatformCardSkeleton key={i} index={i}/>)}
+            </div>
+          ) : (
+            platforms.map((platform, idx) => {
+              const pm = PLATFORM_META[platform.id] || { color: '#00E5FF', border: 'rgba(0,229,255,0.2)', bg: 'rgba(0,229,255,0.07)', label: 'Intel' };
                 const isH = hoveredId === platform.id;
                 const isUnderConstruction = UNDER_CONSTRUCTION_PLATFORMS.includes(platform.id);
 
@@ -798,7 +795,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     </div>
                   </button>
                 );
-              })
+              }))
           }
         </div>
       </div>

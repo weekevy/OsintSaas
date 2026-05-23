@@ -15,6 +15,7 @@ import {
 } from "./home_components";
 import { AccountSettings } from "./home_components/settings";
 import ProductTour from "./common/ProductTour";
+import PricingModal from "./common/PricingModal";
 
 // ── Read a localStorage key safely at module level (before any render) ──
 const ls = (key, fallback = null) => {
@@ -52,6 +53,7 @@ const Home = () => {
   const [timeRange, setTimeRange] = useState(() => ls('timeRange', 'week'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -138,11 +140,37 @@ const Home = () => {
     if (!socket || !isConnected) return;
 
     const handleUpdate = (data) => {
-      console.log('WS: Dashboard Refreshing...', data);
+      console.log('WS: Dashboard Update', data);
       
-      // Only refresh if it belongs to current project OR no project selected
+      // Only handle if it belongs to current project OR no project selected
       if (!selectedProject?.id || !data?.projectId || String(data.projectId) === String(selectedProject.id)) {
-        // Small delay to let DB finish
+        
+        // If it's a new notification, optimistically add it to the dashboard alerts list
+        if (data.type === 'threat' || data.type === 'warning' || data.type === 'success') {
+          const newAlert = {
+            id: `ws_alert_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            title: data.title,
+            message: data.message,
+            type: data.type,
+            created_at: data.created_at || new Date().toISOString(),
+            scan_id: data.scan_id
+          };
+
+          setAlerts(prev => {
+            // Avoid duplicates
+            if (prev.some(a => a.scan_id === data.scan_id && a.title === data.title)) return prev;
+            return [newAlert, ...prev];
+          });
+
+          if (selectedProject) {
+            setProjectAlerts(prev => {
+              if (prev.some(a => a.scan_id === data.scan_id && a.title === data.title)) return prev;
+              return [newAlert, ...prev];
+            });
+          }
+        }
+
+        // Small delay to let DB finish then re-sync for full data integrity
         setTimeout(() => fetchDashboardData(), 500);
       }
     };
@@ -424,12 +452,15 @@ const Home = () => {
             isMobileMenuOpen={isSidebarOpen}
             navItems={navItems}
             selectedProject={selectedProject}
+            onPricingClick={() => setPricingOpen(true)}
           />
           <div className="flex-1 overflow-y-auto scrollbar-thin max-md:pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))]">
             {renderDashboard()}
           </div>
         </main>
+
         <AccountSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        <PricingModal isOpen={pricingOpen} onClose={() => setPricingOpen(false)} />
         <ProductTour 
           isOpen={isTourOpen} 
           onComplete={completeTour} 

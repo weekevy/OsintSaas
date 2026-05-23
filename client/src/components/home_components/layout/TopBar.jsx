@@ -18,6 +18,7 @@ const TopBar = ({
   onTabChange,
   navItems,
   selectedProject,
+  onPricingClick,
 }) => {
   const [searchTypeDropdownOpen, setSearchTypeDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -242,18 +243,19 @@ const TopBar = ({
           <button
             id="tour-credits"
             type="button"
-            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-2 py-1.5 transition-colors hover:border-[#00E5FF]/30 hover:bg-white/[0.06] sm:gap-2.5 sm:px-3 sm:py-2"
+            onClick={onPricingClick}
+            className="group flex items-center gap-1.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.03] px-2 py-1.5 transition-all hover:border-yellow-500/40 hover:bg-yellow-500/[0.06] hover:shadow-[0_0_20px_-5px_rgba(234,179,8,0.3)] sm:gap-2.5 sm:px-3 sm:py-2"
             aria-label={`${credits} tokens remaining`}
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#00E5FF]/12 ring-1 ring-[#00E5FF]/25 sm:h-9 sm:w-9">
-              <svg className="h-3.5 w-3.5 text-[#00E5FF] sm:h-[18px] sm:w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-[0_0_15px_rgba(234,179,8,0.2)] ring-1 ring-yellow-500/30 group-hover:scale-110 transition-transform sm:h-9 sm:w-9">
+              <svg className="h-4 w-4 text-black sm:h-[22px] sm:w-[22px]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" />
               </svg>
             </div>
-            <span className="text-xs font-semibold tabular-nums text-white sm:hidden">{credits}</span>
+            <span className="text-xs font-black tabular-nums text-yellow-500 sm:hidden">{credits}</span>
             <div className="hidden flex-col items-start leading-none sm:flex">
-              <span className="text-sm font-semibold tabular-nums text-white">{credits}</span>
-              <span className="text-[9px] font-medium uppercase tracking-wider text-[#00E5FF]/65">tokens</span>
+              <span className="text-sm font-black tabular-nums text-yellow-500 tracking-tight">{credits}</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-yellow-500/50">Clearance</span>
             </div>
           </button>
 

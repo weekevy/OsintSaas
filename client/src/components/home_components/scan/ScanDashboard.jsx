@@ -78,17 +78,17 @@ const getTargetDisplay = (scan, moduleId) => {
 };
 
 // ─── Skeleton Loader — exact same height as a real scan card ─────────────────
-// The card renders: p-3 sm:p-5 with icon(36/48px) + text + buttons row = ~88px mobile / ~96px desktop
+// The card renders: p-3 sm:p-5 with icon(36/48px) + text + buttons row + progress bar = ~132px mobile / ~144px desktop
 // We match that precisely so there is zero layout shift when data arrives.
 const RunningScansSkeleton = () => (
   <div
     className="relative border border-white/10 rounded-xl sm:rounded-2xl bg-black overflow-hidden"
-    style={{ minHeight: 88 }}
+    style={{ minHeight: 132 }}
   >
     {/* inner glow to match real card feel */}
     <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] to-transparent pointer-events-none" />
     <div className="p-3 sm:p-5 animate-pulse">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
         {/* Left: icon + text */}
         <div className="flex items-center gap-3 sm:gap-4 flex-1">
           <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/10 rounded-lg sm:rounded-xl flex-shrink-0" />
@@ -106,6 +106,15 @@ const RunningScansSkeleton = () => (
           <div className="h-6 sm:h-8 w-10 sm:w-14 bg-white/10 rounded-lg" />
           <div className="h-6 sm:h-8 w-14 sm:w-18 bg-white/[0.07] rounded-lg" />
         </div>
+      </div>
+      
+      {/* Progress Bar Skeleton - prevents jumping */}
+      <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
+        <div className="flex justify-between mb-2">
+          <div className="h-2 bg-white/5 rounded w-24" />
+          <div className="h-2 bg-white/10 rounded w-8" />
+        </div>
+        <div className="h-1.5 bg-white/5 rounded-full w-full" />
       </div>
     </div>
   </div>
@@ -674,7 +683,10 @@ const ScanDashboard = ({
           </div>
 
           {/* Content area — fixed structure regardless of state */}
-          <div className={`space-y-2 sm:space-y-3 transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) ${initialLoadDone ? 'opacity-100' : 'opacity-90'}`}>
+          <div 
+            className={`space-y-2 sm:space-y-3 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${initialLoadDone ? 'opacity-100' : 'opacity-90'}`}
+            style={{ minHeight: annotatedRunningScans.length > 0 || showSkeleton ? 132 : 0 }}
+          >
             {showSkeleton ? (
               <div className="space-y-2 sm:space-y-3 animate-in fade-in duration-300">
                 {Array.from({ length: skeletonCount }).map((_, i) => (

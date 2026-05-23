@@ -211,6 +211,41 @@ const ProjectsDashboard = () => {
     handleAddAssetClick: !!handleAddAssetClick
   });
 
+  const ProjectCardSkeleton = () => (
+    <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 animate-pulse relative overflow-hidden">
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-6 w-32 bg-white/10 rounded-lg" />
+            <div className="h-5 w-16 bg-white/10 rounded-full" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-full bg-white/5 rounded" />
+            <div className="h-3 w-2/3 bg-white/5 rounded" />
+          </div>
+        </div>
+        <div className="h-5 w-12 bg-white/10 rounded-full" />
+      </div>
+      <div className="mb-4">
+        <div className="h-3 w-16 bg-white/10 rounded mb-2" />
+        <div className="h-2 w-full bg-white/10 rounded-full" />
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex gap-3">
+          <div className="h-4 w-8 bg-white/5 rounded" />
+          <div className="h-4 w-12 bg-white/5 rounded" />
+          <div className="h-4 w-16 bg-white/5 rounded" />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-2 pt-4 border-t border-white/10">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-10 bg-white/5 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -244,49 +279,53 @@ const ProjectsDashboard = () => {
       {/* Stats Section */}
       <ProjectStats stats={stats} />
 
-      {/* Projects Grid */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-10 h-10 border-2 border-white/20 border-t-purple-500 rounded-full animate-spin" />
-        </div>
-      ) : projects.length === 0 ? (
-        <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
-          <svg className="w-16 h-16 mx-auto text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          <h3 className="text-white font-medium text-lg mb-2">No projects yet</h3>
-          <p className="text-white/40 mb-4">Create your first project to start investigating</p>
-          <button
-            onClick={() => {
-              console.log('Create project from empty state');
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all"
-          >
-            Create Project
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => {
-            console.log('🔵 Rendering ProjectCard for:', project.name, 'with handlers:', {
-              onEdit: !!handleEditClick,
-              onDelete: !!handleDeleteProject,
-              onAddAsset: !!handleAddAssetClick
-            });
-            return (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteProject}
-                onView={(proj) => console.log('View:', proj)}
-                onAddAsset={handleAddAssetClick} // Add the new prop here
-              />
-            );
-          })}
-        </div>
-      )}
+      {/* Projects Grid with Smooth In-Out Transition */}
+      <div className="relative min-h-[400px]">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <ProjectCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-500">
+            <svg className="w-16 h-16 mx-auto text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <h3 className="text-white font-medium text-lg mb-2">No projects yet</h3>
+            <p className="text-white/40 mb-4">Create your first project to start investigating</p>
+            <button
+              onClick={() => {
+                console.log('Create project from empty state');
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all"
+            >
+              Create Project
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {projects.map((project) => {
+              console.log('🔵 Rendering ProjectCard for:', project.name, 'with handlers:', {
+                onEdit: !!handleEditClick,
+                onDelete: !!handleDeleteProject,
+                onAddAsset: !!handleAddAssetClick
+              });
+              return (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteProject}
+                  onView={(proj) => console.log('View:', proj)}
+                  onAddAsset={handleAddAssetClick} // Add the new prop here
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Create/Edit Modal */}
       <CreateProjectModal

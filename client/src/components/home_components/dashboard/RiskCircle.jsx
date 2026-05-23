@@ -368,7 +368,7 @@ const RiskCircle = ({
                     className="font-black"
                     style={{ fontSize: 'min(8vw, 32px)', color: cfg.color }}
                   >
-                    {isPending ? '○' : isFailed ? '✕' : isStopped ? '■' : '—'}
+                    {isPending ? '—' : isFailed ? '✕' : isStopped ? '■' : '—'}
                   </div>
                 )}
               </div>
