@@ -1,0 +1,388 @@
+ PHASE 1: Platform Detection & Discovery
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 1: PLATFORM DISCOVERY                                       │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 1.1: Identify Recruiter/Company Social Presence                      │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Search by company name across all platforms                      │    │    │
+│  │  │ • Search by recruiter name across all platforms                    │    │    │
+│  │  │ • Search by email domain across platforms                          │    │    │
+│  │  │ • Search by phone number across platforms                          │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 1.2: Platform Discovery Results                                       │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Facebook:    found/not found - page type, followers              │    │    │
+│  │  │ • Twitter:     found/not found - followers, tweets, join date      │    │    │
+│  │  │ • Instagram:   found/not found - posts, followers, business acc    │    │    │
+│  │  │ • LinkedIn:    found/not found - employees, company page age       │    │    │
+│  │  │ • Reddit:      mentions found - subreddits, sentiment              │    │    │
+│  │  │ • Glassdoor:   reviews found - rating, complaints                  │    │    │
+│  │  │ • Trustpilot:  reviews found - trust score, scam reports           │    │    │
+│  │  │ • BBB:         complaints found - rating, accreditation            │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📋 PHASE 2: Scammer Profile Analysis
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 2: SCAMMER PROFILE ANALYSIS                                 │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 2.1: Facebook Profile Analysis                                       │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Profile existence check                                          │    │    │
+│  │  │ • Profile age (creation date) → <3 months = +25 risk               │    │    │
+│  │  │ • Friend count → <50 friends = +15 risk                            │    │    │
+│  │  │ • Profile completeness (photo, bio, posts) → incomplete = +20      │    │    │
+│  │  │ • Post frequency → very active vs dead profile                     │    │    │
+│  │  │ • Suspicious name patterns (generic, random numbers) = +20 risk    │    │    │
+│  │  │ • Multiple accounts with same name = +30 risk                      │    │    │
+│  │  │ • Profile reported as scam = +50 risk                              │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 2.2: Twitter/X Profile Analysis                                      │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Profile existence and verification badge                        │    │    │
+│  │  │ • Account age → <3 months = +25 risk                               │    │    │
+│  │  │ • Follower/Following ratio → high following/low followers = +15   │    │    │
+│  │  │ • Tweet history analysis                                           │    │    │
+│  │  │   - Sudden change in posting pattern = +20 risk                    │    │    │
+│  │  │   - Only retweets, no original content = +10 risk                  │    │    │
+│  │  │   - Promotes crypto/suspicious links = +30 risk                    │    │    │
+│  │  │ • Account suspended or shadowbanned = +40 risk                     │    │    │
+│  │  │ • Listed in scam databases = +50 risk                              │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 2.3: LinkedIn Profile Analysis (Recruiter Focus)                    │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Profile existence and completeness                               │    │    │
+│  │  │ • Profile age → <6 months = +30 risk                               │    │    │
+│  │  │ • Connection count → <100 = +15 risk                               │    │    │
+│  │  │ • No profile photo = +20 risk                                      │    │    │
+│  │  │ • Employment history gaps or inconsistencies = +25 risk            │    │    │
+│  │  │ • No endorsements or recommendations = +15 risk                    │    │    │
+│  │  │ • Recruiter badge missing (claimed vs actual) = +20 risk           │    │    │
+│  │  │ • Profile matches known scammer patterns = +40 risk                │    │    │
+│  │  │ • Reverse image search on photo = +30 if stock photo               │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 2.4: Instagram Profile Analysis                                      │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Business vs personal account                                     │    │    │
+│  │  │ • Follower count → very low = +15 risk                             │    │    │
+│  │  │ • Post frequency and quality                                       │    │    │
+│  │  │ • Verified badge missing for business = +10 risk                   │    │    │
+│  │  │ • Suspicious engagement (bots, fake likes) = +25 risk              │    │    │
+│  │  │ • Account linked to scam reports = +45 risk                        │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📋 PHASE 3: Name & Identity Analysis
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 3: NAME & IDENTITY ANALYSIS                                 │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 3.1: Name Consistency Check                                          │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Compare name across platforms:                                    │    │    │
+│  │  │   - Facebook name vs LinkedIn name = mismatch +20 risk              │    │    │
+│  │  │   - Twitter handle vs real name = suspicious +15 risk               │    │    │
+│  │  │   - Email name vs profile name = mismatch +20 risk                  │    │    │
+│  │  │ • Name patterns:                                                    │    │    │
+│  │  │   - Generic names (John Smith) = +10 risk                           │    │    │
+│  │  │   - Names with numbers (John123) = +15 risk                         │    │    │
+│  │  │   - Celebrity name variations = +25 risk                            │    │    │
+│  │  │   - Non-existent name combinations = +20 risk                       │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 3.2: Reverse Image Search on Profile Photos                         │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Google Images search                                             │    │    │
+│  │  │ • Yandex image search                                              │    │    │
+│  │  │ • TinEye reverse search                                            │    │    │
+│  │  │                                                                     │    │    │
+│  │  │  Results scoring:                                                  │    │    │
+│  │  │  • Found on stock photo site = +50 risk                            │    │    │
+│  │  │  • Used on multiple profiles = +40 risk                            │    │    │
+│  │  │  • Found on scam report sites = +60 risk                           │    │    │
+│  │  │  • No results (unique photo) = 0 risk                              │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 3.3: Alias Detection                                                 │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ • Search for variations of name:                                   │    │    │
+│  │  │   - Different spellings                                            │    │    │
+│  │  │   - Nicknames and short forms                                      │    │    │
+│  │  │   - Name with different middle initial                             │    │    │
+│  │  │   - Names across different domains                                 │    │    │
+│  │  │ • Multiple aliases detected = +25 risk                             │    │    │
+│  │  │ • Name changes over time = +30 risk                                │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📋 PHASE 4: Reputation & Scam Reports
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 4: REPUTATION & SCAM REPORTS                                │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 4.1: Reddit Scam Intelligence                                        │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  Target Subreddits:                                                │    │    │
+│  │  │  • r/scams - search for company/recruiter name                     │    │    │
+│  │  │  • r/jobs - search for scam job postings                           │    │    │
+│  │  │  • r/recruitinghell - search for bad recruiter experiences        │    │    │
+│  │  │  • r/ScamAwareness - scam alerts                                   │    │    │
+│  │  │  • r/JobScams - specific job scams                                 │    │    │
+│  │  │                                                                     │    │    │
+│  │  │  Scoring:                                                          │    │    │
+│  │  │  • Each scam report = +15 risk                                     │    │    │
+│  │  │  • High upvotes (>100) = +20 additional risk                       │    │    │
+│  │  │  • Multiple reports from different users = +30 risk                │    │    │
+│  │  │  • Post with evidence/screenshots = +10 risk                       │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 4.2: Glassdoor Review Analysis                                      │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Overall company rating (1-5):                                   │    │    │
+│  │  │    - Rating < 2.5 = +30 risk                                       │    │    │
+│  │  │    - Rating 2.5-3.5 = +15 risk                                     │    │    │
+│  │  │  • Review count:                                                   │    │    │
+│  │  │    - Very few reviews for old company = +10 risk                   │    │    │
+│  │  │  • Recent negative reviews:                                        │    │    │
+│  │  │    - Scam/fake job reports = +25 risk                              │    │    │
+│  │  │    - Payment request mentions = +30 risk                           │    │    │
+│  │  │  • CEO approval rating:                                            │    │    │
+│  │  │    - Low approval (<50%) = +10 risk                                │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 4.3: Trustpilot Review Analysis                                    │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Trust score (1-5):                                              │    │    │
+│  │  │    - Score < 2 = +35 risk                                          │    │    │
+│  │  │    - Score 2-3 = +20 risk                                          │    │    │
+│  │  │  • Review patterns:                                                │    │    │
+│  │  │    - All 5-star reviews in short period = +25 risk (fake reviews)  │    │    │
+│  │  │    - Many 1-star scam reports = +40 risk                           │    │    │
+│  │  │  • Company response to negative reviews:                           │    │    │
+│  │  │    - No response = +10 risk                                        │    │    │
+│  │  │    - Defensive/aggressive response = +15 risk                      │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 4.4: Better Business Bureau (BBB)                                  │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Rating (A+ to F):                                               │    │    │
+│  │  │    - Rating D or F = +40 risk                                      │    │    │
+│  │  │    - Not accredited = +15 risk                                     │    │    │
+│  │  │  • Complaint count:                                                │    │    │
+│  │  │    - 5-10 complaints = +15 risk                                    │    │    │
+│  │  │    - 10+ complaints = +30 risk                                     │    │    │
+│  │  │    - Pattern of scam complaints = +40 risk                         │    │    │
+│  │  │  • Unanswered complaints = +20 risk                                │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 4.5: Telegram & WhatsApp Scam Channels                              │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Search public groups for company/recruiter name                 │    │    │
+│  │  │  • Check if number reported as scam:                               │    │    │
+│  │  │    - Telegram scam bot check = +30 risk                            │    │    │
+│  │  │    - WhatsApp business verification = -10 risk if verified        │    │    │
+│  │  │  • Channel age:                                                    │    │    │
+│  │  │    - Channel created <30 days = +25 risk                           │    │    │
+│  │  │  • Member count:                                                   │    │    │
+│  │  │    - Very low members = +15 risk                                   │    │    │
+│  │  │    - Very high members (scam broadcast) = +20 risk                 │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📋 PHASE 5: Network & Engagement Analysis
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 5: NETWORK & ENGAGEMENT ANALYSIS                           │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 5.1: Follower/Connection Quality                                     │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Ratio analysis:                                                 │    │    │
+│  │  │    - Following >> Followers (500+/50) = +15 risk (bot behavior)    │    │    │
+│  │  │    - Very few connections for claimed seniority = +20 risk         │    │    │
+│  │  │  • Suspicious followers:                                           │    │    │
+│  │  │    - Bot accounts = +15 risk                                       │    │    │
+│  │  │    - Purchased followers = +25 risk                                │    │    │
+│  │  │  • Engagement rate:                                                │    │    │
+│  │  │    - Very low engagement (<1%) = +10 risk                          │    │    │
+│  │  │    - Unusually high engagement = +10 risk (bot likes)              │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 5.2: Mutual Connections & Shared Networks                           │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  • Common connections between suspicious accounts:                 │    │    │
+│  │  │    - Shared scam networks = +30 risk                               │    │    │
+│  │  │  • Follows known scam accounts = +25 risk                          │    │    │
+│  │  │  • Followed by known scam accounts = +20 risk                      │    │    │
+│  │  │  • Interaction with scam posts = +15 risk                          │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📋 PHASE 6: Risk Scoring & Report Generation
+text
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 6: RISK SCORING & REPORT                                    │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 6.1: Weighted Risk Calculation                                       │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │                                                                      │    │    │
+│  │  │  Category A: Profile Age & Completeness (30% weight)                │    │    │
+│  │  │  ┌────────────────────────────────────────────────────────────┐    │    │    │
+│  │  │  │ • Very new profile (<1 month) = +40                         │    │    │    │
+│  │  │  │ • New profile (1-3 months) = +25                            │    │    │    │
+│  │  │  │ • Incomplete profile = +20                                  │    │    │    │
+│  │  │  │ • Generic/random username = +15                             │    │    │    │
+│  │  │  └────────────────────────────────────────────────────────────┘    │    │    │
+│  │  │                                                                      │    │    │
+│  │  │  Category B: Reputation & Reports (40% weight)                      │    │    │
+│  │  │  ┌────────────────────────────────────────────────────────────┐    │    │    │
+│  │  │  │ • Scam reports found = +50                                  │    │    │    │
+│  │  │  │ • Multiple scam reports = +30                               │    │    │    │
+│  │  │  │ • Low Glassdoor rating (<2.5) = +25                         │    │    │    │
+│  │  │  │ • BBB complaints = +20                                      │    │    │    │
+│  │  │  │ • Trustpilot scam warnings = +30                            │    │    │    │
+│  │  │  └────────────────────────────────────────────────────────────┘    │    │    │
+│  │  │                                                                      │    │    │
+│  │  │  Category C: Name & Identity (20% weight)                           │    │    │
+│  │  │  ┌────────────────────────────────────────────────────────────┐    │    │    │
+│  │  │  │ • Stock photo detected = +45                                │    │    │    │
+│  │  │  │ • Name inconsistency = +25                                  │    │    │    │
+│  │  │  │ • Multiple aliases = +20                                    │    │    │    │
+│  │  │  │ • Name matches scam database = +60                          │    │    │    │
+│  │  │  └────────────────────────────────────────────────────────────┘    │    │    │
+│  │  │                                                                      │    │    │
+│  │  │  Category D: Network & Engagement (10% weight)                      │    │    │
+│  │  │  ┌────────────────────────────────────────────────────────────┐    │    │    │
+│  │  │  │ • Suspicious follower ratio = +15                           │    │    │    │
+│  │  │  │ • Connected to known scammers = +25                         │    │    │    │
+│  │  │  │ • Bot-like behavior = +20                                   │    │    │    │
+│  │  │  └────────────────────────────────────────────────────────────┘    │    │    │
+│  │  │                                                                      │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 6.2: Final Risk Classification                                      │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │                                                                      │    │    │
+│  │  │  0-20   = 🟢 SAFE - Legitimate profile, no scam indicators          │    │    │
+│  │  │  21-40  = 🟡 LOW - Minor concerns, verify manually                  │    │    │
+│  │  │  41-60  = 🟠 MEDIUM - Suspicious patterns detected                  │    │    │
+│  │  │  61-80  = 🔴 HIGH - Strong scam indicators, likely fraudulent      │    │    │
+│  │  │  81-100 = ⚫ CRITICAL - Confirmed scammer, report immediately       │    │    │
+│  │  │                                                                      │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Step 6.3: Output Data Structure                                          │    │
+│  │  ┌────────────────────────────────────────────────────────────────────┐    │    │
+│  │  │  {                                                                  │    │    │
+│  │  │    "target_name": "John Smith",                                    │    │    │
+│  │  │    "target_type": "recruiter",                                     │    │    │
+│  │  │    "platforms_found": ["facebook", "linkedin", "twitter"],         │    │    │
+│  │  │    "profiles": {                                                   │    │    │
+│  │  │      "facebook": {                                                 │    │    │
+│  │  │        "exists": true,                                             │    │    │
+│  │  │        "profile_age_days": 45,                                     │    │    │
+│  │  │        "friend_count": 120,                                        │    │    │
+│  │  │        "has_photo": true,                                          │    │    │
+│  │  │        "post_frequency": "low",                                    │    │    │
+│  │  │        "risk_score": 35                                            │    │    │
+│  │  │      },                                                             │    │    │
+│  │  │      "linkedin": {                                                 │    │    │
+│  │  │        "exists": true,                                             │    │    │
+│  │  │        "profile_age_days": 180,                                    │    │    │
+│  │  │        "connections": 45,                                          │    │    │
+│  │  │        "recommendations": 0,                                       │    │    │
+│  │  │        "risk_score": 55                                            │    │    │
+│  │  │      }                                                              │    │    │
+│  │  │    },                                                               │    │    │
+│  │  │    "reputation": {                                                 │    │    │
+│  │  │      "scam_reports": 3,                                            │    │    │
+│  │  │      "sources": ["reddit", "glassdoor"],                           │    │    │
+│  │  │      "risk_score": 60                                              │    │    │
+│  │  │    },                                                               │    │    │
+│  │  │    "name_analysis": {                                              │    │    │
+│  │  │      "is_consistent": false,                                       │    │    │
+│  │  │      "aliases": ["John S", "JSmith"],                              │    │    │
+│  │  │      "risk_score": 25                                              │    │    │
+│  │  │    },                                                               │    │    │
+│  │  │    "reverse_image_search": {                                       │    │    │
+│  │  │      "is_stock_photo": true,                                       │    │    │
+│  │  │      "source": "shutterstock",                                     │    │    │
+│  │  │      "risk_score": 50                                              │    │    │
+│  │  │    },                                                               │    │    │
+│  │  │    "overall_risk_score": 68,                                       │    │    │
+│  │  │    "overall_risk_level": "HIGH",                                   │    │    │
+│  │  │    "red_flags": [                                                  │    │    │
+│  │  │      "Profile is only 45 days old",                                │    │    │
+│  │  │      "Stock photo detected on profile",                            │    │    │
+│  │  │      "3 scam reports found on Reddit",                             │    │    │
+│  │  │      "Name inconsistent across platforms"                          │    │    │
+│  │  │    ],                                                               │    │    │
+│  │  │    "recommendations": [                                            │    │    │
+│  │  │      "DO NOT engage - strong scam indicators",                     │    │    │
+│  │  │      "Report profile to platform",                                 │    │    │
+│  │  │      "Block and ignore all communications"                         │    │    │
+│  │  │    ]                                                                │    │    │
+│  │  │  }                                                                  │    │    │
+│  │  └────────────────────────────────────────────────────────────────────┘    │    │
+│  └────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘

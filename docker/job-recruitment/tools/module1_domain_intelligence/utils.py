@@ -624,4 +624,4 @@ __all__ = [
     
     # Console output
     'ConsolePrinter'
-]
+] 

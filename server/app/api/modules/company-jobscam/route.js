@@ -1,6 +1,8 @@
 import pool from '../../../../database/config';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
+import { addScanToQueue } from '@/lib/queue';
+import { deductCredits } from '@/lib/tokens';
 
 // Track pending requests to prevent duplicates
 const pendingRequests = new Map();
@@ -198,6 +200,16 @@ export async function POST(request) {
       const [scanResult] = await connection.execute('INSERT INTO scans (target_id, scan_type, status, priority, progress, created_at) VALUES (?, "job-recruitment", "pending", 1, 0, NOW())', [targetId]);
       const scanId = scanResult.insertId;
 
+      // ── Strategic Update: Secure Token Locking ──
+      // Deduct 1 token before starting the scan. If this fails, the user is out of tokens.
+      // Passing 'connection' to use the same transaction and avoid deadlocks.
+      const hasTokens = await deductCredits(user.id, 1, connection);
+      if (!hasTokens) {
+        await connection.rollback();
+        connection.release();
+        return NextResponse.json({ success: false, error: 'Insufficient tokens. Please recharge your account.' }, { status: 402 });
+      }
+
       await connection.execute(
         `INSERT INTO job_recruitment_scans (
           scan_id, job_url, job_title, job_description, 
@@ -238,9 +250,24 @@ export async function POST(request) {
       await connection.commit();
       connection.release();
 
+      // ── Strategic Update: BullMQ Orchestration ──
+      // Add the scan to the queue instead of calling Docker directly.
+      // This ensures the scan is persistent and scalable.
+      const job = await addScanToQueue({
+        scanId,
+        target: body.job_url || body.company_name || body.company_website,
+        userId: user.id,
+        module: 'job-recruitment'
+      });
+
       pendingRequests.delete(requestId);
 
-      return NextResponse.json({ success: true, scan: { id: scanId, status: 'pending' } });
+      return NextResponse.json({ 
+        success: true, 
+        scan: { id: scanId, status: 'pending' },
+        jobId: job.id,
+        credits_deducted: 1
+      });
 
     } catch (error) {
       if (connection) await connection.rollback();

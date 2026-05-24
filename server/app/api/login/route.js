@@ -28,7 +28,7 @@ export async function POST(request) {
 
     // Get user from database (check both email and username)
     const [users] = await db.execute(
-      'SELECT id, email, username, password, first_name, last_name, role FROM users WHERE (email = ? OR username = ?) AND is_active = TRUE',
+      'SELECT id, email, username, password, first_name, last_name, role, credits FROM users WHERE (email = ? OR username = ?) AND is_active = TRUE',
       [email, email]
     );
 
@@ -81,9 +81,10 @@ export async function POST(request) {
         id: user.id,
         email: user.email,
         username: user.username,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        role: user.role
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        credits: user.credits
       }
     });
 

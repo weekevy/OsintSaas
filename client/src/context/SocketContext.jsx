@@ -40,6 +40,16 @@ export const SocketProvider = ({ children }) => {
 
       setSocket(socketInstance);
 
+      socketInstance.on('scan_failed', (data) => {
+        if (window.showToast) {
+          window.showToast(data.message || 'Scan failed', 'error');
+        }
+      });
+
+      socketInstance.on('token_update', (data) => {
+        window.dispatchEvent(new CustomEvent('token_sync', { detail: data }));
+      });
+
       return () => {
         socketInstance.disconnect();
       };

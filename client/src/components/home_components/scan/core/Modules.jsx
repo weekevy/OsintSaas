@@ -503,11 +503,12 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Small delay before showing content for a smoother visual handover
+    // Very fast transition for professional feel
     const timer = setTimeout(() => {
       setIsLoading(false);
-      setShowContent(true);
-    }, 150);
+      const contentTimer = setTimeout(() => setShowContent(true), 50);
+      return () => clearTimeout(contentTimer);
+    }, 400); // 400ms skeleton time on first mount
     return () => clearTimeout(timer);
   }, []);
 
@@ -521,7 +522,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
         ].map(({ label, value, color, sub }, idx) => (
           <div 
             key={label} 
-            className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden"
+            className={`relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden transition-all duration-500 ease-out ${
+              showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            }`}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 to-transparent pointer-events-none"/>
             <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00E5FF]/30"/>
@@ -534,9 +537,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
       {/* ── Investigation Modules ── */}
       <div>
-        <div className={`flex items-center gap-3 mb-5 transition-all duration-700 ease-out ${
-          showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-        }`}>
+        <div className="flex items-center gap-3 mb-5">
           <div className="w-0.5 h-7 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF]"/>
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.14em]">Investigation Modules</h3>
           <span className="text-[8px] px-2 py-0.5 border border-white/15 text-white/35 uppercase tracking-[0.1em] rounded-sm">
@@ -559,11 +560,11 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     onClick={() => !isUnderConstruction && onStartScan(module, selectedTarget)}
                     onMouseEnter={() => setHoveredId(module.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-700 ease-out ${
-                      showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.97]'
+                    className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-500 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                     } ${isUnderConstruction ? 'cursor-default' : ''}`}
                     style={{ 
-                      transitionDelay: `${300 + idx * 80}ms`,
+                      transitionDelay: `${idx * 50}ms`,
                       background: isHovered
                         ? `linear-gradient(135deg, ${meta.accentBg} 0%, #0a0a0a 60%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, #0a0a0a 60%)',
@@ -701,9 +702,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
 
       {/* ── Open Source Platforms ── */}
       <div>
-        <div className={`flex items-center gap-3 mb-5 transition-all duration-500 ease-out delay-200 ${
-          !isLoading && showContent ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-        }`}>
+        <div className="flex items-center gap-3 mb-5">
           <div className="w-0.5 h-7 bg-gradient-to-b from-[#2DD4BF] to-[#00E5FF]"/>
           <h3 className="text-white text-[13px] font-bold uppercase tracking-[0.14em]">Open Source Platforms</h3>
           <span className="text-[8px] px-2 py-0.5 border border-white/15 text-white/35 uppercase tracking-[0.1em] rounded-sm">
@@ -728,11 +727,11 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     onClick={() => !isUnderConstruction && onStartScan(platform, selectedTarget)}
                     onMouseEnter={() => setHoveredId(platform.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-700 ease-out ${
-                      showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-[0.98]'
+                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-500 ease-out ${
+                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                     } ${isUnderConstruction ? 'cursor-default' : ''}`}
                     style={{ 
-                      transitionDelay: `${800 + idx * 60}ms`,
+                      transitionDelay: `${idx * 40}ms`,
                       background: isH
                         ? `linear-gradient(135deg, ${pm.bg} 0%, #0a0a0a 70%)`
                         : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, #0a0a0a 70%)',

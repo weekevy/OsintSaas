@@ -17,6 +17,21 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
+  // Handle real-time token updates
+  useEffect(() => {
+    // Note: Since SocketProvider is a child of AuthProvider in App.js,
+    // we should ideally use a custom event or check for socket availability.
+    // For now, we'll use a window event as a bridge or refactor the provider order.
+    const handleTokenUpdate = (event) => {
+      if (event.detail && typeof event.detail.credits === 'number') {
+        setUser(prev => prev ? { ...prev, credits: event.detail.credits } : null);
+      }
+    };
+
+    window.addEventListener('token_sync', handleTokenUpdate);
+    return () => window.removeEventListener('token_sync', handleTokenUpdate);
+  }, []);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -125,6 +140,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateCredits = (newCredits) => {
+    setUser(prev => prev ? { ...prev, credits: newCredits } : null);
+  };
+
   const value = {
     user,
     loading,
@@ -133,7 +152,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     checkAuth,
-    finalizeLogin
+    finalizeLogin,
+    updateCredits
   };
 
   return (

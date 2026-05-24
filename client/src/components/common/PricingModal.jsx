@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const PricingModal = ({ isOpen, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const { updateCredits } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -19,6 +23,37 @@ const PricingModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   if (!shouldRender) return null;
+
+  const handlePurchase = async (plan) => {
+    if (!plan.isPremium || isPurchasing) return;
+
+    try {
+      setIsPurchasing(true);
+      const tokenCount = parseInt(plan.tokens.split(' ')[0]);
+      
+      const response = await api.post('/api/user/recharge', { tokens: tokenCount });
+      
+      if (response.data.success) {
+        updateCredits(response.data.credits);
+        // Show success message using the global toast system
+        if (window.showToast) {
+          window.showToast(`Success! Your account has been recharged with ${tokenCount} tokens.`, 'success');
+        } else {
+          alert(`Success! Your account has been recharged with ${tokenCount} tokens.`);
+        }
+        onClose();
+      }
+    } catch (err) {
+      console.error('Purchase failed:', err);
+      if (window.showToast) {
+        window.showToast('Purchase failed. Please try again.', 'error');
+      } else {
+        alert('Purchase failed. Please try again.');
+      }
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   const plans = [
     {
@@ -132,12 +167,15 @@ const PricingModal = ({ isOpen, onClose }) => {
                     ))}
                   </div>
 
-                  <button className={`w-full py-4 rounded-xl sm:rounded-[1.2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 mt-auto ${
+                  <button 
+                    onClick={() => handlePurchase(plan)}
+                    disabled={isPurchasing && plan.isPremium}
+                    className={`w-full py-4 rounded-xl sm:rounded-[1.2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 mt-auto ${
                     plan.isPremium 
                       ? 'bg-[#00E5FF] text-black shadow-[0_10px_20px_-5px_rgba(0,229,255,0.3)] hover:brightness-110' 
-                      : 'bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 hover:text-white'
+                      : 'bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 hover:text-white cursor-default'
                   }`}>
-                    {plan.buttonText}
+                    {isPurchasing && plan.isPremium ? 'Processing...' : plan.buttonText}
                   </button>
                 </div>
               </div>

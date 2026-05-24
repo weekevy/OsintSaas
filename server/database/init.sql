@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
     website VARCHAR(255),
     social JSON,
     role ENUM('user', 'admin', 'premium') DEFAULT 'user',
+    credits INT DEFAULT 100,
     is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
     -- Notification Preferences

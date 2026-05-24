@@ -646,7 +646,7 @@ const ScanDashboard = ({
 
   return (
     <div className="dashboard-ambient min-h-screen font-sans text-white">
-      <div className="relative z-[1] max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-10 py-5 sm:py-8 md:py-10 pb-16">
+      <div className="relative max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-10 py-5 sm:py-8 md:py-10 pb-16">
 
         {/* ── HEADER ── */}
         <DashboardHeader

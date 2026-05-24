@@ -10,34 +10,141 @@ const SCAN_STATES_KEY = 'osint_scan_states';
 // InvestigationPopup
 // ──────────────────────────────────────────────────────────────
 const InvestigationPopup = ({ isOpen, onClose, scan }) => {
-  const [investigationData, setInvestigationData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [logs, setLogs] = useState([]);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [progress, setProgress] = useState(0);
+  const [startTime] = useState(Date.now());
+  const [elapsedTime, setElapsedTime] = useState('00:00');
+  const [isClosing, setIsClosing] = useState(false);
+  const { socket, isConnected } = useSocket();
+  const scrollRef = React.useRef(null);
 
-  React.useEffect(() => {
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 100);
+  };
+
+  // Helper to make technical logs understandable for non-technical users
+  const humanizeLog = (message) => {
+    if (message.includes('INVOKING')) {
+      const module = message.split('INVOKING: ')[1];
+      return `Launching deeper analysis: ${module}...`;
+    }
+    if (message.includes('EXECUTING')) {
+      return `Processing and verifying data points...`;
+    }
+    if (message.includes('COMPLETED')) {
+      const module = message.split('COMPLETED: ')[1];
+      return `Finished checking ${module}. Insights gathered.`;
+    }
+    if (message.includes('STARTING PIPELINE')) {
+      return `Target identified. Initializing multi-layer OSINT pipeline...`;
+    }
+    if (message.includes('ANALYZING COLLECTED DATA')) {
+      return `Aggregating intelligence. Running risk assessment algorithms...`;
+    }
+    if (message.includes('DB FINALIZED')) {
+      return `Intelligence report finalized. Security clearance granted.`;
+    }
+    if (message.includes('SKIPPING')) {
+      return `Resource check: Skipping unnecessary module to optimize speed.`;
+    }
+    if (message.includes('Live Threat')) {
+      return `Alert: Potential vulnerability or red flag detected in real-time.`;
+    }
+    if (message.includes('Dispatching target to')) {
+      return `Connecting to specialized intelligence node...`;
+    }
+    if (message.includes('Worker picked up job')) {
+      return `System resources allocated. Initializing scan engine.`;
+    }
+    return message.replace(/\[SYSTEM\]|\[SCAN-\d+\]|\[.*?\]/g, '').trim();
+  };
+
+  useEffect(() => {
     if (isOpen && scan) {
-      setIsLoading(false);
-      setInvestigationData({
-        target: scan.target,
-        module: scan.moduleName,
-        status: 'investigating',
-        findings: [],
-        steps: [
-          { id: 1, name: 'Initializing', status: 'completed', timestamp: new Date().toISOString() },
-          { id: 2, name: 'Scanning Target', status: 'running', timestamp: new Date().toISOString() },
-          { id: 3, name: 'Analyzing Results', status: 'pending', timestamp: null },
-          { id: 4, name: 'Generating Report', status: 'pending', timestamp: null },
-        ]
-      });
+      setLogs([{
+        id: 'init',
+        message: `Initializing investigation for target: ${scan.target}`,
+        level: 'INFO',
+        timestamp: new Date().toISOString()
+      }]);
+      setProgress(scan.progress || 0);
+      setCurrentStep(scan.progress >= 100 ? 4 : (scan.progress > 0 ? 2 : 1));
+    } else {
+      setLogs([]);
     }
   }, [isOpen, scan]);
 
+  useEffect(() => {
+    let interval;
+    if (isOpen && progress < 100) {
+      interval = setInterval(() => {
+        const seconds = Math.floor((Date.now() - startTime) / 1000);
+        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        setElapsedTime(`${mins}:${secs}`);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, progress, startTime]);
+
+  useEffect(() => {
+    if (!socket || !isConnected || !isOpen || !scan) return;
+
+    const scanId = scan.originalId || scan.id?.split('_').pop();
+
+    const handleLog = (data) => {
+      if (String(data.scan_id) === String(scanId)) {
+        setLogs(prev => [...prev.slice(-100), {
+          id: Date.now() + Math.random(),
+          ...data,
+          message: humanizeLog(data.message)
+        }]);
+      }
+    };
+
+    const handleProgress = (data) => {
+      if (String(data.scan_id) === String(scanId)) {
+        setProgress(data.progress);
+        if (data.progress >= 100) setCurrentStep(4);
+        else if (data.progress > 70) setCurrentStep(3);
+        else if (data.progress > 5) setCurrentStep(2);
+      }
+    };
+
+    socket.on('scan_log', handleLog);
+    socket.on('scan_progress', handleProgress);
+
+    return () => {
+      socket.off('scan_log', handleLog);
+      socket.off('scan_progress', handleProgress);
+    };
+  }, [socket, isConnected, isOpen, scan]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [logs]);
+
   if (!isOpen) return null;
+
+  const steps = [
+    { id: 1, name: 'Preparation', status: currentStep > 1 ? 'completed' : 'running' },
+    { id: 2, name: 'Active Intelligence', status: currentStep > 2 ? 'completed' : (currentStep === 2 ? 'running' : 'pending') },
+    { id: 3, name: 'Risk Assessment', status: currentStep > 3 ? 'completed' : (currentStep === 3 ? 'running' : 'pending') },
+    { id: 4, name: 'Final Report', status: currentStep === 4 && progress >= 100 ? 'completed' : (currentStep === 4 ? 'running' : 'pending') },
+  ];
 
   const getStepIcon = (stepStatus) => {
     if (stepStatus === 'completed') {
       return (
-        <div className="w-7 h-7 rounded-full border border-[#2DD4BF]/40 flex items-center justify-center bg-[#2DD4BF]/10">
-          <svg className="w-4 h-4 text-[#2DD4BF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-6 h-6 rounded-full border border-[#2DD4BF]/40 flex items-center justify-center bg-[#2DD4BF]/10">
+          <svg className="w-3.5 h-3.5 text-[#2DD4BF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -45,132 +152,205 @@ const InvestigationPopup = ({ isOpen, onClose, scan }) => {
     }
     if (stepStatus === 'running') {
       return (
-        <div className="w-7 h-7 rounded-full border border-[#00E5FF]/40 flex items-center justify-center">
-          <div className="w-3.5 h-3.5 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 rounded-full border border-[#00E5FF]/40 flex items-center justify-center">
+          <div className="w-3 h-3 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
         </div>
       );
     }
     return (
-      <div className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center">
-        <span className="text-white/40 text-[11px]">○</span>
+      <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center bg-white/5">
+        <span className="text-white/40 text-[10px]">○</span>
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] border border-white/10 rounded-2xl bg-black overflow-hidden shadow-2xl shadow-black/60" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={`fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity duration-100 ${isClosing ? 'opacity-0' : 'opacity-100 animate-fadeIn'}`} 
+      onClick={handleClose}
+    >
+      <div 
+        className={`relative w-full max-w-[90vw] h-[85vh] border border-white/10 rounded-2xl bg-[#0A0A0A] overflow-hidden shadow-2xl flex flex-col transition-all duration-100 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scaleIn'}`} 
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00E5FF]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
-
-        <div className="relative px-4 sm:px-6 py-4 sm:py-5 border-b border-white/[0.07]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-white text-base sm:text-lg font-bold">Investigation Details</h2>
-              <p className="text-white/35 text-[10px] sm:text-[11px] mt-0.5">Live investigation progress</p>
-            </div>
-            <button onClick={onClose} className="p-1.5 sm:p-2 text-white/35 hover:text-[#00E5FF] transition-colors">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        
+        {/* Header */}
+        <div className="relative px-6 py-4 border-b border-white/[0.07] flex items-center justify-between bg-[#111111]/80">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+              <svg className="w-6 h-6 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </button>
+            </div>
+            <div>
+              <h2 className="text-white text-lg font-bold tracking-tight">Investigation Terminal</h2>
+              <div className="flex items-center gap-3 mt-0.5">
+                <span className="text-[#00E5FF]/70 text-[10px] uppercase font-bold tracking-widest bg-[#00E5FF]/5 px-2 py-0.5 rounded border border-[#00E5FF]/10">OSINT ENGINE V2.0</span>
+                <span className="text-white/30 text-[11px] uppercase tracking-wider">Target: {scan?.target}</span>
+              </div>
+            </div>
           </div>
+          <button onClick={handleClose} className="p-2 text-white/30 hover:text-[#00E5FF] transition-all rounded-lg hover:bg-white/5 active:scale-95">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="relative p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-10 sm:py-12">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 border-2 border-[#00E5FF]/30 border-t-[#00E5FF] rounded-full animate-spin mb-4 sm:mb-5" />
-              <p className="text-white/50 text-xs sm:text-sm">Loading investigation data...</p>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar: Progress & Info */}
+          <div className="w-72 border-r border-white/[0.07] bg-[#0E0E0E] p-6 flex flex-col gap-8 shadow-inner">
+            <div>
+              <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]/40" />
+                Investigation Phase
+              </h3>
+              <div className="space-y-5">
+                {steps.map((step) => (
+                  <div key={step.id} className="flex items-center gap-3 group">
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      {getStepIcon(step.status)}
+                    </div>
+                    <span className={`text-xs font-semibold tracking-wide transition-colors duration-300 ${
+                      step.status === 'running' ? 'text-[#00E5FF]' :
+                      step.status === 'completed' ? 'text-white' : 'text-white/20'
+                    }`}>
+                      {step.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : (
-            <>
-              <div className="mb-5 sm:mb-6 p-4 sm:p-5 rounded-xl border border-white/10 bg-white/[0.03]">
-                <div className="flex items-center gap-3 sm:gap-4 mb-2">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-[0.1em]">Target</div>
-                    <div className="text-white text-sm sm:text-base font-semibold">{scan?.target}</div>
-                  </div>
+
+            <div>
+              <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]/40" />
+                Execution Progress
+              </h3>
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <span className="text-[10px] font-bold inline-block py-1 px-2 uppercase rounded-lg text-[#00E5FF] bg-[#00E5FF]/10 border border-[#00E5FF]/10">
+                    {progress}% Complete
+                  </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-[10px] sm:text-[11px]">
-                  <span className="text-white/40">Module:</span>
-                  <span className="text-white/70">{scan?.moduleName}</span>
-                  <span className="text-white/40">Status:</span>
-                  <span className="text-[#00E5FF] animate-pulse">● ACTIVE</span>
+                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-white/[0.03] border border-white/[0.05]">
+                  <div 
+                    style={{ width: `${progress}%` }}
+                    className="shadow-[0_0_15px_rgba(0,229,255,0.4)] flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] transition-all duration-700 ease-out"
+                  />
                 </div>
               </div>
+            </div>
 
-              <div className="mb-5 sm:mb-6">
-                <h3 className="text-white text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.14em] mb-2.5 sm:mb-3 flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Investigation Progress
-                </h3>
-                <div className="space-y-2 sm:space-y-3">
-                  {investigationData?.steps.map((step) => (
-                    <div key={step.id} className="flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-xl border border-white/10 bg-white/[0.03]">
-                      {getStepIcon(step.status)}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-[11px] sm:text-[12px] font-semibold truncate ${
-                            step.status === 'running' ? 'text-[#00E5FF]' :
-                            step.status === 'completed' ? 'text-white' : 'text-white/40'
-                          }`}>
-                            {step.name}
-                          </span>
-                          {step.status === 'completed' && step.timestamp && (
-                            <span className="text-white/30 text-[9px] flex-shrink-0">
-                              {new Date(step.timestamp).toLocaleTimeString()}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-white/40 text-[9px] sm:text-[10px] mt-0.5">
-                          {step.status === 'running' ? 'Processing...' :
-                           step.status === 'completed' ? 'Complete' : 'Waiting'}
-                        </p>
-                      </div>
+            <div className="space-y-4">
+              <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                Session Intelligence
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
+                  <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">Duration</div>
+                  <div className="text-[#00E5FF] text-xs font-mono font-bold">{elapsedTime}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
+                  <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">Cost</div>
+                  <div className="text-[#2DD4BF] text-xs font-mono font-bold">-1 Token</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
+                  <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">Health</div>
+                  <div className="text-[#a3e635] text-[10px] font-bold">OPTIMAL</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
+                  <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">Encryption</div>
+                  <div className="text-white/80 text-[9px] font-mono flex items-center gap-1">
+                    <span className="w-1 h-1 bg-[#00E5FF] rounded-full animate-pulse" />
+                    AES-256
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/5 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-[#00E5FF]/5 rounded-full blur-2xl -mr-8 -mt-8 transition-all group-hover:bg-[#00E5FF]/10" />
+                <div className="text-white/30 text-[8px] uppercase tracking-widest mb-1">Active Module</div>
+                <div className="text-white text-sm font-bold tracking-tight">{scan?.moduleName}</div>
+                <div className="mt-3 text-white/30 text-[8px] uppercase tracking-widest mb-1">Registry ID</div>
+                <div className="text-[#00E5FF]/60 text-xs font-mono">#{scan?.originalId || scan?.id}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content: Terminal Logs */}
+          <div className="flex-1 flex flex-col bg-[#0C0C0C] shadow-2xl relative">
+            {/* Glossy overlay effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#00E5FF]/[0.01] to-transparent pointer-events-none" />
+            
+            <div className="px-6 py-3 border-b border-white/[0.05] flex items-center justify-between bg-[#141414]">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                </div>
+                <span className="text-[10px] text-white/40 font-mono tracking-[0.2em] uppercase">Intelligence Stream // CORE_V2</span>
+              </div>
+              <div className="text-[9px] text-white/30 font-mono bg-white/[0.03] px-3 py-1 rounded-lg border border-white/[0.05] flex items-center gap-2">
+                <span className="w-1 h-1 bg-[#2DD4BF] rounded-full animate-pulse" />
+                {logs.length} PACKETS
+              </div>
+            </div>
+            
+            <div 
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto p-0 font-mono text-[13px] custom-scrollbar"
+            >
+              {logs.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center opacity-30 bg-[#0C0C0C]">
+                  <div className="w-16 h-16 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin mb-6" />
+                  <p className="text-[11px] tracking-[0.3em] font-bold text-[#00E5FF]">INITIALIZING DATA STREAM</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-white/[0.03]">
+                  {logs.map((log, i) => (
+                    <div key={log.id} className={`flex gap-5 px-8 py-3.5 group items-start transition-colors duration-100 ${i % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.01]'}`}>
+                      <span className="text-white/20 flex-shrink-0 w-20 pt-1 text-[11px] font-medium group-hover:text-white/40 transition-colors">
+                        {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
+                      </span>
+                      <span className={`flex-shrink-0 w-20 font-black text-[9px] tracking-widest pt-1.5 px-2 py-0.5 rounded border border-current bg-current/5 inline-block text-center ${
+                        log.level === 'ERROR' ? 'text-red-500/80' :
+                        log.level === 'WARNING' ? 'text-yellow-500/80' :
+                        log.level === 'SUCCESS' ? 'text-[#2DD4BF]/80' : 'text-[#00E5FF]/60'
+                      }`}>
+                        {log.level === 'SUCCESS' ? 'SUCCESS' : log.level === 'ERROR' ? 'ERROR' : log.level === 'WARNING' ? 'ALERT' : 'PROCESS'}
+                      </span>
+                      <span className="text-white/70 group-hover:text-white transition-colors leading-relaxed pt-1">
+                        {log.message}
+                      </span>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <h3 className="text-white text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.14em] mb-2.5 sm:mb-3 flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  Live Data Stream
-                </h3>
-                <div className="p-3 sm:p-4 rounded-xl border border-white/10 bg-black/30">
-                  <div className="space-y-1.5 font-mono text-[10px] sm:text-[11px]">
-                    <div className="flex items-center gap-2 text-white/40">
-                      <span className="text-[#00E5FF]">●</span>
-                      <span>Fetching target information...</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white/30 animate-pulse">
-                      <span className="text-[#00E5FF]">●</span>
-                      <span>Analyzing digital footprint...</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white/30">
-                      <span className="text-[#00E5FF]">○</span>
-                      <span>Cross-referencing databases...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+              )}
+              <div className="h-8" />
+            </div>
+          </div>
         </div>
 
-        <div className="relative px-4 sm:px-6 py-3 sm:py-4 border-t border-white/[0.07] bg-black/20 flex justify-end">
-          <button onClick={onClose} className="px-4 sm:px-5 py-1.5 sm:py-2 border border-white/10 rounded-xl text-white/55 hover:text-white hover:border-white/20 transition-colors text-[10px] sm:text-[11px] uppercase tracking-[0.08em]">
-            Close
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-white/[0.07] bg-[#111111]/90 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
+              <span className="text-[10px] text-white/30 font-bold tracking-widest">ENCRYPTED NODE: <span className="text-white/60">ALPHA-9</span></span>
+            </div>
+            <div className="w-px h-4 bg-white/10" />
+            <span className="text-[10px] text-white/20 font-mono">STATION_OSINT_LOCAL</span>
+          </div>
+          <button 
+            onClick={handleClose}
+            className="px-8 py-2 bg-[#00E5FF]/5 hover:bg-[#00E5FF]/10 border border-[#00E5FF]/20 hover:border-[#00E5FF]/40 rounded-xl text-[#00E5FF] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-[0_0_15px_rgba(0,229,255,0.05)]"
+          >
+            Acknowledge & Close
           </button>
         </div>
       </div>
@@ -182,10 +362,20 @@ const InvestigationPopup = ({ isOpen, onClose, scan }) => {
 // ConfirmModal
 // ──────────────────────────────────────────────────────────────
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = false }) => {
+  const [isClosing, setIsClosing] = useState(false);
+
   React.useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 100);
+  };
 
   if (!isOpen) return null;
 
@@ -195,9 +385,12 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = fal
     : 'border-[#fbbf24]/40 text-[#fbbf24] hover:bg-[#fbbf24]/10';
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80" onClick={onClose}>
+    <div 
+      className={`fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-100 ${isClosing ? 'opacity-0' : 'opacity-100 animate-fadeIn'}`} 
+      onClick={handleClose}
+    >
       <div
-        className="relative w-full max-w-sm sm:max-w-md border border-white/10 rounded-2xl bg-black overflow-hidden shadow-2xl shadow-black/60"
+        className={`relative w-full max-w-sm sm:max-w-md border border-white/10 rounded-2xl bg-[#0A0A0A] overflow-hidden shadow-2xl transition-all duration-100 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scaleIn'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
@@ -227,13 +420,13 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = fal
 
           <div className="flex justify-end gap-2 sm:gap-3 mt-5 sm:mt-6">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 sm:px-5 py-1.5 sm:py-2 border border-white/10 rounded-xl text-white/55 hover:text-white hover:border-white/20 transition-colors text-[10px] sm:text-[11px] uppercase tracking-[0.08em]"
             >
               Cancel
             </button>
             <button
-              onClick={onConfirm}
+              onClick={() => { onConfirm(); handleClose(); }}
               className={`px-5 sm:px-6 py-1.5 sm:py-2 border rounded-xl text-[10px] sm:text-[11px] uppercase tracking-[0.08em] transition-colors flex items-center gap-1.5 sm:gap-2 ${accentClass}`}
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,30 +445,40 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, danger = fal
 // ScanProgressModal
 // ──────────────────────────────────────────────────────────────
 export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) => {
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 100);
+  };
+
   if (!isOpen || !scan) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 overflow-y-auto"
-      onClick={onClose}
+      className={`fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-y-auto transition-opacity duration-100 ${isClosing ? 'opacity-0' : 'opacity-100 animate-fadeIn'}`}
+      onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-2xl sm:max-w-4xl max-h-[92vh] border border-white/10 rounded-2xl bg-black overflow-hidden my-4 sm:my-8 shadow-2xl shadow-black/60"
+        className={`relative w-full max-w-2xl sm:max-w-4xl max-h-[92vh] border border-white/10 rounded-2xl bg-[#0A0A0A] overflow-hidden my-4 sm:my-8 shadow-2xl transition-all duration-100 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scaleIn'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00E5FF]/40 to-transparent" />
 
-        <div className="relative px-4 sm:px-6 py-4 sm:py-5 border-b border-white/[0.07]">
+        <div className="relative px-4 sm:px-6 py-4 sm:py-5 border-b border-white/[0.07] bg-[#111111]/80">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-              <div className="w-9 h-9 sm:w-11 sm:h-11 border border-[#00E5FF]/35 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/5">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 border border-[#00E5FF]/35 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 bg-[#00E5FF]/5 shadow-[0_0_10px_rgba(0,229,255,0.1)]">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-white text-sm sm:text-lg font-bold truncate">
+                <h2 className="text-white text-sm sm:text-lg font-bold truncate tracking-tight">
                   Scan Overview — {scan.tool}
                 </h2>
                 <p className="text-white/35 text-[10px] sm:text-[11px] truncate mt-0.5">
@@ -283,7 +486,7 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 sm:p-2 text-white/35 hover:text-[#00E5FF] transition-colors flex-shrink-0">
+            <button onClick={handleClose} className="p-1.5 sm:p-2 text-white/35 hover:text-[#00E5FF] transition-all rounded-lg hover:bg-white/5 active:scale-95">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -291,20 +494,18 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
           </div>
         </div>
 
-        <div className="relative p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-120px)]">
+        <div className="relative p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-120px)] bg-[#0C0C0C]/50">
           <div className="mb-5 sm:mb-6">
             <h3 className="text-white text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.14em] mb-2.5 sm:mb-3 flex items-center gap-2">
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]/40" />
               Investigation Assets
             </h3>
-            <div className="bg-white/[0.02] border border-white/[0.07] rounded-xl p-3 sm:p-4">
+            <div className="bg-[#141414] border border-white/[0.05] rounded-xl p-3 sm:p-4 shadow-inner">
               {scan.assets && Object.keys(scan.assets).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   {Object.entries(scan.assets).map(([key, value]) =>
                     value && value !== '' ? (
-                      <div key={key} className="bg-white/[0.04] p-2.5 sm:p-3 border border-white/[0.07] rounded-lg">
+                      <div key={key} className="bg-white/[0.02] p-2.5 sm:p-3 border border-white/[0.05] rounded-lg group hover:border-white/10 transition-colors">
                         <h4 className="text-white/45 text-[9px] uppercase tracking-[0.14em] mb-1">
                           {key.replace(/_/g, ' ')}
                         </h4>
@@ -321,9 +522,7 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
 
           <div>
             <h3 className="text-white text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.14em] mb-2.5 sm:mb-3 flex items-center gap-2">
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]/40" />
               Scan Details
             </h3>
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -337,7 +536,7 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
                 { label: 'Start Time', value: scan.startTime || 'Not started' },
                 { label: 'Findings', value: scan.findings || 0 },
               ].map(({ label, value, color = 'text-white' }) => (
-                <div key={label} className="bg-white/[0.03] p-2.5 sm:p-3 border border-white/[0.07] rounded-lg">
+                <div key={label} className="bg-[#141414] p-2.5 sm:p-3 border border-white/[0.05] rounded-lg shadow-inner">
                   <div className="text-white/40 text-[8px] sm:text-[9px] uppercase tracking-[0.14em] mb-1">{label}</div>
                   <div className={`text-[12px] sm:text-[13px] font-semibold truncate ${color}`}>{value}</div>
                 </div>
@@ -346,9 +545,9 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
           </div>
         </div>
 
-        <div className="relative px-4 sm:px-6 py-3 sm:py-4 border-t border-white/[0.07] bg-black/20 flex justify-end gap-2 sm:gap-3">
+        <div className="relative px-4 sm:px-6 py-3 sm:py-4 border-t border-white/[0.07] bg-[#111111]/90 flex justify-end gap-2 sm:gap-3">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 sm:px-5 py-1.5 sm:py-2 border border-white/10 rounded-xl text-white/55 hover:text-white hover:border-white/20 transition-colors text-[10px] sm:text-[11px] uppercase tracking-[0.08em]"
           >
             Close
@@ -356,7 +555,7 @@ export const ScanProgressModal = ({ isOpen, onClose, scan, onGenerateReport }) =
           {onGenerateReport && (
             <button
               onClick={onGenerateReport}
-              className="px-4 sm:px-6 py-1.5 sm:py-2 border border-[#00E5FF]/35 rounded-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors text-[10px] sm:text-[11px] uppercase tracking-[0.08em] flex items-center gap-1.5 sm:gap-2"
+              className="px-4 sm:px-6 py-1.5 sm:py-2 bg-[#00E5FF]/5 border border-[#00E5FF]/35 rounded-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors text-[10px] sm:text-[11px] uppercase tracking-[0.08em] flex items-center gap-1.5 sm:gap-2 shadow-[0_0_15px_rgba(0,229,255,0.05)]"
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -400,6 +599,23 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
     try { localStorage.setItem(SCAN_STATES_KEY, JSON.stringify(scanStatuses)); } catch {}
   }, [scanStatuses]);
 
+  // Stagger each card's fade-in for a premium feel
+  useEffect(() => {
+    if (!runningScans || runningScans.length === 0) {
+      setVisibleCards(new Set());
+      return;
+    }
+    
+    runningScans.forEach((scan, i) => {
+      if (!visibleCards.has(scan.id)) {
+        const t = setTimeout(() => {
+          setVisibleCards(prev => new Set([...prev, scan.id]));
+        }, i * 40); // Snappy but smooth stagger
+        return () => clearTimeout(t);
+      }
+    });
+  }, [runningScans]);
+
   // WebSocket listeners for real-time progress
   useEffect(() => {
     if (!socket || !isConnected) return;
@@ -435,23 +651,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
     };
   }, [socket, isConnected, runningScans, onRefresh]);
 
-  // Stagger each card's fade-in when the list first appears or updates
-  useEffect(() => {
-    if (!runningScans || runningScans.length === 0) {
-      setVisibleCards(new Set());
-      return;
-    }
-    
-    runningScans.forEach((scan, i) => {
-      if (!visibleCards.has(scan.id)) {
-        const t = setTimeout(() => {
-          setVisibleCards(prev => new Set([...prev, scan.id]));
-        }, i * 35); // Snappier stagger (35ms)
-        return () => clearTimeout(t);
-      }
-    });
-  }, [runningScans]);
-
+  // Scans appear instantly for a more professional, less 'laggy' feel when switching tabs
   if (!runningScans || runningScans.length === 0) return null;
 
   const getScanState = (scanId) => scanStatuses[scanId] || { status: 'pending', isPaused: false, progress: 0 };
@@ -611,7 +811,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
           return (
             <div
               key={scan.id}
-              className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-all duration-300 bg-black overflow-hidden ${
+              className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl sm:rounded-2xl transition-all duration-500 bg-black overflow-hidden ${
                 isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
               }`}
               style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
@@ -645,7 +845,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
                     {isPending && (
                       <button
                         onClick={(e) => handleStartScan(scan, e)}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -657,7 +857,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
                     {isFailed && (
                       <button
                         onClick={(e) => handleStartScan(scan, e)}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-500/40 rounded-lg text-red-400 hover:bg-red-500/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-red-500/5"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-500/40 rounded-lg text-red-400 hover:bg-red-500/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-red-500/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -669,7 +869,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
                     {!isPending && !isFailed && (
                       <button
                         onClick={(e) => handleInvestigationClick(scan, e)}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#00E5FF]/40 rounded-lg text-[#00E5FF] hover:bg-[#00E5FF]/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#00E5FF]/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -682,7 +882,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
                     {isRunning && (
                       <button
                         onClick={(e) => handlePauseClick(scan, e)}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#fbbf24]/40 rounded-lg text-[#fbbf24] hover:bg-[#fbbf24]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#fbbf24]/5"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#fbbf24]/40 rounded-lg text-[#fbbf24] hover:bg-[#fbbf24]/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#fbbf24]/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -694,7 +894,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
                     {isPaused && !isFailed && (
                       <button
                         onClick={(e) => handleResumeClick(scan, e)}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2DD4BF]/40 rounded-lg text-[#2DD4BF] hover:bg-[#2DD4BF]/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#2DD4BF]/5"
                       >
                         <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -706,7 +906,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
 
                     <button
                       onClick={(e) => handleEditClick(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/15 rounded-lg text-white/60 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em]"
+                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-white/15 rounded-lg text-white/60 hover:border-[#00E5FF]/40 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em]"
                     >
                       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -716,7 +916,7 @@ export const RunningScans = ({ runningScans, onEditScan, onRemoveScan, onRefresh
 
                     <button
                       onClick={(e) => handleRemoveClick(scan, e)}
-                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#f87171]/30 rounded-lg text-[#f87171] hover:bg-[#f87171]/15 transition-all duration-150 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#f87171]/[0.04]"
+                      className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 border border-[#f87171]/30 rounded-lg text-[#f87171] hover:bg-[#f87171]/15 transition-all duration-100 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#f87171]/[0.04]"
                     >
                       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -824,7 +1024,7 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
       if (!visibleCards.has(scan.id)) {
         const t = setTimeout(() => {
           setVisibleCards(prev => new Set([...prev, scan.id]));
-        }, i * 30); // Ultra-snappy stagger (30ms)
+        }, i * 30); // Very snappy stagger
         return () => clearTimeout(t);
       }
     });
@@ -870,7 +1070,7 @@ export const ScanHistory = ({ scanHistory, onRemoveScan }) => {
             return (
               <div
                 key={scan.id}
-                className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-all duration-300 bg-black overflow-hidden ${
+                className={`relative border border-white/10 hover:border-[#00E5FF]/30 rounded-xl transition-all duration-500 bg-black overflow-hidden ${
                   isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.99]'
                 }`}
                 style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}

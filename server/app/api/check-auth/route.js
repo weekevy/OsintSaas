@@ -17,7 +17,7 @@ export async function GET(request) {
     if (decoded) {
       // Token is valid, get user data
       const [users] = await db.execute(
-        'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
+        'SELECT id, email, username, first_name, last_name, role, credits FROM users WHERE id = ?',
         [decoded.id]
       );
 
@@ -33,7 +33,8 @@ export async function GET(request) {
           username: users[0].username,
           firstName: users[0].first_name,
           lastName: users[0].last_name,
-          role: users[0].role
+          role: users[0].role,
+          credits: users[0].credits
         }
       });
     }
@@ -51,7 +52,7 @@ export async function GET(request) {
         if (sessions.length > 0) {
           // Get user data
           const [users] = await db.execute(
-            'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
+            'SELECT id, email, username, first_name, last_name, role, credits FROM users WHERE id = ?',
             [sessions[0].user_id]
           );
 
@@ -73,7 +74,8 @@ export async function GET(request) {
                 username: users[0].username,
                 firstName: users[0].first_name,
                 lastName: users[0].last_name,
-                role: users[0].role
+                role: users[0].role,
+                credits: users[0].credits
               }
             });
 

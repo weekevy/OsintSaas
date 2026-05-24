@@ -29,14 +29,35 @@ class ConfigManager:
 
 config = ConfigManager()
 
-def loud_log(msg, level="INFO", module=None, scan_id=None, data=None):
+def loud_log(msg, level="INFO", module=None, scan_id=None, data=None, user_id=0):
     timestamp = datetime.now().strftime("%H:%M:%S")
     mod_tag = f"[{module}]" if module else "[SYSTEM]"
     scan_tag = f"[SCAN-{scan_id}]" if scan_id else ""
-    sys.stdout.write(f"{timestamp} - {level} - {scan_tag}{mod_tag} {msg}\n")
+    log_msg = f"{timestamp} - {level} - {scan_tag}{mod_tag} {msg}"
+    sys.stdout.write(f"{log_msg}\n")
     if data:
         sys.stdout.write(f"--- DATA: {json.dumps(data, indent=2, default=str)}\n")
     sys.stdout.flush()
+    
+    # Send WebSocket log if user_id is provided
+    if user_id:
+        asyncio.create_task(send_ws_log(user_id, scan_id, log_msg, level, module))
+
+async def send_ws_log(user_id, scan_id, message, level="INFO", module=None):
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(config.ws_notify_url, json={
+                "type": "scan_log",
+                "userId": user_id,
+                "data": {
+                    "scan_id": scan_id,
+                    "message": message,
+                    "level": level,
+                    "module": module,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }, timeout=2.0)
+    except: pass
 
 # --- DATABASE MANAGER ---
 class DatabaseManager:
@@ -167,9 +188,9 @@ class DatabaseManager:
                                 "projectId": self.project_id
                             })
 
-                loud_log(f"DB FINALIZED: Score {score}%", scan_id=scan_id)
+                loud_log(f"DB FINALIZED: Score {score}%", scan_id=scan_id, user_id=user_id)
             except Exception as e:
-                loud_log(f"DB FINALIZE ERROR: {e}", "ERROR", scan_id=scan_id)
+                loud_log(f"DB FINALIZE ERROR: {e}", "ERROR", scan_id=scan_id, user_id=user_id)
 
     async def close(self):
         if self.pool:
@@ -282,7 +303,7 @@ class OSINTOrchestrator:
     async def run_module(self, step, domain, email, semaphore):
         mid, mname, mclass, mmethod = step["id"], step["name"], step["class"], step["method"]
         async with semaphore:
-            loud_log(f"INVOKING: {mname}", scan_id=self.scan_id)
+            loud_log(f"INVOKING: {mname}", scan_id=self.scan_id, user_id=self.user_id, module=mname)
             try:
                 # Ensure we have project_id for notifications
                 if not self.project_id:
@@ -306,15 +327,20 @@ class OSINTOrchestrator:
                 elif arg_type == "geo_dict": val = {"target": self.target, "domain": domain}
                 else: val = self.target
 
-                if not val: return
+                if not val: 
+                    loud_log(f"SKIPPING: {mname} - No target value", scan_id=self.scan_id, user_id=self.user_id, module=mname)
+                    return
 
                 instance = cls(verbose=True)
                 func = getattr(instance, mmethod, None)
                 if not func: raise Exception(f"Method {mmethod} not found")
 
+                loud_log(f"EXECUTING: {mmethod} for {mname}", scan_id=self.scan_id, user_id=self.user_id, module=mname)
                 raw_data = await func(val) if asyncio.iscoroutinefunction(func) else func(val)
                 self.results["modules"][mname] = {"module_id": mid, "class": mclass, "timestamp": datetime.now().isoformat(), "data": raw_data, "success": True}
                 self.completed_ids.append(mid)
+                
+                loud_log(f"COMPLETED: {mname}", scan_id=self.scan_id, user_id=self.user_id, module=mname)
                 
                 # --- LIVE DETECTION: Push notification if red flags found ---
                 if isinstance(raw_data, dict):
@@ -351,7 +377,7 @@ class OSINTOrchestrator:
                 self.results["modules"][mname] = {"module_id": mid, "success": False, "error": str(e)}
 
     async def run_scan(self):
-        loud_log(f"STARTING PIPELINE: {self.target}", scan_id=self.scan_id)
+        loud_log(f"STARTING PIPELINE: {self.target}", scan_id=self.scan_id, user_id=self.user_id)
         domain = self.extract_domain()
         email = f"hr@{domain}" if domain else None
         
@@ -360,6 +386,7 @@ class OSINTOrchestrator:
         await asyncio.gather(*tasks)
 
         # 1. RUN ALGORITHM TO ANALYZE DATA
+        loud_log("ANALYZING COLLECTED DATA...", scan_id=self.scan_id, user_id=self.user_id)
         analyzer = ResultAnalyzer(self.results)
         analysis_result = analyzer.analyze()
         self.results["analysis"] = analysis_result

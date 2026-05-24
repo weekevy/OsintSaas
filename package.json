@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix server\" \"npm run ws --prefix server\" \"npm run dev --prefix client\""
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run ws --prefix server\" \"npm run worker --prefix server\" \"npm run dev --prefix client\""
   },
   "repository": {
     "type": "git",

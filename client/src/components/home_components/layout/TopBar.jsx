@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import UserMenu from './UserMenu';
 import api from '../../../services/api';
 import { useSocket } from '../../../context/SocketContext';
+import { useAuth } from '../../../context/AuthContext';
 
 const shellMax = 'max-w-[1680px] mx-auto w-full';
 
@@ -24,10 +25,11 @@ const TopBar = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [credits, setCredits] = useState(250);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const { socket, isConnected } = useSocket();
+  const { user } = useAuth();
+  const credits = user?.credits || 0;
 
   const searchTypeRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -144,15 +146,6 @@ const TopBar = ({
     return () => document.removeEventListener('keydown', handleEsc);
   }, [searchExpanded]);
 
-  useEffect(() => {
-    if (isAnalyzing) {
-      const timer = setTimeout(() => {
-        setCredits((prev) => Math.max(0, prev - 1));
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isAnalyzing]);
-
   const getSearchTypeIcon = (type, compact = false) => {
     const color = '#00E5FF';
     const sz = compact ? 'w-5 h-5' : 'w-5 h-5 sm:w-6 sm:h-6';
@@ -213,7 +206,7 @@ const TopBar = ({
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <header className="sticky top-0 z-[9998] flex flex-col font-sans border-b border-white/[0.08] bg-[#000000] max-md:backdrop-blur-none md:bg-[#000000]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
+    <header className="sticky top-0 z-[100] flex flex-col font-sans border-b border-white/[0.08] bg-[#000000] max-md:backdrop-blur-none md:bg-[#000000]/90 md:backdrop-blur-md md:ring-1 md:ring-white/[0.04]">
       {/* Top row */}
       <div className={`${shellMax} flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 sm:px-5 lg:px-8 py-2 sm:py-3.5`}>
         {/* Brand + project - LEFT SIDE (always on left) */}
@@ -244,18 +237,18 @@ const TopBar = ({
             id="tour-credits"
             type="button"
             onClick={onPricingClick}
-            className="group flex items-center gap-1.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.03] px-2 py-1.5 transition-all hover:border-yellow-500/40 hover:bg-yellow-500/[0.06] hover:shadow-[0_0_20px_-5px_rgba(234,179,8,0.3)] sm:gap-2.5 sm:px-3 sm:py-2"
+            className="group flex items-center gap-1.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.03] px-2 py-1.5 transition-all hover:border-yellow-500/40 hover:bg-yellow-500/[0.06] hover:shadow-[0_0_20px_-5px_rgba(234,179,8,0.3)] sm:gap-2.5 sm:px-3 sm:py-1.5"
             aria-label={`${credits} tokens remaining`}
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-[0_0_15px_rgba(234,179,8,0.2)] ring-1 ring-yellow-500/30 group-hover:scale-110 transition-transform sm:h-9 sm:w-9">
               <svg className="h-4 w-4 text-black sm:h-[22px] sm:w-[22px]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" />
+                <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z" />
               </svg>
             </div>
             <span className="text-xs font-black tabular-nums text-yellow-500 sm:hidden">{credits}</span>
             <div className="hidden flex-col items-start leading-none sm:flex">
               <span className="text-sm font-black tabular-nums text-yellow-500 tracking-tight">{credits}</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-yellow-500/50">Clearance</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-yellow-500/50">Tokens</span>
             </div>
           </button>
 

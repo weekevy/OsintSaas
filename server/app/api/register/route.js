@@ -78,7 +78,7 @@ export async function POST(request) {
 
     // Get created user
     const [users] = await db.execute(
-      'SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?',
+      'SELECT id, email, username, first_name, last_name, role, credits FROM users WHERE id = ?',
       [userId]
     );
 
@@ -111,7 +111,8 @@ export async function POST(request) {
         username: user.username,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
+        credits: user.credits
       }
     });
 
