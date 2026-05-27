@@ -83,8 +83,10 @@ async def run_osint_scan(scan_id: int, target: str, user_id: int):
         logger.info(f"🧵 Background process started for scan_id {scan_id}")
         
         # Run the Main.py script with -u for unbuffered output
+        # Using absolute path to ensure reliability across environments
+        main_path = os.path.join(os.path.dirname(__file__), "Main.py")
         process = await asyncio.create_subprocess_exec(
-            "python3", "-u", "tools/Main.py", str(scan_id), target, str(user_id),
+            "python3", "-u", main_path, str(scan_id), target, str(user_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT
         )

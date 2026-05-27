@@ -13,6 +13,7 @@ const DashboardHome = ({
   getRiskBgColor,
   recentScans,
   alerts,
+  isLoading,
   timeRange,
   onTimeRangeChange,
   onAnalyzeClick,
@@ -21,8 +22,8 @@ const DashboardHome = ({
   selectedRiskData,
   selectedProjectName,
   selectedProjectTarget,
-  selectedProjectStatus,     // NEW: status of selected project (running, paused, completed, etc.)
-  selectedProjectFindings,   // NEW: findings count of selected project
+  selectedProjectStatus,     // status of selected project (running, paused, completed, etc.)
+  selectedProjectFindings,   // findings count of selected project
   onRiskDataChange,
   refreshTrigger,
   onRefresh
@@ -37,19 +38,7 @@ const DashboardHome = ({
 
   return (
     <div className="dashboard-ambient min-h-screen font-sans text-white">
-      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-10 pb-14 md:pb-12">
-
-        {/* <header className="mb-8 md:mb-10 max-w-3xl">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-[#00E5FF]/85 uppercase mb-2">
-            Intelligence overview
-          </p>
-          <h1 className="text-2xl sm:text-3xl md:text-[2rem] font-semibold tracking-tight text-white">
-            Your operations hub
-          </h1>
-          <p className="mt-2 text-sm md:text-[15px] text-white/50 leading-relaxed">
-            Live risk posture, investigations, and signals—organized like a modern control room.
-          </p>
-        </header> */}
+      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-10 pb-14 md:pb-12 animate-slide-up">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-10 items-start">
           <div className="lg:col-span-1 min-w-0" id="tour-risk-circle">
@@ -57,15 +46,15 @@ const DashboardHome = ({
               riskData={selectedRiskData}
               projectName={selectedProjectName}
               projectTarget={selectedProjectTarget}
-              projectStatus={selectedProjectStatus}        // NEW: pass status
-              projectFindings={selectedProjectFindings}    // NEW: pass findings
+              projectStatus={selectedProjectStatus}        
+              projectFindings={selectedProjectFindings}    
               getRiskColor={getRiskColor}
               getRiskBgColor={getRiskBgColor}
             />
           </div>
 
           <div className="lg:col-span-2 flex flex-col gap-6 md:gap-8 min-w-0">
-            <div id="tour-start-scan" className="glass-card rounded-2xl p-5 sm:p-6 border border-white/[0.08] relative overflow-hidden group transition-colors duration-300 hover:border-[#00E5FF]/25">
+            <div id="tour-start-scan" className="bg-black rounded-2xl p-5 sm:p-6 border border-white/[0.08] relative overflow-hidden group transition-colors duration-300 hover:border-[#00E5FF]/25">
               <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00E5FF]/20 to-[#2DD4BF]/10 border border-[#00E5FF]/25 flex items-center justify-center shrink-0 shadow-[0_0_24px_-8px_rgba(0,229,255,0.5)]">
@@ -110,19 +99,21 @@ const DashboardHome = ({
           <AlertsSection 
             alerts={selectedProjectStatus === 'completed' ? alerts : []} 
             selectedProjectId={selectedProjectId} 
-            onRefresh={onRefresh} 
+            onRefresh={onRefresh}
+            isLoading={isLoading} 
           />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-10">
           <div id="tour-recent-scans">
-            <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} />
+            <RecentScans scans={recentScans} selectedProjectId={selectedProjectId} isLoading={isLoading} />
           </div>
           <div id="tour-threat-feed">
             <ThreatFeed 
               feeds={selectedProjectStatus === 'completed' ? alerts : []} 
               selectedProjectId={selectedProjectId} 
-              onRefresh={onRefresh} 
+              onRefresh={onRefresh}
+              isLoading={isLoading} 
             />
           </div>
         </section>

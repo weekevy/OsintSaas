@@ -436,7 +436,7 @@ const CurrentModules = ({
 
   const handleViewAll = useCallback(() => navigate('/home?tab=scan'), [navigate]);
 
-  if (initialLoad && loading) return <LoadingSkeleton />;
+  if (loading && modules.length === 0) return <LoadingSkeleton />;
 
   const statCells = [
     { label: 'ACTIVE',    value: moduleStats.active,    color: 'text-[#00E5FF]', bg: 'bg-[#00E5FF]/10', border: 'border-[#00E5FF]/20' },

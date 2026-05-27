@@ -2,52 +2,40 @@ import { useEffect, useRef, useState } from 'react';
 
 const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
   const modalRef = useRef(null);
-  const [assets, setAssets] = useState([]);
-  const [loadingAssets, setLoadingAssets] = useState(false);
+  const [data, setData] = useState({ assets: [], findings: [], scans: [] });
+  const [loading, setLoading] = useState(false);
+  const [activeView, setActiveTab] = useState('overview');
 
-  // Fetch assets when modal opens
   useEffect(() => {
     if (isOpen && project?.id) {
-      fetchAssets();
+      fetchIntelligence();
     }
   }, [isOpen, project?.id]);
 
-  const fetchAssets = async () => {
-    setLoadingAssets(true);
+  const fetchIntelligence = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/projects/${project.id}/assets`, {
         credentials: 'include'
       });
-      const data = await response.json();
+      const resData = await response.json();
       if (response.ok) {
-        setAssets(data.assets || []);
+        setData(resData);
       }
     } catch (error) {
-      console.error('Error fetching assets:', error);
+      console.error('Error fetching intelligence:', error);
     } finally {
-      setLoadingAssets(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    const handleEsc = (event) => {
-      if (event.key === 'Escape') onClose();
-    };
-
+    const handleEsc = (e) => { e.key === 'Escape' && onClose(); };
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
     }
-
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
@@ -55,335 +43,282 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
 
   if (!isOpen || !project) return null;
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'review': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'planning': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'completed': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      default: return 'bg-white/20 text-white/60 border-white/30';
+  const getSeverityColor = (sev) => {
+    switch(sev?.toLowerCase()) {
+      case 'critical': return 'text-red-500 bg-red-500/10 border-red-500/20';
+      case 'high': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
+      case 'medium': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+      default: return 'text-[#2DD4BF] bg-[#2DD4BF]/10 border-[#2DD4BF]/20';
     }
   };
-
-  const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'critical': return 'text-red-400 bg-red-500/20';
-      case 'high': return 'text-orange-400 bg-orange-500/20';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20';
-      case 'low': return 'text-green-400 bg-green-500/20';
-      default: return 'text-white/40 bg-white/5';
-    }
-  };
-
-  // Format date safely
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not set';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Get asset icon based on type
-  const getAssetIcon = (type) => {
-    switch(type) {
-      case 'url':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        );
-      case 'linkedin':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        );
-      case 'suspicious_url':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        );
-      case 'image':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-          </svg>
-        );
-      case 'document':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
-        );
-      case 'email':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.57 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-          </svg>
-        );
-      case 'phone':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-          </svg>
-        );
-      case 'crypto':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
-      default:
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
-        );
-    }
-  };
-
-  // Get asset color based on type
-  const getAssetColor = (type) => {
-    switch(type) {
-      case 'url': return 'from-blue-500/20 to-cyan-500/20 border-blue-500/30';
-      case 'linkedin': return 'from-sky-500/20 to-blue-500/20 border-sky-500/30';
-      case 'suspicious_url': return 'from-red-500/20 to-orange-500/20 border-red-500/30';
-      case 'image': return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
-      case 'document': return 'from-green-500/20 to-emerald-500/20 border-green-500/30';
-      case 'email': return 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30';
-      case 'phone': return 'from-teal-500/20 to-cyan-500/20 border-teal-500/30';
-      case 'crypto': return 'from-indigo-500/20 to-purple-500/20 border-indigo-500/30';
-      default: return 'from-white/5 to-white/10 border-white/10';
-    }
-  };
-
-  // Folder icon SVG component
-  const FolderIcon = () => (
-    <svg className="w-8 h-8 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-    </svg>
-  );
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
         ref={modalRef}
-        className="relative w-full max-w-3xl bg-gradient-to-b from-gray-900 to-black rounded-2xl border border-white/10 shadow-2xl shadow-purple-500/20 overflow-hidden animate-slideUp"
+        className="relative w-full max-w-[90%] lg:max-w-[85%] xl:max-w-[80%] h-[90vh] bg-[#0A0C10] rounded-[40px] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col animate-slide-up"
       >
-        {/* Header with gradient background */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10" />
-          <div className="relative p-6 border-b border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Icon with glow - Fixed folder icon */}
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                    <FolderIcon />
-                  </div>
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur opacity-30" />
+        {/* Intelligence Header */}
+        <div className="relative p-8 lg:p-10 border-b border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-3xl bg-gradient-to-br from-[#00E5FF]/20 to-[#2DD4BF]/20 flex items-center justify-center border border-[#00E5FF]/30 shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                  <svg className="w-8 h-8 lg:w-10 lg:h-10 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.03 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
-                
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">{project.name}</h2>
-                  <div className="flex gap-2">
-                    <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(project.status)}`}>
-                      {project.status}
-                    </span>
-                    <span className={`px-3 py-1 text-xs rounded-full ${getPriorityColor(project.priority)}`}>
-                      {project.priority}
-                    </span>
-                  </div>
-                </div>
+                <div className="absolute -inset-2 bg-[#00E5FF]/10 rounded-[36px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
               
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl lg:text-4xl font-black text-white tracking-tighter uppercase">{project.name}</h2>
+                  <span className="px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-[10px] font-black tracking-widest rounded-full uppercase">Verified Briefing</span>
+                </div>
+                <p className="text-white/40 text-xs lg:text-sm font-medium max-w-2xl line-clamp-1">{project.description || 'Confidential investigation data.'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex flex-col items-end mr-4">
+                <span className="text-[10px] font-bold text-white/20 tracking-widest uppercase">Classification</span>
+                <span className="text-xs font-black text-red-500 tracking-wider">TOP SECRET // LEVEL 5</span>
+              </div>
               <button
                 onClick={onClose}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-95"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
+
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-2 mt-10">
+            {['overview', 'findings', 'assets', 'metadata'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 border ${
+                  activeView === tab 
+                    ? 'bg-[#00E5FF] text-black border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.2)]' 
+                    : 'text-white/30 border-transparent hover:text-white/60 hover:bg-white/5'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Content - Scrollable */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          
-          {/* Description Card */}
-          <div className="mb-6">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-              Description
-            </h3>
-            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-              <p className="text-white/70 leading-relaxed">
-                {project.description || 'No description provided.'}
-              </p>
+        {/* Intelligence Content */}
+        <div className="flex-1 overflow-y-auto p-8 lg:p-10 no-scrollbar bg-black/20">
+          {loading ? (
+            <div className="h-full flex flex-col items-center justify-center gap-6 opacity-40">
+              <div className="w-16 h-16 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
+              <span className="text-xs font-black text-[#00E5FF] tracking-[0.4em] uppercase animate-pulse">Decrypting Intelligence Package...</span>
             </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-4 rounded-xl border border-purple-500/30">
-              <div className="text-purple-400 text-sm mb-1">Progress</div>
-              <div className="text-2xl font-bold text-white">{project.progress || 0}%</div>
-              <div className="w-full h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500" 
-                  style={{ width: `${project.progress || 0}%` }} 
-                />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 p-4 rounded-xl border border-blue-500/30">
-              <div className="text-blue-400 text-sm mb-1">Members</div>
-              <div className="text-2xl font-bold text-white">{project.members || 1}</div>
-              <div className="text-white/40 text-xs mt-2">Team members</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 p-4 rounded-xl border border-orange-500/30">
-              <div className="text-orange-400 text-sm mb-1">Due Date</div>
-              <div className="text-lg font-bold text-white">{formatDate(project.dueDate)}</div>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4 rounded-xl border border-green-500/30">
-              <div className="text-green-400 text-sm mb-1">Created</div>
-              <div className="text-lg font-bold text-white">{formatDate(project.created_at)}</div>
-            </div>
-          </div>
-
-          {/* Assets Section - Display Only (No Add/Delete) */}
-          <div className="mb-6">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              Project Assets ({assets.length})
-            </h3>
-
-            {loadingAssets ? (
-              <div className="flex justify-center py-8">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-purple-500 rounded-full animate-spin" />
-              </div>
-            ) : assets.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {assets.map((asset) => (
-                  <a
-                    key={asset.id}
-                    href={asset.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group relative bg-gradient-to-br ${getAssetColor(asset.asset_type)} rounded-xl p-4 border hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer`}
-                  >
-                    <div className="flex flex-col items-start gap-2">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAssetColor(asset.asset_type).split(' ')[0]} bg-opacity-30 flex items-center justify-center`}>
-                        <span className="text-purple-400">{getAssetIcon(asset.asset_type)}</span>
-                      </div>
-                      <div className="flex-1 min-w-0 w-full">
-                        <h5 className="text-white font-medium text-sm truncate group-hover:text-purple-400 transition-colors">
-                          {asset.title}
-                        </h5>
-                        {asset.url && (
-                          <p className="text-white/40 text-xs truncate mt-1">{asset.url}</p>
-                        )}
-                        {asset.description && (
-                          <p className="text-white/40 text-xs mt-1 line-clamp-2">{asset.description}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40 capitalize">
-                            {asset.asset_type}
-                          </span>
-                          <span className="text-white/30 text-[10px]">
-                            {formatDate(asset.created_at)}
-                          </span>
+          ) : (
+            <div className="animate-in fade-in duration-500">
+              
+              {/* VIEW: OVERVIEW */}
+              {activeView === 'overview' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Summary Cards */}
+                  <div className="lg:col-span-2 space-y-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {[
+                        { label: 'Scans Performed', val: data.scans.length, color: '#00E5FF' },
+                        { label: 'Threats Detected', val: data.findings.length, color: '#F43F5E' },
+                        { label: 'Assets Synced', val: data.assets.length, color: '#2DD4BF' }
+                      ].map((stat, i) => (
+                        <div key={i} className="p-6 rounded-[32px] bg-white/[0.02] border border-white/5 group hover:border-white/10 transition-all">
+                          <span className="block text-[10px] font-black text-white/20 tracking-widest uppercase mb-2">{stat.label}</span>
+                          <span className="text-3xl font-black text-white group-hover:scale-110 transition-transform inline-block" style={{ color: stat.color }}>{stat.val}</span>
                         </div>
+                      ))}
+                    </div>
+
+                    <div className="p-8 rounded-[40px] bg-gradient-to-br from-white/[0.03] to-transparent border border-white/5 flex flex-col h-[500px]">
+                      <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3 capitalize tracking-tight">
+                        <div className="w-1.5 h-6 bg-[#00E5FF] rounded-full shadow-[0_0_10px_rgba(0,229,255,0.5)]" />
+                        threat intelligence briefing
+                      </h3>
+                      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar no-scrollbar hover:scrollbar-show">
+                        {data.findings.map((f, i) => (
+                          <div key={i} className="flex gap-4 p-5 rounded-3xl bg-white/[0.02] border border-white/5 items-start hover:bg-white/[0.04] transition-all group">
+                            <div className={`mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                              f.severity === 'critical' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 
+                              f.severity === 'high' ? 'bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.4)]' :
+                              'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.4)]'
+                            }`} />
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-sm font-bold text-white capitalize tracking-tight">{f.title}</h4>
+                                <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-white/5 text-white/40 uppercase tracking-widest">{f.severity}</span>
+                              </div>
+                              <p className="text-[11px] text-white/40 leading-relaxed font-medium lowercase">{f.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {data.findings.length === 0 && (
+                          <div className="h-full flex flex-col items-center justify-center opacity-20 py-10">
+                            <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.03 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-center">No Active Threats Detected</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
-                <svg className="w-12 h-12 mx-auto text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <p className="text-white/40 text-sm">No assets for this project</p>
-              </div>
-            )}
-          </div>
+                  </div>
 
-          {/* Additional Info */}
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.02] rounded-xl border border-white/10 p-5">
-            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Additional Information
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Project ID</span>
-                  <span className="text-white/80 font-mono">#{project.id}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Icon</span>
-                  <span className="text-white/80">
-                    <FolderIcon />
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Color Theme</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full bg-gradient-to-r from-${project.color}-500 to-${project.color}-600`} />
-                    <span className="text-white/80 capitalize">{project.color}</span>
+                  {/* Sidebar Info */}
+                  <div className="space-y-6">
+                    <div className="p-6 rounded-[32px] bg-black border border-white/10 shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                      </div>
+                      <h4 className="text-[10px] font-black text-[#00E5FF] tracking-[0.3em] uppercase mb-6">Target Parameters</h4>
+                      <div className="space-y-4">
+                        {data.scans.map((s, i) => (
+                          <div key={i} className="flex flex-col gap-1 border-l-2 border-white/5 pl-4 py-1">
+                            <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">{s.scan_type}</span>
+                            <span className="text-[11px] font-black text-white/70 truncate">{s.target_value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Assets</span>
-                  <span className="text-white/80">{assets.length}</span>
+              )}
+
+              {/* VIEW: FINDINGS (SSL, THREATS, ETC) */}
+              {activeView === 'findings' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {data.findings.map((finding, idx) => (
+                    <div 
+                      key={finding.id} 
+                      className="p-6 rounded-[32px] bg-white/[0.03] border border-white/5 hover:border-[#00E5FF]/30 transition-all group animate-slide-up"
+                      style={{ animationDelay: `${idx * 0.05}s` }}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex flex-col gap-1">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black tracking-widest uppercase border ${getSeverityColor(finding.severity)}`}>
+                            {finding.severity}
+                          </span>
+                          <span className="text-[9px] font-bold text-white/20 tracking-tighter uppercase">{finding.scan_type} Detected</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-white/10">{new Date(finding.created_at).toLocaleDateString()}</span>
+                      </div>
+                      
+                      <h4 className="text-base font-black text-white mb-2 group-hover:text-[#00E5FF] transition-colors uppercase tracking-tight">{finding.title}</h4>
+                      <p className="text-xs text-white/40 leading-relaxed mb-6">{finding.description}</p>
+                      
+                      {finding.evidence && (
+                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 font-mono text-[10px] text-[#2DD4BF] overflow-x-auto whitespace-pre-wrap">
+                          <div className="flex items-center gap-2 mb-2 opacity-30">
+                            <div className="w-2 h-2 rounded-full bg-current" />
+                            <span className="uppercase tracking-[0.2em] font-bold text-[8px]">Intelligence Evidence</span>
+                          </div>
+                          {finding.evidence}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {data.findings.length === 0 && (
+                    <div className="col-span-full py-32 text-center bg-white/[0.01] rounded-[40px] border border-dashed border-white/5">
+                      <p className="text-white/10 text-xs font-black tracking-[0.4em] uppercase">No Critical Findings Isolated</p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Last Updated</span>
-                  <span className="text-white/80">
-                    {project.updated_at ? formatDate(project.updated_at) : 'Never'}
-                  </span>
+              )}
+
+              {/* VIEW: ASSETS */}
+              {activeView === 'assets' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {data.assets.map((asset, idx) => (
+                    <a
+                      key={asset.id}
+                      href={asset.url.startsWith('http') ? asset.url : `https://${asset.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-6 rounded-[32px] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-all group animate-slide-up block"
+                      style={{ animationDelay: `${idx * 0.03}s` }}
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-[#00E5FF]/40 transition-colors">
+                        <svg className="w-6 h-6 text-white/20 group-hover:text-[#00E5FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </div>
+                      <h5 className="text-sm font-black text-white mb-1 truncate uppercase tracking-tight">{asset.title}</h5>
+                      <p className="text-[10px] text-white/30 truncate mb-4 font-medium">{asset.url}</p>
+                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <span className="text-[9px] font-black text-[#00E5FF]/40 tracking-widest uppercase">{asset.asset_type}</span>
+                        <span className="text-[9px] font-bold text-white/10 uppercase">{new Date(asset.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </a>
+                  ))}
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Threat Level</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${getPriorityColor(project.priority)}`}>
-                    {project.priority}
-                  </span>
+              )}
+
+              {/* VIEW: METADATA */}
+              {activeView === 'metadata' && (
+                <div className="space-y-4 max-w-4xl mx-auto">
+                  <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/10">
+                    <h4 className="text-[10px] font-black text-[#00E5FF] tracking-[0.3em] uppercase mb-8">System Provenance</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+                      {[
+                        { label: 'Intelligence ID', val: `#PRJ-${project.id}` },
+                        { label: 'Origin Date', val: new Date(project.created_at).toLocaleString() },
+                        { label: 'Last Modification', val: project.updated_at ? new Date(project.updated_at).toLocaleString() : 'N/A' },
+                        { label: 'Source Integrity', val: 'Verified // MariaDB CLUSTER' },
+                        { label: 'Squad Association', val: project.team_id ? `T-${project.team_id}` : 'SOLO COMMAND' },
+                        { label: 'Cryptographic Hash', val: '8f92-a1b4-c6d8-e5f2-9a0c' }
+                      ].map((item, i) => (
+                        <div key={i} className="flex flex-col gap-2">
+                          <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{item.label}</span>
+                          <span className="text-sm font-black text-white/80 tracking-tight">{item.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-4 border-t border-white/10 bg-black/20">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all font-medium"
-          >
-            Close
-          </button>
+        {/* Intelligence Footer */}
+        <div className="p-6 lg:px-10 lg:py-6 border-t border-white/5 bg-[#0D0F14] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-white/20">
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0D0F14] bg-white/5 flex items-center justify-center">
+                  <div className="w-1 h-1 rounded-full bg-current" />
+                </div>
+              ))}
+            </div>
+            <span className="text-[10px] font-black tracking-widest uppercase italic">Secure Briefing Mode Active</span>
+          </div>
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+             <button
+              onClick={onClose}
+              className="flex-1 sm:flex-none px-10 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white/60 text-[10px] font-black tracking-[0.2em] uppercase transition-all"
+            >
+              Terminate Session
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex-1 sm:flex-none px-10 py-3.5 bg-[#00E5FF] text-black rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase hover:brightness-110 transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)]"
+            >
+              Export Intel
+            </button>
+          </div>
         </div>
       </div>
     </div>

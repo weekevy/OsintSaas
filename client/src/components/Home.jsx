@@ -47,6 +47,7 @@ const Home = () => {
   const [searchInput, setSearchInput] = useState(() => ls('searchInput', ''));
   const [searchType, setSearchType] = useState(() => ls('searchType', 'url'));
   const [recentScans, setRecentScans] = useState([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [riskScore, setRiskScore] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [alerts, setAlerts] = useState([]);
@@ -96,6 +97,7 @@ const Home = () => {
   const { socket, isConnected } = useSocket();
 
   const fetchDashboardData = useCallback(async () => {
+    setIsDashboardLoading(true);
     // ── Fetch Alerts ──
     try {
       let url = '/api/dashboard/alerts';
@@ -127,6 +129,8 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Failed to fetch scans:', error);
+    } finally {
+      setIsDashboardLoading(false);
     }
   }, [selectedProject?.id]);
 
@@ -371,6 +375,7 @@ const Home = () => {
         getRiskBgColor={getRiskBgColor}
         recentScans={recentScans}
         alerts={projectAlerts}
+        isLoading={isDashboardLoading}
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
         onAnalyzeClick={() => handleTabChange("scan")}
@@ -416,6 +421,7 @@ const Home = () => {
         getRiskBgColor={getRiskBgColor}
         recentScans={recentScans}
         alerts={projectAlerts}
+        isLoading={isDashboardLoading}
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
         onAnalyzeClick={() => handleTabChange("scan")}

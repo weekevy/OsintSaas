@@ -23,25 +23,35 @@ export async function POST(request, { params }) {
     }
 
     const body = await request.json();
-    const { projectId } = body;
+    const { scanId } = body;
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    if (!scanId) {
+      return NextResponse.json({ error: 'Scan ID is required' }, { status: 400 });
     }
 
-    // Check if user owns the project
-    const [project] = await db.execute(
-      'SELECT id, user_id FROM projects WHERE id = ?',
-      [projectId]
+    // Check if user owns the scan and it is completed
+    const [scanData] = await db.execute(
+      `SELECT s.id, s.status, t.project_id, p.user_id 
+       FROM scans s
+       JOIN targets t ON s.target_id = t.id
+       JOIN projects p ON t.project_id = p.id
+       WHERE s.id = ?`,
+      [scanId]
     );
 
-    if (project.length === 0) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    if (scanData.length === 0) {
+      return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
     }
 
-    if (project[0].user_id !== decoded.id) {
-      return NextResponse.json({ error: 'Only the project owner can share it' }, { status: 403 });
+    if (scanData[0].user_id !== decoded.id) {
+      return NextResponse.json({ error: 'Only the scan owner can share it' }, { status: 403 });
     }
+
+    if (scanData[0].status !== 'completed') {
+      return NextResponse.json({ error: 'Only completed scans can be synchronized with the team' }, { status: 400 });
+    }
+
+    const projectId = scanData[0].project_id;
 
     // Update project with team_id and shared_at
     await db.execute(
@@ -51,7 +61,7 @@ export async function POST(request, { params }) {
 
     const response = NextResponse.json({ 
       success: true, 
-      message: 'Project shared with team successfully'
+      message: 'Intelligence synchronized with team successfully'
     });
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');

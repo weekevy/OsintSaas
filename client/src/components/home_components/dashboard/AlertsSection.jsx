@@ -34,7 +34,7 @@ const getRandomAlerts = (projectId = null) => {
 };
 */
 
-const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh }) => {
+const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh, isLoading }) => {
   const [alerts, setAlerts] = useState([]);
 
   // COMMENTED OUT - Using externalAlerts from props instead of generating mock data
@@ -90,6 +90,39 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh })
     if (onRefresh) onRefresh();
   };
 
+  const AlertSkeleton = () => (
+    <div className="p-4 lg:p-5 rounded-2xl border border-white/10 bg-black flex flex-col sm:flex-row items-start gap-3 lg:gap-4 animate-pulse">
+      <div className="w-10 h-10 bg-white/5 rounded-lg border border-white/10 shrink-0" />
+      <div className="flex-1 w-full space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-24 bg-white/10 rounded" />
+          <div className="h-4 w-20 bg-white/5 rounded" />
+        </div>
+        <div className="h-4 w-full bg-white/5 rounded" />
+        <div className="h-4 w-2/3 bg-white/5 rounded" />
+        <div className="flex gap-3 pt-2">
+          <div className="h-7 w-20 bg-white/5 rounded-lg" />
+          <div className="h-7 w-20 bg-white/5 rounded-lg" />
+        </div>
+      </div>
+      <div className="h-4 w-16 bg-white/5 rounded ml-auto" />
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <header>
+          <p className="text-[10px] font-semibold text-[#00E5FF]/80 tracking-[0.18em] uppercase">Alerts</p>
+          <div className="h-6 w-48 bg-white/10 rounded mt-1 animate-pulse" />
+        </header>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <AlertSkeleton key={i} />)}
+        </div>
+      </div>
+    );
+  }
+
   // Check if no project is selected
   if (!selectedProjectId) {
     return (
@@ -106,7 +139,7 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh })
           </h3>
         </header>
 
-        <div className="glass-card rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
+        <div className="bg-black rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
           <svg className="w-14 h-14 mx-auto text-white/25 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -145,7 +178,7 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh })
           </button>
         </div>
 
-        <div className="glass-card rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
+        <div className="bg-black rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
           <svg className="w-12 h-12 mx-auto text-emerald-400/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -191,7 +224,7 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh })
             {alerts.map((alert, index) => (
               <div
                 key={alert.id}
-                className={`p-4 lg:p-5 rounded-2xl border ${getSeverityColor(alert.severity)} glass-card flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:border-white/20 cursor-pointer relative overflow-hidden animate-slideUp`}
+                className={`p-4 lg:p-5 rounded-2xl border ${getSeverityColor(alert.severity)} bg-black flex flex-col sm:flex-row items-start gap-3 lg:gap-4 transition-all hover:border-white/20 cursor-pointer relative overflow-hidden animate-slideUp`}
                 style={{ 
                   animationDelay: `${index * 70}ms`,
                   animationFillMode: 'both'

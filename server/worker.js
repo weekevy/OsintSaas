@@ -3,6 +3,23 @@ const IORedis = require('ioredis');
 const axios = require('axios');
 const mysql = require('mysql2/promise');
 
+// ── Manual Env Loading for standalone script ──
+try {
+  const envPath = require('path').join(__dirname, '.env');
+  if (require('fs').existsSync(envPath)) {
+    const envConfig = require('fs').readFileSync(envPath, 'utf8');
+    envConfig.split('\n').forEach(line => {
+      const [key, ...vals] = line.split('=');
+      if (key && vals.length > 0) {
+        process.env[key.trim()] = vals.join('=').trim().replace(/^["']|["']$/g, '');
+      }
+    });
+    console.log('Loaded environment variables from .env');
+  }
+} catch (e) {
+  console.log('No .env file found or failed to load');
+}
+
 // Configuration
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
@@ -17,10 +34,10 @@ const connection = new IORedis({
 
 // Database connection pool for worker
 const pool = mysql.createPool({
-  host: process.env.MARIADB_HOST || 'localhost',
-  user: process.env.MYSQL_USER || 'osintuser',
-  password: process.env.MYSQL_PASSWORD || 'osintpassword',
-  database: process.env.MYSQL_DATABASE || 'osint_db',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'rootpassword123',
+  database: process.env.DB_NAME || 'osint_db',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

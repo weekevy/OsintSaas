@@ -102,10 +102,35 @@ export async function POST(request, { params }) {
       return response;
     }
 
-    await db.execute(
+    const [result] = await db.execute(
       'INSERT INTO team_messages (team_id, user_id, content) VALUES (?, ?, ?)',
       [teamId, decoded.id, content]
     );
+
+    // Notify WebSocket server about the new message
+    try {
+      const wsNotifyUrl = process.env.WS_NOTIFY_URL || 'http://localhost:4005/notify';
+      fetch(wsNotifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'team_message',
+          teamId,
+          data: {
+            id: result.insertId,
+            team_id: teamId,
+            user_id: decoded.id,
+            content,
+            first_name: decoded.first_name,
+            last_name: decoded.last_name,
+            email: decoded.email,
+            created_at: new Date().toISOString()
+          }
+        })
+      }).catch(err => console.error('WS Notify Error:', err));
+    } catch (wsErr) {
+      console.error('Failed to notify WS server:', wsErr);
+    }
 
     const response = NextResponse.json({ success: true });
     response.headers.set('Access-Control-Allow-Origin', origin);

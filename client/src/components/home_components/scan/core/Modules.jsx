@@ -494,23 +494,21 @@ const UNDER_CONSTRUCTION_MODULES = ['scam-email', 'phone-number', 'crypto-wallet
 const UNDER_CONSTRUCTION_PLATFORMS = [''];
 
 // ==================== InvestigationModules ====================
-export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
+export const InvestigationModules = ({ onStartScan, selectedTarget, isLoading }) => {
   const [modules] = useState(defaultModules);
   const [platforms] = useState(defaultPlatforms);
   const [stats] = useState({ total: 45, active: 3 });
-  const [isLoading, setIsLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState(null);
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Very fast transition for professional feel
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      const contentTimer = setTimeout(() => setShowContent(true), 50);
-      return () => clearTimeout(contentTimer);
-    }, 400); // 400ms skeleton time on first mount
-    return () => clearTimeout(timer);
-  }, []);
+    if (!isLoading) {
+      const timer = setTimeout(() => setShowContent(true), 30);
+      return () => clearTimeout(timer);
+    } else {
+      setShowContent(false);
+    }
+  }, [isLoading]);
 
   return (
     <div className="space-y-8 font-sans">
@@ -522,9 +520,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
         ].map(({ label, value, color, sub }, idx) => (
           <div 
             key={label} 
-            className={`relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden transition-all duration-500 ease-out ${
-              showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-            }`}
+            className="relative border border-white/10 rounded-2xl p-5 bg-black overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/3 to-transparent pointer-events-none"/>
             <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00E5FF]/30"/>
@@ -545,10 +541,26 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {isLoading
-            ? [0,1,2,3].map(i => <ModuleCardSkeleton key={i} index={i}/>)
-            : modules.map((module, idx) => {
+        <div className="relative min-h-[400px]">
+          {/* ── SKELETON LAYER ── */}
+          <div 
+            className={`transition-all duration-700 ease-in-out ${
+              isLoading ? 'opacity-100 visible' : 'opacity-0 invisible absolute inset-0 pointer-events-none'
+            }`}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {[0,1,2,3].map(i => <ModuleCardSkeleton key={i} index={i}/>)}
+            </div>
+          </div>
+
+          {/* ── CONTENT LAYER ── */}
+          <div 
+            className={`transition-all duration-700 delay-100 ease-out ${
+              !isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'
+            }`}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {modules.map((module, idx) => {
                 const meta = MODULE_META[module.id] || MODULE_META['job-recruitment'];
                 const risk = RISK_CONFIG[meta.risk];
                 const isHovered = hoveredId === module.id;
@@ -575,6 +587,7 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                       minHeight: 220,
                     }}
                   >
+                    {/* ... (button content) ... */}
                     {/* Under Construction Overlay */}
                     {isUnderConstruction && <UnderConstructionOverlay rounded="1rem" />}
 
@@ -695,8 +708,9 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
                     </div>
                   </button>
                 );
-              })
-          }
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -710,92 +724,106 @@ export const InvestigationModules = ({ onStartScan, selectedTarget }) => {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {isLoading ? (
-            <div className="contents animate-in fade-in duration-500">
+        <div className="relative min-h-[240px]">
+          {/* ── SKELETON LAYER ── */}
+          <div 
+            className={`transition-all duration-700 ease-in-out ${
+              isLoading ? 'opacity-100 visible' : 'opacity-0 invisible absolute inset-0 pointer-events-none'
+            }`}
+          >
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {[0,1,2,3,4,5].map(i => <PlatformCardSkeleton key={i} index={i}/>)}
             </div>
-          ) : (
-            platforms.map((platform, idx) => {
-              const pm = PLATFORM_META[platform.id] || { color: '#00E5FF', border: 'rgba(0,229,255,0.2)', bg: 'rgba(0,229,255,0.07)', label: 'Intel' };
-                const isH = hoveredId === platform.id;
-                const isUnderConstruction = UNDER_CONSTRUCTION_PLATFORMS.includes(platform.id);
+          </div>
 
-                return (
-                  <button
-                    key={platform.id}
-                    onClick={() => !isUnderConstruction && onStartScan(platform, selectedTarget)}
-                    onMouseEnter={() => setHoveredId(platform.id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                    className={`group relative text-left rounded-xl overflow-hidden transition-all duration-500 ease-out ${
-                      showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                    } ${isUnderConstruction ? 'cursor-default' : ''}`}
-                    style={{ 
-                      transitionDelay: `${idx * 40}ms`,
-                      background: isH
-                        ? `linear-gradient(135deg, ${pm.bg} 0%, #0a0a0a 70%)`
-                        : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, #0a0a0a 70%)',
-                      border: `1px solid ${isH ? pm.border.replace('0.25','0.5') : pm.border}`,
-                      boxShadow: isH
-                        ? `0 0 0 1px ${pm.border.replace('0.25','0.3')}, 0 6px 20px ${pm.bg}, inset 0 1px 0 rgba(255,255,255,0.04)`
-                        : `0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)`,
-                      minHeight: 110,
-                    }}
-                  >
-                    {/* Under Construction Overlay */}
-                    {isUnderConstruction && <UnderConstructionOverlay rounded="0.75rem" />}
+          {/* ── CONTENT LAYER ── */}
+          <div 
+            className={`transition-all duration-700 delay-100 ease-out ${
+              !isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'
+            }`}
+          >
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {platforms.map((platform, idx) => {
+                const pm = PLATFORM_META[platform.id] || { color: '#00E5FF', border: 'rgba(0,229,255,0.2)', bg: 'rgba(0,229,255,0.07)', label: 'Intel' };
+                  const isH = hoveredId === platform.id;
+                  const isUnderConstruction = UNDER_CONSTRUCTION_PLATFORMS.includes(platform.id);
 
-                    {/* top glow line */}
-                    <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300"
-                      style={{ background: `linear-gradient(90deg, transparent, ${pm.color}, transparent)`, opacity: isH ? 0.6 : 0.15 }}/>
+                  return (
+                    <button
+                      key={platform.id}
+                      onClick={() => !isUnderConstruction && onStartScan(platform, selectedTarget)}
+                      onMouseEnter={() => setHoveredId(platform.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      className={`group relative text-left rounded-xl overflow-hidden transition-all duration-500 ease-out ${
+                        showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                      } ${isUnderConstruction ? 'cursor-default' : ''}`}
+                      style={{ 
+                        transitionDelay: `${idx * 40}ms`,
+                        background: isH
+                          ? `linear-gradient(135deg, ${pm.bg} 0%, #0a0a0a 70%)`
+                          : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, #0a0a0a 70%)',
+                        border: `1px solid ${isH ? pm.border.replace('0.25','0.5') : pm.border}`,
+                        boxShadow: isH
+                          ? `0 0 0 1px ${pm.border.replace('0.25','0.3')}, 0 6px 20px ${pm.bg}, inset 0 1px 0 rgba(255,255,255,0.04)`
+                          : `0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)`,
+                        minHeight: 110,
+                      }}
+                    >
+                      {/* Under Construction Overlay */}
+                      {isUnderConstruction && <UnderConstructionOverlay rounded="0.75rem" />}
 
-                    <div className="relative p-4 flex flex-col gap-3">
-                      {/* Icon + name row */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0"
-                            style={{
-                              background: isH ? pm.bg : 'rgba(255,255,255,0.04)',
-                              border: `1px solid ${isH ? pm.border.replace('0.25','0.5') : pm.border}`,
-                              boxShadow: isH ? `0 0 12px ${pm.bg}` : 'none',
-                              color: pm.color,
-                            }}
-                          >
-                            <PlatformIcon id={platform.id} className="w-5 h-5"/>
+                      {/* top glow line */}
+                      <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300"
+                        style={{ background: `linear-gradient(90deg, transparent, ${pm.color}, transparent)`, opacity: isH ? 0.6 : 0.15 }}/>
+
+                      <div className="relative p-4 flex flex-col gap-3">
+                        {/* Icon + name row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0"
+                              style={{
+                                background: isH ? pm.bg : 'rgba(255,255,255,0.04)',
+                                border: `1px solid ${isH ? pm.border.replace('0.25','0.5') : pm.border}`,
+                                boxShadow: isH ? `0 0 12px ${pm.bg}` : 'none',
+                                color: pm.color,
+                              }}
+                            >
+                              <PlatformIcon id={platform.id} className="w-5 h-5"/>
+                            </div>
+                            <div>
+                              <h4 className="text-white text-[12px] font-bold uppercase tracking-[0.06em] leading-tight">{platform.name}</h4>
+                              <span className="text-[8px] uppercase tracking-[0.1em] font-semibold" style={{ color: `${pm.color}80` }}>{pm.label}</span>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="text-white text-[12px] font-bold uppercase tracking-[0.06em] leading-tight">{platform.name}</h4>
-                            <span className="text-[8px] uppercase tracking-[0.1em] font-semibold" style={{ color: `${pm.color}80` }}>{pm.label}</span>
-                          </div>
+                          <svg className="w-3 h-3 transition-all duration-200 flex-shrink-0"
+                            style={{ color: pm.color, opacity: isH ? 1 : 0.3, transform: isH ? 'translateX(1px)' : 'none' }}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                          </svg>
                         </div>
-                        <svg className="w-3 h-3 transition-all duration-200 flex-shrink-0"
-                          style={{ color: pm.color, opacity: isH ? 1 : 0.3, transform: isH ? 'translateX(1px)' : 'none' }}
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                      </div>
 
-                      {/* Description */}
-                      <p className="text-white/35 text-[10px] uppercase tracking-[0.06em] leading-relaxed">
-                        {platform.description}
-                      </p>
+                        {/* Description */}
+                        <p className="text-white/35 text-[10px] uppercase tracking-[0.06em] leading-relaxed">
+                          {platform.description}
+                        </p>
 
-                      {/* Bottom indicator bar */}
-                      <div className="h-0.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: isH ? '100%' : '30%',
-                            background: `linear-gradient(90deg, ${pm.color}80, ${pm.color})`,
-                          }}
-                        />
+                        {/* Bottom indicator bar */}
+                        <div className="h-0.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: isH ? '100%' : '30%',
+                              background: `linear-gradient(90deg, ${pm.color}80, ${pm.color})`,
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              }))
-          }
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

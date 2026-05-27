@@ -9,6 +9,7 @@ import {
   TeamChat
 } from '../team';
 import ShareProjectModal from '../team/ShareProjectModal';
+import ProjectDetailsModal from '../projects/ProjectDetailsModal';
 import api from '../../../services/api';
 
 const shellMax = 'max-w-[1680px] mx-auto w-full';
@@ -21,6 +22,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [selectedSharedProject, setSelectedSharedProject] = useState(null);
   const [teamDetails, setTeamDetails] = useState(null);
 
   useEffect(() => {
@@ -96,10 +98,13 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
 
   if (!selectedTeam) {
     return (
-      <div className={`${shellMax} px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-sans text-white`}>
+      <div className={`${shellMax} px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-sans text-white animate-slide-up`}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 mb-8 lg:mb-12">
           <div>
-            <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-1 lg:mb-2">Collaboration Hub</h1>
+            <div className="flex items-center gap-3 mb-1 lg:mb-2">
+              <div className="w-1.5 h-8 lg:h-10 bg-[#00E5FF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
+              <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">Collaboration Hub</h1>
+            </div>
             <p className="text-white/40 text-[11px] lg:text-sm font-medium">Manage elite investigation squads and shared intelligence.</p>
           </div>
           <button
@@ -115,9 +120,11 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
             <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {teams.map(team => (
-              <TeamCard key={team.id} team={team} onClick={() => handleTeamClick(team)} onAction={handleAction} />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 animate-fade-in">
+            {teams.map((team, idx) => (
+              <div key={team.id} style={{ animationDelay: `${idx * 0.05}s` }} className="contents">
+                <TeamCard team={team} onClick={() => handleTeamClick(team)} onAction={handleAction} />
+              </div>
             ))}
             {teams.length === 0 && (
               <div className="col-span-full py-20 text-center rounded-[32px] border border-dashed border-white/10">
@@ -170,10 +177,10 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap text-[10px] font-black tracking-widest uppercase transition-all duration-300 ${
+              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap text-[10px] font-black tracking-widest uppercase transition-all duration-300 border-2 ${
                 activeTab === tab.id 
-                  ? 'bg-[#00E5FF]/10 text-[#00E5FF] ring-1 ring-[#00E5FF]/30' 
-                  : 'text-white/30 hover:text-white/60'
+                  ? 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30' 
+                  : 'text-white/30 border-transparent hover:text-white/60'
               }`}
             >
               {tab.label}
@@ -212,10 +219,10 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-5 py-3.5 rounded-xl transition-all duration-200 ${
+                  className={`w-full flex items-center justify-between px-5 py-3.5 rounded-xl transition-all duration-200 border ${
                     activeTab === tab.id 
-                      ? 'bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF]' 
-                      : 'text-white/30 hover:bg-white/5 hover:text-white'
+                      ? 'bg-[#00E5FF]/10 border-[#00E5FF]/20 text-[#00E5FF]' 
+                      : 'text-white/30 border-transparent hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <span className="text-[11px] font-bold tracking-widest uppercase">{tab.label}</span>
@@ -241,7 +248,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
               onClick={() => setIsShareModalOpen(true)}
               className="w-full py-3.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-[#2DD4BF] hover:border-[#2DD4BF]/40 transition-all text-[10px] font-bold tracking-widest uppercase"
             >
-              Sync Project
+              Share Project
             </button>
             <button
               onClick={() => setIsInviteModalOpen(true)}
@@ -274,9 +281,14 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
                 {activeTab === 'members' && <TeamMembers members={teamDetails?.members} />}
                 
                 {activeTab === 'projects' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {teamDetails?.projects?.map(project => (
-                      <div key={project.id} className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                    {teamDetails?.projects?.map((project, idx) => (
+                      <div 
+                        key={project.id} 
+                        onClick={() => setSelectedSharedProject(project)}
+                        className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group animate-slide-up cursor-pointer"
+                        style={{ animationDelay: `${idx * 0.05}s` }}
+                      >
                         <div className="flex justify-between items-start mb-4">
                           <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/5 border border-white/10 flex items-center justify-center">
                             <span className="text-[#00E5FF] font-bold text-lg">{project.name[0]}</span>
@@ -290,23 +302,23 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
                         
                         <div className="flex flex-col gap-2 mb-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
                           <div className="flex items-center justify-between text-[9px] font-bold tracking-widest uppercase">
+                            <span className="text-white/20">Intelligence Assets</span>
+                            <span className="text-[#2DD4BF]">{project.asset_count || 0} Detected</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[9px] font-bold tracking-widest uppercase">
                             <span className="text-white/20">Shared By</span>
                             <span className="text-[#00E5FF]">{project.first_name} {project.last_name}</span>
                           </div>
                           <div className="flex items-center justify-between text-[9px] font-bold tracking-widest uppercase">
                             <span className="text-white/20">Shared On</span>
-                            <span className="text-white/40">{project.shared_at ? new Date(project.shared_at).toLocaleString() : new Date(project.created_at).toLocaleString()}</span>
+                            <span className="text-white/40">{project.shared_at ? new Date(project.shared_at).toLocaleDateString() : new Date(project.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
 
                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                           <span className="text-[8px] font-bold text-white/20 tracking-widest uppercase">ID: {project.id}</span>
                           <button 
-                            onClick={() => {
-                              onProjectSelect(project);
-                              onTabChange('dashboard');
-                            }}
-                            className="text-[9px] font-bold text-[#00E5FF] hover:underline tracking-widest uppercase"
+                            className="text-[9px] font-bold text-[#00E5FF] group-hover:underline tracking-widest uppercase"
                           >
                             Access Intelligence →
                           </button>
@@ -322,7 +334,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
                 )}
 
                 {activeTab === 'chat' && <TeamChat teamId={selectedTeam.id} />}
-                {activeTab === 'settings' && <TeamSettings team={teamDetails?.team} onUpdate={fetchTeamDetails} />}
+                {activeTab === 'settings' && <TeamSettings team={teamDetails?.team} userRole={teamDetails?.userRole} onUpdate={fetchTeamDetails} />}
               </div>
             )}
           </div>
@@ -335,7 +347,11 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
         isOpen={isShareModalOpen} 
         onClose={() => { setIsShareModalOpen(false); if (selectedTeam) fetchTeamDetails(selectedTeam.id); }} 
         teamId={selectedTeam.id}
-        currentProject={selectedProject}
+      />
+      <ProjectDetailsModal
+        isOpen={!!selectedSharedProject}
+        onClose={() => setSelectedSharedProject(null)}
+        project={selectedSharedProject}
       />
     </div>
   );

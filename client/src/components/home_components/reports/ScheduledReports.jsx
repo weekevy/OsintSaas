@@ -2,35 +2,33 @@ import { useState } from 'react';
 
 const ScheduledReports = () => {
   const [schedules, setSchedules] = useState([
-    // {
-    //   id: 1,
-    //   name: 'Weekly Threat Briefing',
-    //   template: 'Executive Summary',
-    //   frequency: 'Every Monday',
-    //   recipients: ['security@company.com', 'management@company.com'],
-    //   nextRun: '2024-03-25 09:00',
-    //   status: 'active'
-    // },
-    // {
-    //   id: 2,
-    //   name: 'Daily IOC Feed',
-    //   template: 'Technical Analysis',
-    //   frequency: 'Daily',
-    //   recipients: ['soc@company.com'],
-    //   nextRun: '2024-03-19 08:00',
-    //   status: 'active'
-    // },
-    // {
-    //   id: 3,
-    //   name: 'Monthly OSINT Report',
-    //   template: 'Threat Intelligence',
-    //   frequency: '1st of month',
-    //   recipients: ['team@company.com'],
-    //   nextRun: '2024-04-01 10:00',
-    //   status: 'paused'
-    // }
-
-
+    {
+      id: 1,
+      name: 'Weekly Threat Briefing',
+      template: 'Executive Summary',
+      frequency: 'Every Monday',
+      recipients: ['security@osint.io', 'ops@osint.io'],
+      nextRun: '2024-03-25 09:00',
+      status: 'active'
+    },
+    {
+      id: 2,
+      name: 'Daily IOC Feed',
+      template: 'Technical Analysis',
+      frequency: 'Daily at 08:00',
+      recipients: ['soc@osint.io'],
+      nextRun: '2024-03-19 08:00',
+      status: 'active'
+    },
+    {
+      id: 3,
+      name: 'Monthly OSINT Report',
+      template: 'Threat Intelligence',
+      frequency: '1st of month',
+      recipients: ['management@osint.io'],
+      nextRun: '2024-04-01 10:00',
+      status: 'paused'
+    }
   ]);
 
   const toggleStatus = (id) => {

@@ -51,7 +51,7 @@ const QuickTools = () => {
   ];
 
   return (
-    <div className="glass-card rounded-2xl p-5 lg:p-6 border border-white/[0.07]">
+    <div className="bg-black rounded-2xl p-5 lg:p-6 border border-white/[0.07]">
       <div className="mb-5">
         <p className="text-[10px] font-semibold text-[#00E5FF]/80 tracking-[0.18em] uppercase">Toolkit</p>
         <h3 className="text-base lg:text-lg font-semibold text-white mt-1 tracking-tight">

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import ScanTabs from './ScanTabs';
-import { InvestigationModules, CustomScanConfig } from './core/Modules';
-import { RunningScans, ScanHistory, ScheduledScans } from './core/ScansManager';
+import { InvestigationModules } from './core/Modules';
+import { RunningScans, ScanHistory } from './core/ScansManager';
 import { getModuleAddModal, getModuleEditModal } from './modules';
-import { getIcon } from './utils/icons';
 import api from '../../../services/api';
 import { useSocket } from '../../../context/SocketContext';
+import { ScanCardSkeleton, ScanHistorySkeleton } from './utils/Skeleton';
 
-// Cache for modules data to prevent re-fetching on tab switches
+// Cache for modules data to prevent re-fetching
 let cachedModules = null;
 let lastFetchTime = null;
 const CACHE_DURATION = 30000; // 30 seconds cache
@@ -77,232 +76,43 @@ const getTargetDisplay = (scan, moduleId) => {
   }
 };
 
-// ─── Skeleton Loader — exact same height as a real scan card ─────────────────
-// The card renders: p-3 sm:p-5 with icon(36/48px) + text + buttons row + progress bar = ~132px mobile / ~144px desktop
-// We match that precisely so there is zero layout shift when data arrives.
-const RunningScansSkeleton = () => (
-  <div
-    className="relative border border-white/10 rounded-xl sm:rounded-2xl bg-black overflow-hidden"
-    style={{ minHeight: 132 }}
-  >
-    {/* inner glow to match real card feel */}
-    <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] to-transparent pointer-events-none" />
-    <div className="p-3 sm:p-5 animate-pulse">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-        {/* Left: icon + text */}
-        <div className="flex items-center gap-3 sm:gap-4 flex-1">
-          <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/10 rounded-lg sm:rounded-xl flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-1 sm:mb-1.5">
-              <div className="h-3 sm:h-4 bg-white/10 rounded w-32 sm:w-40" />
-              <div className="h-5 sm:h-6 bg-white/10 rounded w-16 sm:w-20" />
-            </div>
-            <div className="h-2.5 sm:h-3 bg-white/[0.07] rounded w-44 sm:w-56" />
-          </div>
-        </div>
-        {/* Right: buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="h-6 sm:h-8 w-14 sm:w-20 bg-white/10 rounded-lg" />
-          <div className="h-6 sm:h-8 w-10 sm:w-14 bg-white/10 rounded-lg" />
-          <div className="h-6 sm:h-8 w-14 sm:w-18 bg-white/[0.07] rounded-lg" />
-        </div>
-      </div>
-      
-      {/* Progress Bar Skeleton - prevents jumping */}
-      <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/[0.07]">
-        <div className="flex justify-between mb-2">
-          <div className="h-2 bg-white/5 rounded w-24" />
-          <div className="h-2 bg-white/10 rounded w-8" />
-        </div>
-        <div className="h-1.5 bg-white/5 rounded-full w-full" />
-      </div>
-    </div>
-  </div>
-);
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
-const EmptyState = () => (
-  <div
-    className="relative rounded-xl sm:rounded-2xl border border-white/10 bg-black overflow-hidden"
-    style={{ minHeight: 88 }}
-  >
-    {/* Subtle inner atmospheric glow */}
-    <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.04] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
-    {/* Corner brackets */}
-    <span className="absolute top-2.5 left-2.5 w-2.5 h-2.5 border-t border-l border-[#00E5FF]/20" />
-    <span className="absolute bottom-2.5 right-2.5 w-2.5 h-2.5 border-b border-r border-[#00E5FF]/20" />
-
-    <div className="relative flex items-center gap-4 sm:gap-6 px-5 sm:px-8 py-5 sm:py-6">
-      <div className="w-10 h-10 sm:w-12 sm:h-12 border border-white/15 rounded-xl flex items-center justify-center bg-white/[0.03] flex-shrink-0">
-        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <div>
-        <p className="text-[11px] sm:text-[12px] font-bold text-white/50 uppercase tracking-[0.16em]">No Active Scans</p>
-        <p className="text-white/25 text-[9px] sm:text-[10px] uppercase tracking-[0.1em] mt-0.5">Select a module below to begin</p>
-      </div>
-    </div>
-  </div>
-);
-
 // ─── Main Header ──────────────────────────────────────────────────────────────
-const DashboardHeader = ({ 
-  filterLabel, 
-  selectedProject, 
-  onRefresh, 
-  isLoading, 
-  isRefreshing, 
-  stats, 
-  lastUpdated,
-  projects = [],
-  onProjectSelect 
-}) => {
-  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsProjectDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+const DashboardHeader = ({ onRefresh, isLoading, isRefreshing }) => {
   return (
-    <header className="relative mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-white/10 bg-black overflow-hidden">
-      {/* Top edge glow */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/30 to-transparent" />
-      {/* Inner atmospheric glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.03] via-transparent to-[#2DD4BF]/[0.02] pointer-events-none" />
-
-      <div className="relative p-4 sm:p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="w-1 h-3.5 sm:h-4 bg-[#00E5FF] rounded-full" />
-              <span className="text-[#00E5FF]/80 text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold">
-                Scan Operations
-              </span>
-            </div>
-            <h1 className="text-[22px] sm:text-[28px] lg:text-[32px] font-bold tracking-tight text-white leading-tight truncate">
-              Scan Dashboard
-            </h1>
-            
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5 sm:mt-2">
-              <p className="text-white/40 text-[11px] sm:text-[13px] leading-relaxed">
-                Monitoring <span className="text-[#00E5FF]/70 font-medium">{filterLabel}</span>
-              </p>
-              
-              <div className="h-3 w-px bg-white/10 hidden sm:block" />
-
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                  className="flex items-center gap-1.5 text-[11px] sm:text-[13px] group"
-                >
-                  <span className="text-white/30">Project:</span>
-                  <span className="text-white/70 group-hover:text-[#00E5FF] transition-colors flex items-center gap-1 font-medium">
-                    {selectedProject ? selectedProject.name : 'All Investigations'}
-                    <svg className={`w-3 h-3 transition-transform duration-200 ${isProjectDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </span>
-                </button>
-
-                {isProjectDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-[#0d0d0d] shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-2 border-b border-white/5">
-                      <p className="px-3 py-1.5 text-[9px] font-bold text-white/30 uppercase tracking-widest">Select Investigation</p>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto py-1 custom-scrollbar">
-                      <button
-                        onClick={() => {
-                          onProjectSelect(null);
-                          setIsProjectDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-[11px] sm:text-[12px] transition-colors flex items-center gap-3 ${!selectedProject ? 'bg-[#00E5FF]/10 text-[#00E5FF]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
-                      >
-                        <div className={`w-1.5 h-1.5 rounded-full ${!selectedProject ? 'bg-[#00E5FF]' : 'bg-transparent border border-white/20'}`} />
-                        All Investigations
-                      </button>
-                      
-                      {projects.map((proj) => (
-                        <button
-                          key={proj.id}
-                          onClick={() => {
-                            onProjectSelect(proj);
-                            setIsProjectDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-[11px] sm:text-[12px] transition-colors flex items-center gap-3 ${selectedProject?.id === proj.id ? 'bg-[#00E5FF]/10 text-[#00E5FF]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
-                        >
-                          <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === proj.id ? 'bg-[#00E5FF]' : 'bg-transparent border border-white/20'}`} />
-                          <span className="truncate">{proj.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={onRefresh}
-              disabled={isLoading || isRefreshing}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-white/10 rounded-lg sm:rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 hover:border-[#00E5FF]/30 text-white/50 hover:text-[#00E5FF] transition-all duration-200 text-[10px] sm:text-[11px] uppercase tracking-[0.1em] disabled:opacity-35"
-            >
-              <svg className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-
-            <button className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-white/10 rounded-lg sm:rounded-xl bg-white/5 text-white/50 text-[10px] sm:text-[11px] uppercase tracking-[0.1em]">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span className="hidden sm:inline">Filter</span>
-            </button>
-          </div>
+    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-forwards">
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
+          <h1 className="text-2xl md:text-[32px] font-bold text-white tracking-tight">Scan Terminal</h1>
         </div>
+        <p className="text-white/40 text-[10px] lg:text-sm font-medium tracking-wide">Execute OSINT modules and monitor live investigation streams.</p>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0 w-full md:w-auto">
+        <button
+          onClick={onRefresh}
+          disabled={isLoading || isRefreshing}
+          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-white/10 rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 hover:border-[#00E5FF]/30 text-white/50 hover:text-[#00E5FF] transition-all duration-300 text-[10px] sm:text-[11px] uppercase tracking-widest font-bold disabled:opacity-35 active:scale-95 transform-gpu"
+        >
+          <svg className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh Terminal
+        </button>
       </div>
     </header>
   );
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const ScanDashboard = ({
-  searchInput,
-  onSearchChange,
-  onAnalyze,
-  isAnalyzing,
-  selectedProject,
-  onProjectSelect
-}) => {
+const ScanDashboard = ({ searchInput, selectedProject }) => {
   const { socket, isConnected, joinProject } = useSocket();
-  const [activeScanTab, setActiveScanTab] = useState('module');
-  const [scanOptions, setScanOptions] = useState({
-    deepScan: false,
-    passiveMode: true,
-    activeMode: false,
-    stealthMode: false,
-    followRedirects: true,
-  });
 
   const [runningScans, setRunningScans] = useState([]);
   const [scanHistory, setScanHistory] = useState([]);
   const [status, setStatus] = useState('idle');
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
-  const [projects, setProjects] = useState([]);
-
+  const fetchingRef = useRef(false);
   const [newScanIds, setNewScanIds] = useState(new Set());
   const prevScanIdsRef = useRef(new Set());
 
@@ -311,112 +121,183 @@ const ScanDashboard = ({
   const [showEditAssets, setShowEditAssets] = useState(false);
   const [editingScan, setEditingScan] = useState(null);
 
-  const [filterModule, setFilterModule] = useState('all');
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filterDropdownRef = useRef(null);
-
   const fetchAbortRef = useRef(null);
   const isSavingRef = useRef(false);
   const isEditOpenRef = useRef(false);
   const isAddOpenRef = useRef(false);
   const refreshTimeoutRef = useRef(null);
 
+  const processScans = useCallback((all) => {
+    const allNextIds = new Set(all.map((s) => s.id));
+    const brandNew = new Set([...allNextIds].filter((id) => !prevScanIdsRef.current.has(id)));
+    if (brandNew.size > 0 && prevScanIdsRef.current.size > 0) {
+      setNewScanIds(brandNew);
+      setTimeout(() => setNewScanIds(new Set()), 700);
+    }
+    prevScanIdsRef.current = allNextIds;
+
+    setRunningScans(all.filter((s) => ['queued', 'pending', 'running', 'paused', 'failed', 'completed'].includes(s.status)));
+    setScanHistory(all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
+    
+    // Ensure skeleton is visible for a minimum duration for smoothness
+    const elapsed = Date.now() - (lastFetchTime || 0);
+    const minLoadTime = 450; 
+    const remaining = Math.max(0, minLoadTime - (elapsed % 1000)); // Rough estimate if we just started
+
+    setTimeout(() => {
+      setInitialLoadDone(true);
+      setStatus('idle');
+    }, silentRef.current ? 0 : 400); 
+  }, []);
+
+  const silentRef = useRef(false);
+
+  const socketTimeoutRef = useRef(null);
+
+  const runHttpFallback = useCallback(async ({ silent = false } = {}) => {
+    if (fetchingRef.current && !silent) return;
+    fetchingRef.current = true;
+    console.log('Running HTTP fallback for scans fetch...');
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
+    try {
+      const results = await Promise.allSettled(
+        ALL_MODULES.map(async (module) => {
+          let url = `${module.api}?_=${Date.now()}`;
+          if (selectedProject?.id) {
+            url += `&projectId=${selectedProject.id}`;
+          }
+          const response = await api.get(url, { signal: controller.signal });
+          const data = response.data;
+          if (!data.success || !data.scans?.length) return [];
+          return data.scans.map((scan) => ({
+            id: `${module.id}_${scan.id}`,
+            originalId: scan.id,
+            moduleId: module.id,
+            moduleName: module.name,
+            moduleIcon: module.icon,
+            moduleColor: module.color,
+            moduleTextColor: module.textColor,
+            target: getTargetDisplay(scan, module.id),
+            api: module.api,
+            status: scan.status,
+            progress: scan.progress || 0,
+            assets: scan.assets,
+            findings: scan.findings_count || 0,
+            createdAt: scan.created_at,
+          }));
+        })
+      );
+
+      if (controller.signal.aborted) return;
+
+      const seen = new Set();
+      const all = results
+        .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
+        .filter((scan) => {
+          const key = `${scan.moduleId}_${scan.originalId}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      cachedModules = all;
+      lastFetchTime = Date.now();
+      processScans(all);
+    } catch (err) {
+      if (err.name === 'CanceledError') return;
+      console.error('Fetch all failed:', err);
+      if (!silent) setStatus('error');
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, [selectedProject?.id, processScans]);
+
+  const socketRef = useRef(socket);
+  const isConnectedRef = useRef(isConnected);
+
+  useEffect(() => { socketRef.current = socket; }, [socket]);
+  useEffect(() => { isConnectedRef.current = isConnected; }, [isConnected]);
+
   const fetchAllScans = useCallback(
     async ({ silent = false, useCache = true } = {}) => {
+      if (fetchingRef.current && !silent) return;
+      
+      silentRef.current = silent;
+
+      // Always show loading state for non-silent fetches to ensure the "effect"
+      if (!silent) {
+        setStatus('loading');
+        setInitialLoadDone(false);
+      }
+
       if (useCache && cachedModules && lastFetchTime && (Date.now() - lastFetchTime) < CACHE_DURATION) {
-        const all = cachedModules;
-        setRunningScans(all.filter((s) => ['queued', 'pending', 'running', 'paused', 'failed', 'completed'].includes(s.status)));
-        setScanHistory(all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
-        if (!silent) setStatus('idle');
-        setInitialLoadDone(true);
-        setLastUpdated(new Date());
+        setTimeout(() => processScans(cachedModules), silent ? 0 : 100);
         return;
       }
 
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+      if (socketTimeoutRef.current) clearTimeout(socketTimeoutRef.current);
       if (fetchAbortRef.current) fetchAbortRef.current.abort();
-      const controller = new AbortController();
-      fetchAbortRef.current = controller;
-      if (!silent) setStatus('loading');
+      
+      // ── Strategic Update: Socket-First Fetching with HTTP Fallback ──
+      const currentSocket = socketRef.current;
+      const currentConnected = isConnectedRef.current;
 
-      try {
-        const modulesToFetch =
-          filterModule === 'all' ? ALL_MODULES : ALL_MODULES.filter((m) => m.id === filterModule);
-        const results = await Promise.allSettled(
-          modulesToFetch.map(async (module) => {
-            let url = `${module.api}?_=${Date.now()}`;
-            if (selectedProject?.id) {
-              url += `&projectId=${selectedProject.id}`;
-            }
-            const response = await api.get(url, { signal: controller.signal });
-            const data = response.data;
-            if (!data.success || !data.scans?.length) return [];
-            return data.scans.map((scan) => ({
-              id: `${module.id}_${scan.id}`,
-              originalId: scan.id,
-              jobRecruitmentId: scan.originalId,
-              moduleId: module.id,
-              moduleName: module.name,
-              moduleIcon: module.icon,
-              moduleColor: module.color,
-              moduleTextColor: module.textColor,
-              toolIcon: module.icon,
-              target: getTargetDisplay(scan, module.id),
-              rawTarget: scan.target?.value || scan.assets?.job_url || scan.assets?.company_website || 'Unknown',
-              api: module.api,
-              status: scan.status,
-              progress: scan.progress || 0,
-              assets: scan.assets,
-              findings: scan.findings_count || 0,
-              createdAt: scan.created_at,
-            }));
-          })
-        );
-
-        if (controller.signal.aborted) return;
-
-        const seen = new Set();
-        const all = results
-          .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
-          .filter((scan) => {
-            const key = `${scan.moduleId}_${scan.originalId}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          })
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        const allNextIds = new Set(all.map((s) => s.id));
-        const brandNew = new Set([...allNextIds].filter((id) => !prevScanIdsRef.current.has(id)));
-        if (brandNew.size > 0 && prevScanIdsRef.current.size > 0) {
-          setNewScanIds(brandNew);
-          setTimeout(() => setNewScanIds(new Set()), 700);
-        }
-        prevScanIdsRef.current = allNextIds;
-
-        setRunningScans(all.filter((s) => ['queued', 'pending', 'running', 'paused', 'failed', 'completed'].includes(s.status)));
-        setScanHistory(all.filter((s) => ['completed', 'stopped', 'failed', 'cancelled'].includes(s.status)));
-        setLastUpdated(new Date());
-        setInitialLoadDone(true);
-
-        cachedModules = all;
-        lastFetchTime = Date.now();
-        if (!silent) setStatus('idle');
-      } catch (err) {
-        if (err.name === 'CanceledError') return;
-        console.error('Fetch all failed:', err);
-        if (!silent) setStatus('error');
+      if (currentSocket && currentConnected) {
+        fetchingRef.current = true;
+        currentSocket.emit('request_scans', { projectId: selectedProject?.id });
+        
+        // Set a timeout to fallback to HTTP if socket is slow or fails
+        socketTimeoutRef.current = setTimeout(() => {
+          if (fetchingRef.current) {
+            runHttpFallback({ silent: silentRef.current });
+          }
+        }, 3000);
+        return;
       }
+
+      // Initial HTTP call if no socket
+      await runHttpFallback({ silent });
     },
-    [filterModule, selectedProject?.id, ALL_MODULES, getTargetDisplay]
+    [selectedProject?.id, processScans, runHttpFallback]
   );
 
-  // WebSocket event listeners
   useEffect(() => {
     if (!socket || !isConnected) return;
 
+    socket.on('scans_list', (data) => {
+      console.log('Socket scans_list received:', data.success ? 'Success' : 'Failed');
+      fetchingRef.current = false;
+      if (data.success) {
+        if (socketTimeoutRef.current) clearTimeout(socketTimeoutRef.current);
+        // Hydrate with UI-specific module info that might be missing from server response
+        const hydratedScans = data.scans.map(s => {
+          const mod = getModuleById(s.moduleId);
+          return {
+            ...s,
+            moduleIcon: mod.icon,
+            moduleColor: mod.color,
+            moduleTextColor: mod.textColor,
+            api: mod.api
+          };
+        });
+        cachedModules = hydratedScans;
+        lastFetchTime = Date.now();
+        processScans(hydratedScans);
+      } else {
+        console.error('Socket scans_list error:', data.error);
+        // If socket failed, immediately try HTTP fallback instead of waiting for timeout
+        if (socketTimeoutRef.current) {
+          clearTimeout(socketTimeoutRef.current);
+          runHttpFallback();
+        }
+      }
+    });
+
     socket.on('scan_progress', (data) => {
-      console.log('WS: scan_progress', data);
       setRunningScans(prev => prev.map(scan => {
         if (scan.originalId === data.scan_id) {
           return { ...scan, progress: data.progress, status: data.status || 'running' };
@@ -425,76 +306,32 @@ const ScanDashboard = ({
       }));
     });
 
-    socket.on('scan_completed', (data) => {
-      console.log('WS: scan_completed', data);
-      // For now, let's trigger a light refresh to update everything correctly
+    socket.on('scan_completed', () => {
       fetchAllScans({ silent: true, useCache: false });
     });
 
     return () => {
+      socket.off('scans_list');
       socket.off('scan_progress');
       socket.off('scan_completed');
     };
-  }, [socket, isConnected, fetchAllScans]);
+  }, [socket, isConnected, fetchAllScans, processScans]);
 
-  // Join project room when project changes
   useEffect(() => {
     if (selectedProject?.id) {
       joinProject(selectedProject.id);
     }
   }, [selectedProject?.id, joinProject]);
 
-  const stats = useMemo(() => {
-    const all = [...runningScans, ...scanHistory];
-    return {
-      total: all.length,
-      activeNow: runningScans.filter((s) => ['queued', 'running'].includes(s.status)).length,
-      findings: scanHistory.reduce((acc, s) => acc + (s.findings || 0), 0),
-    };
-  }, [runningScans, scanHistory]);
-
-  // Fetch all projects for the dropdown
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await api.get('/api/projects');
-        if (response.data.success) {
-          setProjects(response.data.projects);
-        }
-      } catch (err) {
-        console.error('Failed to fetch projects for dropdown:', err);
-      }
-    };
-    fetchProjects();
-  }, []);
-
-  const debouncedRefresh = useCallback(() => {
-    if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
-    refreshTimeoutRef.current = setTimeout(() => fetchAllScans({ silent: true, useCache: false }), 500);
-  }, [fetchAllScans]);
-
+  // Initial load
   useEffect(() => {
     fetchAllScans({ useCache: false });
+    
     return () => {
       if (fetchAbortRef.current) fetchAbortRef.current.abort();
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
     };
   }, [fetchAllScans, selectedProject?.id]);
-
-  useEffect(() => {
-    cachedModules = null;
-    lastFetchTime = null;
-    fetchAllScans({ useCache: false });
-  }, [filterModule, selectedProject?.id]); // Clear cache on project change too
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target))
-        setShowFilterDropdown(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const handleStartScan = useCallback((module) => {
     if (isAddOpenRef.current) return;
@@ -536,7 +373,6 @@ const ScanDashboard = ({
         }
         if (success) { 
           handleCloseAdd(); 
-          // Small delay to let DB finish
           setTimeout(() => fetchAllScans({ silent: true, useCache: false }), 300);
         }
       } catch (err) {
@@ -556,14 +392,12 @@ const ScanDashboard = ({
       setScanHistory((p) => p.filter((s) => s.originalId !== scanId));
       try {
         const res = await fetch(`${apiBase}?id=${scanId}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!data.success) debouncedRefresh();
+        await res.json();
       } catch (err) {
         console.error('Remove error:', err);
-        debouncedRefresh();
       }
     },
-    [debouncedRefresh]
+    []
   );
 
   const handleEditScan = useCallback((scan) => {
@@ -591,12 +425,12 @@ const ScanDashboard = ({
           body: JSON.stringify(updatedAssets),
         });
         const data = await res.json();
-        if (data.success) { handleCloseEdit(); debouncedRefresh(); }
+        if (data.success) { handleCloseEdit(); fetchAllScans({ silent: true, useCache: false }); }
       } catch (err) {
         console.error('Update error:', err);
       }
     },
-    [editingScan, debouncedRefresh, handleCloseEdit]
+    [editingScan, fetchAllScans, handleCloseEdit]
   );
 
   const renderAddModal = () => {
@@ -629,8 +463,6 @@ const ScanDashboard = ({
     );
   };
 
-  const filterLabel =
-    filterModule === 'all' ? 'All Modules' : getModuleById(filterModule).name;
   const isLoading = status === 'loading';
   const isRefreshing = status === 'refreshing';
   const annotatedRunningScans = useMemo(
@@ -638,110 +470,120 @@ const ScanDashboard = ({
     [runningScans, newScanIds]
   );
 
-  const showSkeleton = isLoading && !initialLoadDone;
-  const showEmpty = !isLoading && !showSkeleton && annotatedRunningScans.length === 0;
-
-  // How many skeleton rows to show = same as last known count (or 2 on first load)
-  const skeletonCount = annotatedRunningScans.length > 0 ? annotatedRunningScans.length : 2;
-
   return (
-    <div className="dashboard-ambient min-h-screen font-sans text-white">
+    <div className="dashboard-ambient min-h-screen font-sans text-white transform-gpu">
       <div className="relative max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-10 py-5 sm:py-8 md:py-10 pb-16">
 
         {/* ── HEADER ── */}
         <DashboardHeader
-          filterLabel={filterLabel}
-          selectedProject={selectedProject}
           onRefresh={() => fetchAllScans({ silent: true, useCache: false })}
           isLoading={isLoading}
           isRefreshing={isRefreshing}
-          stats={stats}
-          lastUpdated={lastUpdated}
-          projects={projects}
-          onProjectSelect={onProjectSelect}
         />
 
-        {/* ── TABS ── */}
-        <ScanTabs activeScanTab={activeScanTab} setActiveScanTab={setActiveScanTab} />
+        {/* ── MAIN TERMINAL PIPELINE ── */}
+        <div className="space-y-12">
+          
+          {/* ── MONITOR LAYER ── */}
+          <section className="duration-500 ease-out fill-mode-forwards">
+            {/* ── Terminal Container (Minimal & Dynamic) ── */}
+            <div className="relative bg-black transition-all duration-500 transform-gpu">
+              {/* Dynamic Content Area */}
+              <div className="z-10 py-4 sm:py-6 relative">
+                {/* ── SKELETON LAYER ── */}
+                <div 
+                  className={`transition-all duration-300 ease-in-out ${
+                    isLoading ? 'opacity-100 visible' : 'opacity-0 invisible absolute inset-x-0 top-4 pointer-events-none'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    {[0, 1].map(i => <ScanCardSkeleton key={i} index={i} />)}
+                  </div>
+                </div>
 
-        {/* ── RUNNING SCANS SECTION ────────────────────────────────────────────
-            We always reserve the "Active Scans" header + content area so the
-            page height never jumps between skeleton → real data.
-        ──────────────────────────────────────────────────────────────────────── */}
-        <section className="mt-5 sm:mt-6">
-          {/* Single "Active Scans" header — always visible, not per-scan */}
-          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="w-0.5 h-4 sm:h-5 bg-gradient-to-b from-[#2DD4BF] to-[#00E5FF] rounded-full" />
-            <h3 className="text-white text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em]">
-              Current Scans
-              {!showSkeleton && (
-                <span className="ml-1.5 text-[#2DD4BF]/70 text-[10px] sm:text-[11px]">
-                  ({annotatedRunningScans.length})
-                </span>
-              )}
-            </h3>
-          </div>
+                {/* ── CONTENT LAYER ── */}
+                <div 
+                  className={`transition-all duration-300 delay-50 ease-out ${
+                    !isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 absolute inset-x-0 top-4 pointer-events-none'
+                  }`}
+                >
+                  {annotatedRunningScans.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center text-center py-16">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-[#00E5FF]/5 blur-3xl rounded-full" />
+                        <svg className="w-12 h-12 text-white/10 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-[11px] sm:text-[13px] font-black text-white/20 uppercase tracking-[0.4em] mb-2">No Active Intelligence</p>
+                      <p className="text-[9px] text-white/10 uppercase tracking-widest">Awaiting Module Initiation...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <RunningScans
+                        runningScans={annotatedRunningScans}
+                        onEditScan={handleEditScan}
+                        onRemoveScan={handleRemoveScan}
+                        onRefresh={() => fetchAllScans({ silent: true, useCache: false })}
+                        onUpdateScanStatus={(scanId, newStatus) =>
+                          setRunningScans((prev) =>
+                            prev.map((s) => s.originalId === scanId ? { ...s, status: newStatus } : s)
+                          )
+                        }
+                        isLoading={false}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
 
-          {/* Content area — fixed structure regardless of state */}
-          <div 
-            className={`space-y-2 sm:space-y-3 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${initialLoadDone ? 'opacity-100' : 'opacity-90'}`}
-            style={{ minHeight: annotatedRunningScans.length > 0 || showSkeleton ? 132 : 0 }}
-          >
-            {showSkeleton ? (
-              <div className="space-y-2 sm:space-y-3 animate-in fade-in duration-300">
-                {Array.from({ length: skeletonCount }).map((_, i) => (
-                  <RunningScansSkeleton key={i} />
-                ))}
-              </div>
-            ) : showEmpty ? (
-              <div className="animate-in fade-in zoom-in-95 duration-300">
-                <EmptyState />
-              </div>
-            ) : (
-              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                <RunningScans
-                  runningScans={annotatedRunningScans}
-                  onEditScan={handleEditScan}
-                  onRemoveScan={handleRemoveScan}
-                  onRefresh={() => fetchAllScans({ silent: true, useCache: false })}
-                  onUpdateScanStatus={(scanId, newStatus) =>
-                    setRunningScans((prev) =>
-                      prev.map((s) => s.originalId === scanId ? { ...s, status: newStatus } : s)
-                    )
-                  }
-                />
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── TAB PANELS ── */}
-        <div className="mt-6 sm:mt-8">
-          {activeScanTab === 'module' && (
+          {/* ──  action layer: modules ── */}
+          <section className="duration-500 delay-100 ease-out fill-mode-forwards">
+            <div className="flex items-center gap-3 mb-6 px-2">
+              <h3 className="text-[10px] lg:text-[11px] font-bold text-white/40 tracking-widest uppercase font-sans">2. Initiate Module</h3>
+              <div className="h-px flex-1 bg-white/5" />
+            </div>
+            
             <InvestigationModules
               onStartScan={handleStartScan}
               selectedTarget={selectedProject?.name || searchInput}
-            />
-          )}
-          {activeScanTab === 'custom' && (
-            <CustomScanConfig
-              scanOptions={scanOptions}
-              toggleOption={(opt) => setScanOptions((p) => ({ ...p, [opt]: !p[opt] }))}
-              selectedProjectForScan={selectedProject}
-              searchInput={searchInput}
-              onStartCustomScan={() => console.log('custom scan', scanOptions)}
               isLoading={isLoading}
             />
-          )}
-          {activeScanTab === 'scheduled' && (
-            <ScheduledScans scanHistory={scanHistory} runningScans={runningScans} />
-          )}
-        </div>
+          </section>
 
-        {/* ── HISTORY SECTION ── */}
-        <section className="mt-8 sm:mt-10">
-          <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} />
-        </section>
+          {/* ── archive layer: history ── */}
+          <section className="duration-500 delay-200 ease-out fill-mode-forwards">
+            <div className="flex items-center gap-3 mb-6 px-2">
+              <h3 className="text-[10px] lg:text-[11px] font-bold text-white/20 tracking-widest uppercase font-sans">3. Intelligence Archives</h3>
+              <div className="h-px flex-1 bg-white/5" />
+            </div>
+            
+            <div className="relative min-h-[100px]">
+               {/* ── SKELETON LAYER ── */}
+               <div 
+                  className={`transition-all duration-300 ease-in-out ${
+                    isLoading ? 'opacity-100 visible' : 'opacity-0 invisible absolute inset-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    {[0, 1, 2].map(i => <ScanHistorySkeleton key={i} index={i} />)}
+                  </div>
+                </div>
+
+                {/* ── CONTENT LAYER ── */}
+                <div 
+                  className={`transition-all duration-300 delay-50 ease-out ${
+                    !isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'
+                  }`}
+                >
+                  <ScanHistory scanHistory={scanHistory} onRemoveScan={handleRemoveScan} isLoading={false} />
+                </div>
+            </div>
+          </section>
+
+        </div>
       </div>
 
       {renderAddModal()}

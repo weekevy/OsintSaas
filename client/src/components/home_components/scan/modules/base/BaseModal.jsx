@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const BaseModal = ({ 
   isOpen, 
@@ -78,14 +79,14 @@ const BaseModal = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div 
-      className={`fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100 animate-fadeIn'}`}
+      className={`fixed inset-0 z-[10000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100 animate-fadeIn'}`}
       onKeyDown={handleKeyDown}
     >
       <div 
         ref={modalRef}
-        className={`relative w-full ${maxWidth} max-h-[85vh] border border-white/10 rounded-2xl bg-[#0A0A0A] overflow-hidden shadow-2xl transition-all duration-200 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scaleIn'}`}
+        className={`relative w-full ${maxWidth} max-h-[90vh] border border-white/10 rounded-2xl bg-[#0A0A0A] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.9)] transition-all duration-200 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scaleIn'}`}
       >
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00E5FF]/40 to-transparent" />
         
@@ -114,7 +115,7 @@ const BaseModal = ({
           e.preventDefault();
           handleSave();
         }}>
-          <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)] custom-scroll bg-[#0C0C0C]/50">
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] custom-scroll bg-[#0C0C0C]/50">
             {children}
           </div>
 
@@ -173,6 +174,8 @@ const BaseModal = ({
       `}</style>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default BaseModal;

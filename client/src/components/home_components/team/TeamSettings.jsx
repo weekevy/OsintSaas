@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import api from '../../../services/api';
 
-const TeamSettings = ({ team, onUpdate }) => {
+const TeamSettings = ({ team, userRole, onUpdate }) => {
   const [name, setName] = useState(team?.name || '');
   const [description, setDescription] = useState(team?.description || '');
   const [visibility, setVisibility] = useState(team?.visibility || 'private');
@@ -10,7 +10,11 @@ const TeamSettings = ({ team, onUpdate }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const canManage = userRole === 'owner' || userRole === 'admin';
+  const isOwner = userRole === 'owner';
+
   const handleUpdate = async () => {
+    if (!canManage) return;
     setLoading(true);
     setError('');
     setSuccess('');
@@ -34,6 +38,7 @@ const TeamSettings = ({ team, onUpdate }) => {
   };
 
   const handleDelete = async () => {
+    if (!isOwner) return;
     if (window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
       try {
         const response = await api.delete(`/api/teams/${team.id}`);
@@ -52,9 +57,14 @@ const TeamSettings = ({ team, onUpdate }) => {
       {success && <div className="p-3 bg-[#00E5FF]/10 border border-[#00E5FF]/30 rounded-xl text-[#00E5FF] text-xs">{success}</div>}
 
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-5 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full" />
-          <h3 className="text-white font-bold text-base">General Settings</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-5 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full" />
+            <h3 className="text-white font-bold text-base">General Settings</h3>
+          </div>
+          {!canManage && (
+            <span className="text-[10px] font-bold text-white/20 tracking-widest uppercase border border-white/5 px-3 py-1 rounded-full">View Only Mode</span>
+          )}
         </div>
 
         <div className="grid gap-4">
@@ -63,8 +73,9 @@ const TeamSettings = ({ team, onUpdate }) => {
             <input 
               type="text" 
               value={name}
+              disabled={!canManage}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors"
+              className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -72,9 +83,10 @@ const TeamSettings = ({ team, onUpdate }) => {
             <label className="block text-white font-semibold text-sm mb-2">Description</label>
             <textarea 
               value={description}
+              disabled={!canManage}
               onChange={(e) => setDescription(e.target.value)}
               rows="2"
-              className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors resize-none"
+              className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors resize-none disabled:opacity-50"
             />
           </div>
 
@@ -83,8 +95,9 @@ const TeamSettings = ({ team, onUpdate }) => {
               <label className="block text-white font-semibold text-sm mb-2">Visibility</label>
               <select 
                 value={visibility}
+                disabled={!canManage}
                 onChange={(e) => setVisibility(e.target.value)}
-                className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors"
+                className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors disabled:opacity-50"
               >
                 <option value="private" className="bg-black">Private</option>
                 <option value="public" className="bg-black">Public</option>
@@ -96,43 +109,48 @@ const TeamSettings = ({ team, onUpdate }) => {
               <input 
                 type="number" 
                 value={maxMembers}
+                disabled={!canManage}
                 onChange={(e) => setMaxMembers(parseInt(e.target.value))}
-                className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors"
+                className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E5FF]/50 outline-none transition-colors disabled:opacity-50"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <button 
-            onClick={handleUpdate}
-            disabled={loading}
-            className="px-8 py-2.5 bg-[#00E5FF] text-black font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4 pt-6">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-5 bg-gradient-to-b from-[#f87171] to-[#ef4444] rounded-full" />
-          <h3 className="text-white font-bold text-base">Danger Zone</h3>
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/5">
-          <div>
-            <h4 className="text-white font-semibold text-sm">Delete Team</h4>
-            <p className="text-white/40 text-xs">Permanently delete this team and all associated data</p>
+        {canManage && (
+          <div className="flex justify-end">
+            <button 
+              onClick={handleUpdate}
+              disabled={loading}
+              className="px-8 py-2.5 bg-[#00E5FF] text-black font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
-          <button 
-            onClick={handleDelete}
-            className="px-6 py-2 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors duration-150 text-xs font-bold"
-          >
-            Delete Team
-          </button>
-        </div>
+        )}
       </div>
+
+      {isOwner && (
+        <div className="space-y-4 pt-6">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-5 bg-gradient-to-b from-[#f87171] to-[#ef4444] rounded-full" />
+            <h3 className="text-white font-bold text-base">Danger Zone</h3>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+            <div>
+              <h4 className="text-white font-semibold text-sm">Delete Team</h4>
+              <p className="text-white/40 text-xs">Permanently delete this team and all associated data</p>
+            </div>
+            <button 
+              onClick={handleDelete}
+              className="px-6 py-2 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors duration-150 text-xs font-bold"
+            >
+              Delete Team
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

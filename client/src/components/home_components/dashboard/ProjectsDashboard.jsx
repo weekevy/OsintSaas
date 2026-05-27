@@ -174,22 +174,16 @@ const ProjectsDashboard = ({ onProjectSelect, onTabChange }) => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 font-sans">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 font-sans animate-slide-up">
       
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white flex items-center gap-3">
-            <div className="w-12 h-12 border border-white/[0.08] rounded-xl flex items-center justify-center bg-[#00E5FF]/5 backdrop-blur-xl">
-              <svg className="w-7 h-7 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-            </div>
-            Projects
-          </h1>
-          <p className="text-white/60 text-sm lg:text-base mt-1">
-            Manage and track your OSINT investigation projects
-          </p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
+            <h1 className="text-2xl md:text-[32px] font-bold text-white tracking-tight">Active Projects</h1>
+          </div>
+          <p className="text-white/40 text-[10px] lg:text-sm font-medium tracking-wide">Manage and track your OSINT investigation projects.</p>
         </div>
         
         <button
@@ -197,14 +191,16 @@ const ProjectsDashboard = ({ onProjectSelect, onTabChange }) => {
             setEditingProject(null);
             setIsCreateModalOpen(true);
           }}
-          className="px-6 py-3 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-xl transition-all flex items-center gap-2"
+          className="group relative w-full md:w-auto px-8 py-3.5 lg:py-4 bg-[#00E5FF] text-black font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(0,229,255,0.2)] text-[10px] lg:text-xs font-sans uppercase tracking-widest"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          New Project
+          <div className="flex items-center justify-center gap-3">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Assemble project
+          </div>
         </button>
-      </div>
+      </header>
 
       {/* Error Message */}
       {error && (
@@ -222,7 +218,7 @@ const ProjectsDashboard = ({ onProjectSelect, onTabChange }) => {
           <div className="w-10 h-10 border-2 border-white/20 border-t-[#00E5FF] rounded-full" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-12 glass-card rounded-2xl">
+        <div className="text-center py-12 bg-black rounded-2xl border border-white/5">
           <svg className="w-16 h-16 mx-auto text-white/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>

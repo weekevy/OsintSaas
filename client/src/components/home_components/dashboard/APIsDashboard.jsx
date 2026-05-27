@@ -73,35 +73,25 @@ const APIsDashboard = () => {
 
   return (
     <div className="min-h-screen font-sans text-white bg-black">
-      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-8 pb-12 md:pb-10">
+      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-8 pb-12 md:pb-10 animate-slide-up">
         
         {/* Header */}
-        <div className="rounded-2xl border border-white/10 bg-black mb-6 md:mb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 md:p-8">
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 rounded-lg bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h1 className="font-sans text-2xl md:text-3xl font-bold text-white">
-                  API Management
-                </h1>
-              </div>
-              <p className="text-sm font-sans text-white/40 ml-16">
-                Monitor and manage your API usage, keys, and documentation
-              </p>
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
+              <h1 className="text-2xl md:text-[32px] font-bold text-white tracking-tight">API Management</h1>
             </div>
-            
-            <button className="flex items-center gap-2 px-6 py-3 border border-white/10 rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 text-white/60 hover:text-[#00E5FF] transition-colors duration-150 text-sm font-sans">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-              Generate New Key
-            </button>
+            <p className="text-white/40 text-[10px] lg:text-sm font-medium tracking-wide">Monitor and manage your API usage, keys, and documentation.</p>
           </div>
-        </div>
+          
+          <button className="flex items-center gap-2 px-6 py-3 border border-white/10 rounded-xl bg-[#00E5FF] text-black hover:brightness-110 transition-all duration-150 text-[10px] sm:text-[11px] uppercase tracking-widest font-bold">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            Generate New Key
+          </button>
+        </header>
 
         {/* API Stats */}
         <div className="mb-6">

@@ -68,9 +68,24 @@ export async function POST(request) {
     if (scanInfo.length > 0) {
         const userId = scanInfo[0].user_id;
         const type = risk_score > 70 ? 'threat' : risk_score > 40 ? 'warning' : 'success';
+        
+        let friendlyTitle = "Investigation Complete";
+        let friendlyMessage = `Your scan for project #${scanInfo[0].project_id} is ready to review.`;
+        
+        if (risk_score > 70) {
+            friendlyTitle = "Critical Risks Detected";
+            friendlyMessage = "Our analysis found high-risk signals that require your immediate attention.";
+        } else if (risk_score > 40) {
+            friendlyTitle = "Security Warning";
+            friendlyMessage = "Some suspicious patterns were identified during the investigation.";
+        } else {
+            friendlyTitle = "Scan Finished Successfully";
+            friendlyMessage = "The analysis is complete and no major threats were found.";
+        }
+
         await connection.execute(
             `INSERT INTO notifications (user_id, title, message, type, scan_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())`,
-            [userId, `Investigation #${scan_id} Ready`, `Risk Score: ${risk_score}%`, type, scan_id]
+            [userId, friendlyTitle, friendlyMessage, type, scan_id]
         );
     }
 

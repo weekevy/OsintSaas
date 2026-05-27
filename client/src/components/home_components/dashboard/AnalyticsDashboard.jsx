@@ -24,45 +24,35 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="min-h-screen font-sans text-white bg-black">
-      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-8 pb-12 md:pb-10">
+      <div className="relative z-[1] max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-8 pb-12 md:pb-10 animate-slide-up">
         
         {/* Header */}
-        <div className="rounded-2xl border border-white/10 bg-black mb-6 md:mb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 md:p-8">
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-14 h-14 rounded-xl bg-[#00E5FF]/15 border border-[#00E5FF]/30 flex items-center justify-center">
-                  <svg className="w-7 h-7 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h1 className="font-sans text-3xl md:text-4xl font-bold text-white">
-                  Analytics
-                </h1>
-              </div>
-              <p className="text-base font-sans text-white/40 ml-[4.5rem]">
-                Insights and metrics about your OSINT operations
-              </p>
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
+              <h1 className="text-2xl md:text-[32px] font-bold text-white tracking-tight">Analytics</h1>
             </div>
-            
-            {/* Time Range Selector */}
-            <div className="flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1">
-              {timeRanges.map((range) => (
-                <button
-                  key={range.id}
-                  onClick={() => setTimeRange(range.id)}
-                  className={`px-5 py-2 rounded-lg text-sm font-sans font-semibold transition-colors duration-150
-                    ${timeRange === range.id 
-                      ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
-                      : 'text-white/40 hover:text-white'
-                    }`}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
+            <p className="text-white/40 text-[10px] lg:text-sm font-medium tracking-wide">Insights and metrics about your OSINT operations.</p>
           </div>
-        </div>
+          
+          {/* Time Range Selector */}
+          <div className="flex gap-1 p-1 rounded-2xl bg-black border border-white/5">
+            {timeRanges.map((range) => (
+              <button
+                key={range.id}
+                onClick={() => setTimeRange(range.id)}
+                className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border ${
+                  timeRange === range.id 
+                    ? 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30' 
+                    : 'text-white/30 border-transparent hover:text-white/60'
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </header>
 
         {/* Overview Cards */}
         <div className="mb-8">

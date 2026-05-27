@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const RecentScans = ({ scans = [], selectedProjectId }) => {
+const RecentScans = ({ scans = [], selectedProjectId, isLoading }) => {
   const [recentScans, setRecentScans] = useState([]);
 
   // Use scans from props
@@ -56,8 +56,37 @@ const RecentScans = ({ scans = [], selectedProjectId }) => {
     console.log('Refresh scans');
   };
 
-  // Check if no project is selected
-  const cardShell = 'glass-card rounded-2xl p-5 flex flex-col h-full relative border border-white/[0.07]';
+  const cardShell = 'bg-black rounded-2xl p-5 flex flex-col h-full relative border border-white/[0.07]';
+
+  const RecentScanSkeleton = () => (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] animate-pulse">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="w-9 h-9 bg-white/5 rounded-xl border border-white/10" />
+        <div className="min-w-0 flex-1">
+          <div className="h-3 bg-white/10 rounded w-3/4 mb-1.5" />
+          <div className="h-2 bg-white/5 rounded w-1/2" />
+        </div>
+      </div>
+      <div className="w-12 h-6 bg-white/5 rounded-lg ml-4" />
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className={cardShell}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[10px] font-semibold text-[#00E5FF]/80 tracking-[0.18em] uppercase">Activity</p>
+            <div className="h-5 w-40 bg-white/10 rounded mt-1 animate-pulse" />
+          </div>
+        </div>
+        <div className="flex-1 space-y-2">
+          {[1, 2, 3, 4].map(i => <RecentScanSkeleton key={i} />)}
+        </div>
+        <div className="h-9 w-full bg-white/5 rounded-xl mt-4 animate-pulse" />
+      </div>
+    );
+  }
 
   if (!selectedProjectId) {
     return (
@@ -148,7 +177,7 @@ const RecentScans = ({ scans = [], selectedProjectId }) => {
         </button>
       </div>
       
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
         {recentScans.map((scan) => (
           <div key={scan.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#00E5FF]/25 hover:bg-[#00E5FF]/5 transition-colors cursor-pointer group">
             <div className="flex items-center gap-3 min-w-0">
@@ -171,6 +200,23 @@ const RecentScans = ({ scans = [], selectedProjectId }) => {
           </div>
         ))}
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.2);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 229, 255, 0.4);
+        }
+      `}</style>
       
       <button type="button" className="w-full mt-4 p-2.5 rounded-xl border border-white/[0.12] text-white/70 hover:text-[#00E5FF] hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 text-xs font-medium transition-all">
         View all investigations

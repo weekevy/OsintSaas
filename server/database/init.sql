@@ -96,12 +96,18 @@ CREATE TABLE IF NOT EXISTS investigations (
 CREATE TABLE IF NOT EXISTS reports (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    project_id INT DEFAULT NULL,
     title VARCHAR(255) NOT NULL,
-    type VARCHAR(50),
+    type ENUM('technical', 'executive', 'squad') DEFAULT 'technical',
+    status ENUM('generating', 'ready', 'failed') DEFAULT 'generating',
     file_path VARCHAR(500),
+    template VARCHAR(100),
+    classification VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id)
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_project_id (project_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
@@ -460,10 +466,12 @@ CREATE TABLE IF NOT EXISTS notifications (
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT,
-    type ENUM('info', 'success', 'warning', 'error', 'threat') DEFAULT 'info',
+    type ENUM('info', 'success', 'warning', 'error', 'threat', 'team_invite') DEFAULT 'info',
     is_read BOOLEAN DEFAULT FALSE,
+    data JSON DEFAULT NULL,
     scan_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),

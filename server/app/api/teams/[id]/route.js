@@ -57,9 +57,11 @@ export async function GET(request, { params }) {
       [id]
     );
 
-    // Fetch team projects
+    // Fetch team projects with asset counts
     const [projects] = await db.execute(
-      `SELECT p.id, p.name, p.description, p.icon, p.priority, p.status, p.created_at, p.shared_at, u.email as owner_email, u.first_name, u.last_name
+      `SELECT p.id, p.name, p.description, p.icon, p.priority, p.status, p.created_at, p.shared_at, 
+              u.email as owner_email, u.first_name, u.last_name,
+              (SELECT COUNT(*) FROM targets t WHERE t.project_id = p.id) as asset_count
        FROM projects p
        JOIN users u ON p.user_id = u.id
        WHERE p.team_id = ?`,
