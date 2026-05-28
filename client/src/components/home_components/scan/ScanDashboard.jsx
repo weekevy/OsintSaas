@@ -79,7 +79,7 @@ const getTargetDisplay = (scan, moduleId) => {
 // ─── Main Header ──────────────────────────────────────────────────────────────
 const DashboardHeader = ({ onRefresh, isLoading, isRefreshing }) => {
   return (
-    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-forwards">
+    <header id="tour-scan-header" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-forwards">
       <div>
         <div className="flex items-center gap-3 mb-2">
           <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
@@ -90,6 +90,7 @@ const DashboardHeader = ({ onRefresh, isLoading, isRefreshing }) => {
 
       <div className="flex items-center gap-2 flex-shrink-0 w-full md:w-auto">
         <button
+          id="tour-refresh-terminal"
           onClick={onRefresh}
           disabled={isLoading || isRefreshing}
           className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-white/10 rounded-xl bg-white/5 hover:bg-[#00E5FF]/10 hover:border-[#00E5FF]/30 text-white/50 hover:text-[#00E5FF] transition-all duration-300 text-[10px] sm:text-[11px] uppercase tracking-widest font-bold disabled:opacity-35 active:scale-95 transform-gpu"
@@ -485,7 +486,7 @@ const ScanDashboard = ({ searchInput, selectedProject }) => {
         <div className="space-y-12">
           
           {/* ── MONITOR LAYER ── */}
-          <section className="duration-500 ease-out fill-mode-forwards">
+          <section id="tour-running-scans" className="duration-500 ease-out fill-mode-forwards">
             {/* ── Terminal Container (Minimal & Dynamic) ── */}
             <div className="relative bg-black transition-all duration-500 transform-gpu">
               {/* Dynamic Content Area */}
@@ -540,7 +541,7 @@ const ScanDashboard = ({ searchInput, selectedProject }) => {
           </section>
 
           {/* ──  action layer: modules ── */}
-          <section className="duration-500 delay-100 ease-out fill-mode-forwards">
+          <section id="tour-initiate-module" className="duration-500 delay-100 ease-out fill-mode-forwards">
             <div className="flex items-center gap-3 mb-6 px-2">
               <h3 className="text-[10px] lg:text-[11px] font-bold text-white/40 tracking-widest uppercase font-sans">2. Initiate Module</h3>
               <div className="h-px flex-1 bg-white/5" />
@@ -554,7 +555,7 @@ const ScanDashboard = ({ searchInput, selectedProject }) => {
           </section>
 
           {/* ── archive layer: history ── */}
-          <section className="duration-500 delay-200 ease-out fill-mode-forwards">
+          <section id="tour-scan-archives" className="duration-500 delay-200 ease-out fill-mode-forwards">
             <div className="flex items-center gap-3 mb-6 px-2">
               <h3 className="text-[10px] lg:text-[11px] font-bold text-white/20 tracking-widest uppercase font-sans">3. Intelligence Archives</h3>
               <div className="h-px flex-1 bg-white/5" />

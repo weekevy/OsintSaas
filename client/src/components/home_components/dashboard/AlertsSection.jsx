@@ -34,31 +34,14 @@ const getRandomAlerts = (projectId = null) => {
 };
 */
 
-const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh, isLoading }) => {
-  const [alerts, setAlerts] = useState([]);
-
-  // COMMENTED OUT - Using externalAlerts from props instead of generating mock data
-  /*
-  useEffect(() => {
-    console.log('Project changed, generating new alerts for project:', selectedProjectId);
-    const newAlerts = getRandomAlerts(selectedProjectId);
-    setAlerts(newAlerts);
-  }, [selectedProjectId]);
-
-  useEffect(() => {
-    const newAlerts = getRandomAlerts(selectedProjectId);
-    setAlerts(newAlerts);
-  }, []);
-  */
-
-  // Use externalAlerts from props
-  useEffect(() => {
-    if (externalAlerts && externalAlerts.length > 0) {
-      setAlerts(externalAlerts);
-    } else {
-      setAlerts([]);
-    }
-  }, [externalAlerts, selectedProjectId]);
+const AlertsSection = ({ alerts: externalAlerts = [], selectedProjectId, onRefresh, isLoading, projectStatus }) => {
+  // Strategic Update: Filter alerts to ensure only the selected project's alerts are shown.
+  // ALSO: Only show alerts if the project is 'completed'.
+  const isCompleted = !selectedProjectId || projectStatus === 'completed';
+  
+  const alerts = (selectedProjectId && isCompleted)
+    ? externalAlerts.filter(a => !a.projectId || String(a.projectId) === String(selectedProjectId))
+    : (!selectedProjectId ? externalAlerts : []);
 
   const getSeverityColor = (severity) => {
     switch(severity) {
@@ -123,35 +106,11 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh, i
     );
   }
 
-  // Check if no project is selected
-  if (!selectedProjectId) {
-    return (
-      <div className="space-y-4">
-        <header>
-          <p className="text-[10px] font-semibold text-[#00E5FF]/80 tracking-[0.18em] uppercase">Alerts</p>
-          <h3 className="text-lg lg:text-xl font-semibold text-white mt-1 tracking-tight flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/15 border border-red-500/25">
-              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </span>
-            Threats & alerts
-          </h3>
-        </header>
-
-        <div className="bg-black rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
-          <svg className="w-14 h-14 mx-auto text-white/25 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className="text-white/70 text-base font-medium mb-1">No project selected</p>
-          <p className="text-white/40 text-sm max-w-md mx-auto">Select a project to surface live alerts and severity-ranked signals.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if no alerts exist for selected project
+  // Check if no alerts exist
   if (alerts.length === 0) {
+    const isPaused = projectStatus === 'paused';
+    const isRunning = projectStatus === 'running';
+
     return (
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-4">
@@ -179,11 +138,31 @@ const AlertsSection = ({ alerts: externalAlerts, selectedProjectId, onRefresh, i
         </div>
 
         <div className="bg-black rounded-2xl p-8 text-center border border-white/[0.07] animate-fadeIn">
-          <svg className="w-12 h-12 mx-auto text-emerald-400/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-white/70 font-medium">All clear</p>
-          <p className="text-white/40 text-sm mt-1">No active threats for this project right now.</p>
+          {isPaused ? (
+            <>
+              <svg className="w-12 h-12 mx-auto text-yellow-400/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-white/70 font-medium">Investigation Paused</p>
+              <p className="text-white/40 text-sm mt-1">Findings are hidden while the project is in standby.</p>
+            </>
+          ) : isRunning ? (
+            <>
+              <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
+              </div>
+              <p className="text-white/70 font-medium">Scan in Progress</p>
+              <p className="text-white/40 text-sm mt-1">Live alerts will appear once the analysis is finalized.</p>
+            </>
+          ) : (
+            <>
+              <svg className="w-12 h-12 mx-auto text-emerald-400/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-white/70 font-medium">All clear</p>
+              <p className="text-white/40 text-sm mt-1">{selectedProjectId ? 'No active threats for this project.' : 'No active threats found across projects.'}</p>
+            </>
+          )}
         </div>
       </div>
     );

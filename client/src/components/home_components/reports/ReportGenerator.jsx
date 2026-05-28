@@ -1,257 +1,133 @@
-import { useState, useEffect } from 'react';
-import Modal from '../common/Modal';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../../services/api';
+import { useSocket } from '../../../context/SocketContext';
 
 const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
+  const { socket, isConnected } = useSocket();
   const [step, setStep] = useState(1);
-  const [projects, setProjects] = useState([]);
-  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [scans, setScans] = useState([]);
+  const [loadingScans, setLoadingScans] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const fetchTimeoutRef = useRef(null);
+  const loadingRef = useRef(false);
+  const modalRef = useRef(null);
   
   const [formData, setFormData] = useState({
-    projectId: '',
+    scanId: '',
     name: '',
+    investigator: '',
+    agency: 'OSINT_NETWORK_COMMAND',
     template: 'technical',
-    pdfTemplate: 'standard',
+    theme: 'noir',
+    layout: 'classic',
     classification: 'confidential',
-    sections: ['summary', 'findings', 'assets', 'technical_logs'],
+    sections: ['summary', 'findings', 'assets', 'technical_logs', 'risk_score', 'metadata'],
     investigatorNotes: '',
-    format: 'pdf'
+    format: 'pdf',
+    pageSize: 'a4',
+    lineSpacing: 'relaxed',
+    fontStyle: 'modern',
+    includeWatermark: true,
+    includePageNumbers: true,
+    includeSeparators: true,
+    compactLayout: false,
+    highPriority: false,
+    encryption: 'standard'
   });
+
+  const fetchScansFallback = useCallback(async () => {
+    setLoadingScans(true);
+    loadingRef.current = true;
+    try {
+      const response = await api.get('/api/modules/company-jobscam');
+      if (response.data.success) {
+        const formatted = (response.data.scans || [])
+          .filter(s => s.status === 'completed')
+          .map(s => {
+             let desc = 'intelligence unit';
+             if (s.target && typeof s.target === 'object') {
+               desc = s.target.label || s.target.value || desc;
+             } else if (s.target) {
+               desc = String(s.target);
+             }
+             return {
+               id: String(s.id),
+               name: 'investigation node',
+               description: String(desc),
+               status: 'completed',
+               created_at: s.created_at
+             };
+          });
+        setScans(formatted);
+      }
+    } catch (err) {
+      console.error('Failed to load scans:', err);
+    } finally {
+      setLoadingScans(false);
+      loadingRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      fetchProjects();
-    }
-  }, [isOpen]);
-
-  const fetchProjects = async () => {
-    setLoadingProjects(true);
-    try {
-      const response = await api.get('/api/projects');
-      if (response.data.success) {
-        setProjects(response.data.projects);
+      document.body.style.overflow = 'hidden';
+      setLoadingScans(true);
+      loadingRef.current = true;
+      
+      if (socket && isConnected) {
+        socket.emit('request_completed_scans');
+        
+        if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = setTimeout(() => {
+          if (loadingRef.current) {
+            fetchScansFallback();
+          }
+        }, 5000);
+      } else {
+        fetchScansFallback();
       }
-    } catch (err) {
-      console.error('Failed to load projects:', err);
-    } finally {
-      setLoadingProjects(false);
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  };
+    return () => {
+      document.body.style.overflow = 'unset';
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+    };
+  }, [isOpen, socket, isConnected, fetchScansFallback]);
 
-  const templates = [
-    { 
-      id: 'technical', 
-      name: 'technical analysis', 
-      desc: 'deep-dive dossier with raw logs, ssl details, and ioc lists.',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      )
-    },
-    { 
-      id: 'executive', 
-      name: 'executive summary', 
-      desc: 'high-level risk briefing with charts and visualization.',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'squad', 
-      name: 'squad briefing', 
-      desc: 'collaboration-focused report highlighting team shares.',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      )
-    }
-  ];
+  useEffect(() => {
+    if (!socket) return;
 
-  const pdfTemplates = [
-    { id: 'standard', name: 'Standard protocol', desc: 'Default investigative layout' },
-    { id: 'noir', name: 'Dark obsidian', desc: 'High-contrast tactical theme' },
-    { id: 'minimal', name: 'Clean minimalist', desc: 'Focus on essential data' },
-    { id: 'compact', name: 'Compact briefing', desc: 'Dense intelligence package' }
-  ];
+    const handleScans = (data) => {
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+      if (data.success) {
+        setScans(data.scans || []);
+      }
+      setLoadingScans(false);
+      loadingRef.current = false;
+    };
 
-  const sections = [
-    { 
-      id: 'summary', 
-      name: 'summary', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'findings', 
-      name: 'findings', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.03 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'assets', 
-      name: 'assets', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-      )
-    },
-    { 
-      id: 'technical_logs', 
-      name: 'evidence', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      )
-    },
-    { 
-      id: 'timeline', 
-      name: 'timeline', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'risk_analysis', 
-      name: 'risk', 
-      icon: (
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      )
-    }
-  ];
-
-  const formats = [
-    { 
-      id: 'pdf', 
-      label: 'PDF', 
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'html', 
-      label: 'HTML', 
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      )
-    },
-    { 
-      id: 'xml', 
-      label: 'XML', 
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'jpg', 
-      label: 'JPG', 
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'json', 
-      label: 'JSON', 
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      )
-    }
-  ];
+    socket.on('completed_scans_list', handleScans);
+    return () => socket.off('completed_scans_list', handleScans);
+  }, [socket]);
 
   const handleGenerate = async () => {
+    if (!formData.scanId) return;
     setGenerating(true);
     try {
-      // 1. First, create the report record in DB
       const response = await api.post('/api/reports', formData);
-      
       if (response.data.success) {
-        // 2. Fetch full intelligence data to generate the file
-        const intelRes = await api.get(`/api/projects/${formData.projectId}/assets`);
-        const intelData = intelRes.data;
-
-        // 3. Synthesize the file based on format
-        const fileName = `${formData.name.replace(/\s+/g, '_')}_${new Date().getTime()}`;
-        let blob;
-        let mimeType;
-
-        if (formData.format === 'json') {
-          const content = JSON.stringify({
-            report_info: formData,
-            intelligence_data: intelData,
-            generated_at: new Date().toISOString()
-          }, null, 2);
-          blob = new Blob([content], { type: 'application/json' });
-          mimeType = 'json';
-        } else if (formData.format === 'xml') {
-          // Simple XML serialization
-          const content = `<?xml version="1.0" encoding="UTF-8"?>
-<report>
-  <metadata>
-    <title>${formData.name}</title>
-    <classification>${formData.classification}</classification>
-    <generated_at>${new Date().toISOString()}</generated_at>
-  </metadata>
-  <findings>
-    ${intelData.findings.map(f => `<finding severity="${f.severity}"><title>${f.title}</title><desc>${f.description}</desc></finding>`).join('\n')}
-  </findings>
-</report>`;
-          blob = new Blob([content], { type: 'application/xml' });
-          mimeType = 'xml';
-        } else if (formData.format === 'html') {
-          const content = `<html><head><title>${formData.name}</title><style>body{font-family:sans-serif;background:#000;color:white;padding:50px;} h1{color:#00E5FF;}</style></head><body><h1>${formData.name}</h1><h3>Classification: ${formData.classification}</h3><hr/><h2>Findings</h2>${intelData.findings.map(f => `<div><h4>${f.title} (${f.severity})</h4><p>${f.description}</p></div>`).join('')}</body></html>`;
-          blob = new Blob([content], { type: 'text/html' });
-          mimeType = 'html';
-        } else {
-          // For PDF/JPG, use the browser's high-fidelity print mechanism
-          // We trigger the print dialog for the current preview
-          setTimeout(() => {
-            window.print();
-          }, 500);
+        if (formData.format === 'pdf') {
+          window.print();
         }
-
-        // 4. Trigger download if a blob was created
-        if (blob) {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', `${fileName}.${mimeType}`);
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-        }
-
         if (onReportGenerated) onReportGenerated();
         handleClose();
       }
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || 'Failed to synthesize dossier');
     } finally {
       setGenerating(false);
     }
@@ -259,17 +135,66 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
 
   const handleClose = () => {
     setStep(1);
+    setSearchTerm('');
     setFormData({
-      projectId: '',
+      scanId: '',
       name: '',
+      investigator: '',
+      agency: 'OSINT_NETWORK_COMMAND',
       template: 'technical',
-      pdfTemplate: 'standard',
+      theme: 'noir',
+      layout: 'classic',
       classification: 'confidential',
       sections: ['summary', 'findings', 'assets', 'technical_logs'],
       investigatorNotes: '',
-      format: 'pdf'
+      format: 'pdf',
+      pageSize: 'a4',
+      lineSpacing: 'relaxed',
+      fontStyle: 'modern',
+      includeWatermark: true,
+      includePageNumbers: true,
+      highPriority: false,
+      encryption: 'standard'
     });
     onClose();
+  };
+
+  const templates = [
+    { id: 'technical', name: 'Technical Analysis', desc: 'deep-dive dossier with raw logs.' },
+    { id: 'executive', name: 'Executive Summary', desc: 'high-level risk briefing.' },
+    { id: 'squad', name: 'Squad Briefing', desc: 'team-collaboration report.' }
+  ];
+
+  const themes = [
+    { id: 'noir', name: 'Noir', color: '#0A0C10' },
+    { id: 'executive', name: 'Executive Blue', color: '#1E293B' },
+    { id: 'paper', name: 'Paper', color: '#FFFFFF' },
+    { id: 'slate', name: 'Modern Slate', color: '#334155' }
+  ];
+
+  const informationBlocks = [
+    { id: 'summary', name: 'exec summary' },
+    { id: 'findings', name: 'findings' },
+    { id: 'assets', name: 'assets' },
+    { id: 'technical_logs', name: 'raw logs' },
+    { id: 'risk_score', name: 'risk analysis' },
+    { id: 'metadata', name: 'system metadata' }
+  ];
+
+  const formats = [
+    { id: 'pdf', label: 'PDF' },
+    { id: 'html', label: 'HTML' },
+    { id: 'json', label: 'JSON' }
+  ];
+
+  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
+  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+
+  const isStepValid = () => {
+    if (step === 1) return !!formData.scanId;
+    if (step === 2) return !!formData.template && formData.sections.length > 0;
+    if (step === 3) return !!formData.name;
+    return false;
   };
 
   const toggleSection = (id) => {
@@ -281,310 +206,454 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
     }));
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="intelligence dossier builder" size="xl">
-      <div className="flex flex-col lg:flex-row h-[75vh] -m-6 overflow-hidden bg-[#0D0F14] font-sans">
+  const filteredScans = scans.filter(s => 
+    String(s.name).toLowerCase().includes(searchTerm.toLowerCase()) || 
+    String(s.description).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(s.id).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedScan = scans.find(s => s.id === formData.scanId);
+  const selectedScanName = selectedScan ? String(selectedScan.name) : "no_node_selected";
+
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[10000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-300 font-['Poppins']">
+      <div 
+        ref={modalRef}
+        className="w-[92vw] h-[95vh] max-w-[1700px] flex flex-col bg-gradient-to-b from-gray-900 to-black border border-white/10 rounded-[32px] overflow-hidden shadow-[0_0_150px_rgba(0,0,0,0.8)] relative animate-in zoom-in-95 duration-500"
+      >
+        {/* Close Button */}
+        <button 
+          onClick={handleClose}
+          className="absolute top-5 right-8 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Top Header Glow */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00E5FF]/30 to-transparent" />
         
-        {/* Left: Configuration Steps */}
-        <div className="w-full lg:w-[450px] flex flex-col border-r border-white/5 bg-black p-8 overflow-y-auto no-scrollbar relative z-20">
+        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
           
-          {/* Step Indicator */}
-          <div className="flex items-center gap-2 mb-10">
-            {[1, 2, 3].map(i => (
-              <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= i ? 'bg-[#00E5FF]' : 'bg-white/5'}`} />
-            ))}
-          </div>
-
-          {/* STEP 1: PROJECT SYNC */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-xl font-bold text-white tracking-tight capitalize mb-2">Sync intelligence</h4>
-                <p className="text-white/40 text-[10px] font-medium tracking-wide font-sans">Select a project to aggregate investigation data.</p>
-              </div>
-
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar animate-fade-in">
-                {loadingProjects ? (
-                  <div className="py-10 flex justify-center"><div className="w-8 h-8 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" /></div>
-                ) : projects.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setFormData({ ...formData, projectId: p.id, name: `${p.name} - investigation dossier` })}
-                    className={`w-full text-left p-5 rounded-2xl border transition-all ${
-                      formData.projectId === p.id 
-                        ? 'bg-[#00E5FF]/10 border-[#00E5FF]/30' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[9px] font-bold text-[#00E5FF]/40 tracking-widest uppercase font-sans">id: {p.id}</span>
-                      <span className="text-[9px] font-bold px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full uppercase font-sans">{p.status}</span>
-                    </div>
-                    <h5 className="text-sm font-bold text-white tracking-tight">{p.name}</h5>
-                    <p className="text-[10px] text-white/20 mt-1 line-clamp-1 lowercase">{p.description}</p>
-                  </button>
-                ))}
-              </div>
+          {/* LEFT PANEL: CONFIGURATION */}
+          <div className="w-full lg:w-[44%] flex flex-col bg-black/20 p-6 lg:p-10 relative border-r border-white/5 overflow-hidden">
+            
+            {/* Header Stage Selector */}
+            <div className="flex items-center gap-4 mb-8 flex-shrink-0 pr-12">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex-1 flex flex-col gap-2">
+                  <div className={`h-1 rounded-full transition-all duration-1000 ease-out ${step >= i ? 'bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]' : 'bg-white/5'}`} />
+                  <span className={`text-[10px] font-black tracking-[0.2em] transition-colors ${step === i ? 'text-[#00E5FF]' : 'text-white/20'}`}>STAGE 0{i}</span>
+                </div>
+              ))}
             </div>
-          )}
 
-          {/* STEP 2: TEMPLATE & SECTIONS */}
-          {step === 2 && (
-            <div className="space-y-8 animate-fade-in">
-              <div>
-                <h4 className="text-xl font-bold text-white tracking-tight capitalize mb-2">Design parameters</h4>
-                <p className="text-white/40 text-[10px] font-medium tracking-wide">Configure briefing template and data inclusion.</p>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">output template</label>
-                <div className="grid grid-cols-1 gap-2">
-                  {templates.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => setFormData({ ...formData, template: t.id })}
-                      className={`flex gap-4 items-center p-4 rounded-2xl border transition-all text-left ${
-                        formData.template === t.id 
-                          ? 'bg-[#00E5FF]/10 border-[#00E5FF]/30' 
-                          : 'bg-white/[0.02] border-white/5 hover:border-white/10'
-                      }`}
-                    >
-                      <div className={`${formData.template === t.id ? 'text-[#00E5FF]' : 'text-white/20'} transition-colors`}>
-                        {t.icon}
-                      </div>
-                      <div>
-                        <h5 className="text-xs font-bold text-white capitalize font-sans">{t.name}</h5>
-                        <p className="text-[9px] text-white/30 mt-0.5 font-sans lowercase">{t.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">dossier sections</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {sections.map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => toggleSection(s.id)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-[10px] font-bold transition-all tracking-tight font-sans capitalize ${
-                        formData.sections.includes(s.id) 
-                          ? 'bg-[#00E5FF] text-black border-[#00E5FF]' 
-                          : 'bg-white/[0.02] border-white/5 text-white/40'
-                      }`}
-                    >
-                      <span className={formData.sections.includes(s.id) ? 'text-black' : 'text-[#00E5FF]'}>{s.icon}</span>
-                      {s.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: FINAL REVIEW & FORMAT */}
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h4 className="text-xl font-bold text-white tracking-tight capitalize mb-2">Manual briefing</h4>
-                <p className="text-white/40 text-[10px] font-medium tracking-wide">Add your professional observations and classification.</p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">report nomenclature</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-5 py-4 bg-white/[0.02] border border-white/10 rounded-2xl text-white text-sm focus:border-[#00E5FF]/40 outline-none transition-all font-sans"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">export format</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {formats.map(f => (
-                      <button
-                        key={f.id}
-                        onClick={() => setFormData({ ...formData, format: f.id })}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                          formData.format === f.id 
-                            ? 'bg-[#00E5FF]/10 border-[#00E5FF]/30 text-[#00E5FF]' 
-                            : 'bg-white/[0.02] border-white/5 text-white/30 hover:border-white/20'
-                        }`}
-                      >
-                        <span className="text-sm mb-1">{f.icon}</span>
-                        <span className="text-[8px] font-black">{f.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {formData.format === 'pdf' && (
-                  <div className="space-y-3 pt-2">
-                    <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">pdf draft design</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {pdfTemplates.map(pt => (
-                        <button
-                          key={pt.id}
-                          onClick={() => setFormData({ ...formData, pdfTemplate: pt.id })}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            formData.pdfTemplate === pt.id 
-                              ? 'bg-[#00E5FF]/10 border-[#00E5FF]/30' 
-                              : 'bg-white/[0.02] border-white/5 text-white/30'
-                          }`}
-                        >
-                          <h6 className="text-[10px] font-bold text-white mb-0.5 capitalize">{pt.name}</h6>
-                          <p className="text-[8px] opacity-40 lowercase">{pt.desc}</p>
-                        </button>
-                      ))}
+            <div className="flex-1 overflow-y-auto no-scrollbar pr-1 mb-6">
+              {step === 1 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h4 className="text-white/60 text-sm font-semibold tracking-wider uppercase">
+                      Select Completed Scan to Sync
+                    </h4>
+                    
+                    <div className="relative w-full md:w-64">
+                      <input
+                        type="text"
+                        placeholder="Filter nodes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-medium focus:outline-none focus:border-[#00E5FF]/50 transition-colors placeholder-white/20"
+                      />
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/20 tracking-widest uppercase font-sans">security classification</label>
-                  <select
-                    value={formData.classification}
-                    onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
-                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white text-sm focus:border-[#00E5FF]/40 outline-none appearance-none cursor-pointer font-sans"
-                  >
-                    <option value="confidential">confidential // internal</option>
-                    <option value="secret">top secret // eyes only</option>
-                    <option value="public">open source // unclassified</option>
-                  </select>
+                  <div className="relative min-h-[300px] bg-white/[0.01] border border-white/5 rounded-[32px] overflow-hidden">
+                    <div className="grid grid-cols-1 gap-4 p-5 max-h-[500px] overflow-y-auto no-scrollbar">
+                      {loadingScans ? (
+                        <div className="py-20 flex flex-col items-center justify-center gap-6">
+                          <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
+                          <p className="text-[10px] text-[#00E5FF] font-bold lowercase tracking-[0.3em] animate-pulse">scanning archive...</p>
+                        </div>
+                      ) : scans.length === 0 ? (
+                        <div className="py-16 text-center border border-dashed border-white/10 rounded-[32px] bg-white/[0.01]">
+                          <h5 className="text-white/40 text-xs font-bold uppercase tracking-[0.1em] mb-1.5">NO SCANS COMPLETED YET !</h5>
+                          <p className="text-[9px] text-white/20 lowercase tracking-normal">dossier synthesis requires a finalized investigation archive node</p>
+                        </div>
+                      ) : (
+                        filteredScans.map((s, idx) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, scanId: s.id, name: `${String(s.name)} - DOSSIER_${s.id}` })}
+                            className={`group relative p-5 rounded-[24px] border transition-all duration-500 text-left transform-gpu active:scale-[0.98] animate-slide-up ${
+                              formData.scanId === s.id 
+                                ? 'bg-[#00E5FF]/10 border-[#00E5FF]/40 shadow-[0_0_30px_rgba(0,229,255,0.05)] ring-1 ring-[#00E5FF]/20' 
+                                : 'bg-white/[0.02] border-white/5 hover:border-white/20'
+                            }`}
+                            style={{ animationDelay: `${idx * 0.03}s` }}
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-500 ${
+                                formData.scanId === s.id 
+                                  ? 'bg-[#00E5FF]/20 border-[#00E5FF]/30 text-[#00E5FF]' 
+                                  : 'bg-white/5 border-white/10 text-white/40'
+                              }`}>
+                                <span className="text-lg font-bold">{(s.name || 'S')[0]}</span>
+                              </div>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className={`text-[10px] font-black tracking-widest uppercase transition-colors ${formData.scanId === s.id ? 'text-[#00E5FF]/60' : 'text-white/20'}`}>
+                                  NODE_{s.id}
+                                </span>
+                                <span className="text-[11px] font-bold tracking-widest px-2.5 py-1 rounded-full uppercase border bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/20 shadow-[0_0_10px_rgba(45,212,191,0.1)]">
+                                  COMPLETED
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <h5 className={`text-base font-bold truncate mb-1.5 transition-colors duration-500 uppercase tracking-tight ${
+                              formData.scanId === s.id ? 'text-[#00E5FF]' : 'text-white'
+                            }`}>
+                              {String(s.name)}
+                            </h5>
+                            <p className="text-[10px] text-white/30 line-clamp-2 leading-relaxed mb-4 font-normal lowercase">
+                              {String(s.description)}
+                            </p>
+                            
+                            <div className="flex items-center justify-between mt-auto">
+                              <div className="flex items-center gap-1.5">
+                                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${formData.scanId === s.id ? 'bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]' : 'bg-white/10'}`} />
+                                <span className="text-[9px] font-bold text-white/40 uppercase tracking-tighter">
+                                  Intelligence Node Active
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-bold text-white/20 tracking-wider">
+                                {s.created_at ? new Date(s.created_at).toLocaleDateString() : 'SYNCED'}
+                              </span>
+                            </div>
+
+                            {formData.scanId === s.id && (
+                              <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#00E5FF] text-black rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#00E5FF]/[0.02] border border-[#00E5FF]/10 rounded-2xl flex gap-4 items-start">
+                    <div className="w-8 h-8 rounded-lg bg-[#00E5FF]/10 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-[11px] text-white/40 leading-relaxed">
+                      <span className="text-[#00E5FF]/60 font-bold uppercase tracking-wider mr-1">Synthesis Policy:</span>
+                      Synchronizing investigation nodes will aggregate all discovered intelligence into a unified dossier. Ensure clearance levels are verified before final execution.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Builder Navigation */}
-          <div className="mt-auto pt-8 flex gap-3">
-            {step > 1 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                className="px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white/40 text-[10px] font-bold tracking-widest hover:text-white transition-all font-sans uppercase"
-              >
-                Back
-              </button>
-            )}
-            {step < 3 ? (
-              <button
-                onClick={() => setStep(step + 1)}
-                disabled={step === 1 && !formData.projectId}
-                className="flex-1 py-4 bg-[#00E5FF] text-black font-bold rounded-2xl text-[10px] uppercase tracking-wider transition-all hover:brightness-110 disabled:opacity-20 disabled:grayscale font-sans"
-              >
-                Next protocol
-              </button>
-            ) : (
-              <button
-                onClick={handleGenerate}
-                disabled={generating}
-                className="flex-1 py-4 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black font-bold rounded-2xl text-[10px] uppercase tracking-wider transition-all hover:scale-[1.02] shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 font-sans"
-              >
-                {generating ? 'synthesizing...' : 'generate dossier'}
-              </button>
-            )}
-          </div>
-        </div>
+              {step === 2 && (
+                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-bold text-white tracking-tight uppercase leading-none">SIGNATURE CONFIG</h4>
+                    <p className="text-white/40 text-[11px] lowercase tracking-normal leading-relaxed font-medium">configure visual themes, intelligence block sorting, and operational security directives</p>
+                  </div>
 
-        {/* Right: Real-time Live Preview Panel */}
-        <div id="report-preview-canvas" className="hidden lg:flex flex-1 bg-[#12141A] flex-col overflow-hidden relative print:hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#00E5FF]/5 via-transparent to-transparent pointer-events-none" />
-          
-          {/* Preview Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative z-10 bg-black/20 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-               <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-               <span className="text-[10px] font-bold text-white/40 tracking-widest uppercase italic font-sans">Draft preview mode</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-white/5 rounded-full text-[8px] font-bold text-white/30 uppercase tracking-widest border border-white/5 font-sans">Format: {formData.format}</span>
-            </div>
-          </div>
-
-          {/* Preview Canvas (Scrollable) */}
-          <div className="flex-1 p-12 overflow-y-auto no-scrollbar relative z-10">
-            <div className={`max-w-[650px] mx-auto p-12 shadow-2xl min-h-[850px] relative transition-all duration-500 font-sans ${formData.pdfTemplate === 'noir' ? 'bg-[#0A0C10] text-white border border-white/10' : 'bg-white text-black'}`}>
-               {/* Watermark */}
-               <div className={`absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none rotate-[-45deg] select-none ${formData.pdfTemplate === 'noir' ? 'text-white' : 'text-black'}`}>
-                  <span className="text-8xl font-black">{formData.classification.toUpperCase()}</span>
-               </div>
-
-               {/* Report Content Simulation */}
-               <div className="relative z-20">
-                  <div className={`flex justify-between items-start border-b-2 pb-6 mb-10 ${formData.pdfTemplate === 'noir' ? 'border-white/20' : 'border-black'}`}>
-                    <div>
-                      <h2 className="text-2xl font-bold tracking-tight uppercase mb-1">Intelligence dossier</h2>
-                      <p className="text-[10px] font-bold opacity-60">Status: {formData.classification}</p>
+                  <div className="grid grid-cols-1 gap-10">
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-black tracking-[0.15em]">VISUAL THEME</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {themes.map(t => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, theme: t.id })}
+                            className={`p-4 rounded-2xl border text-center transition-all duration-300 transform-gpu active:scale-[0.95] ${
+                              formData.theme === t.id 
+                                ? 'bg-[#00E5FF]/10 border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.1)]' 
+                                : 'bg-white/5 border-white/5 hover:border-white/15'
+                            }`}
+                          >
+                             <div className="w-6 h-6 rounded-lg mx-auto mb-2.5 border border-white/10" style={{ background: t.color }} />
+                             <h5 className="text-[10px] font-black text-white uppercase">{t.name}</h5>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase">Date: {new Date().toLocaleDateString()}</p>
-                      <p className="text-[10px] font-bold uppercase">Report ID: #DE-9942</p>
+
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-black tracking-[0.15em]">INTELLIGENCE BLOCKS</label>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {informationBlocks.map(block => (
+                          <button
+                            key={block.id}
+                            type="button"
+                            onClick={() => toggleSection(block.id)}
+                            className={`px-4 py-3 rounded-xl border flex items-center justify-between transition-all duration-300 transform-gpu active:scale-[0.95] ${
+                              formData.sections.includes(block.id)
+                                ? 'bg-[#00E5FF]/10 border-[#00E5FF]/40 text-[#00E5FF]'
+                                : 'bg-white/5 border-white/5 text-white/30'
+                            }`}
+                          >
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">{block.name}</span>
+                             {formData.sections.includes(block.id) && <div className="w-1 h-1 bg-[#00E5FF] rounded-full" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-black tracking-[0.15em] text-[#00E5FF] uppercase block pl-1 border-l-2 border-[#00E5FF]/50">LAYOUT CONTROLS</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                          { key: 'includeSeparators', label: 'section lines' },
+                          { key: 'compactLayout', label: 'compact mode' }
+                        ].map(opt => (
+                          <div key={opt.key} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/10 rounded-2xl group hover:border-[#00E5FF]/20 transition-all">
+                            <span className="text-[10px] font-bold text-white/60 lowercase">{opt.label}</span>
+                            <button 
+                              type="button"
+                              onClick={() => setFormData({...formData, [opt.key]: !formData[opt.key]})}
+                              className={`w-10 h-5 rounded-full transition-all duration-300 relative ${formData[opt.key] ? 'bg-[#00E5FF]' : 'bg-white/10'}`}
+                            >
+                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-black transition-all duration-300 ${formData[opt.key] ? 'left-5.5' : 'left-0.5'}`} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-bold text-white tracking-tight uppercase leading-none">AUTHORIZATION</h4>
+                    <p className="text-white/40 text-[11px] lowercase tracking-normal leading-relaxed font-medium">assign nomenclature and security clearance validation for archive finalization</p>
                   </div>
 
                   <div className="space-y-8">
-                    <section>
-                      <h3 className={`text-sm font-bold uppercase border-b pb-1 mb-4 ${formData.pdfTemplate === 'noir' ? 'border-white/10' : 'border-black/10'}`}>I. Executive summary</h3>
-                      <p className="text-xs leading-relaxed opacity-80 italic lowercase">
-                        {formData.name || "[Assemble intelligence to begin briefing...]"}
-                      </p>
-                    </section>
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-black tracking-[0.15em]">DOSSIER NOMENCLATURE</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-3xl text-white text-sm focus:border-[#00E5FF]/40 outline-none transition-all font-bold uppercase tracking-tight shadow-inner"
+                        placeholder="ENTER REFERENCE ID..."
+                      />
+                    </div>
 
-                    <section className="space-y-4">
-                       <h3 className={`text-sm font-bold uppercase border-b pb-1 mb-2 ${formData.pdfTemplate === 'noir' ? 'border-white/10' : 'border-black/10'}`}>II. Operational targets</h3>
-                       <div className="grid grid-cols-1 gap-2">
-                          <div className={`h-3 rounded w-full animate-pulse ${formData.pdfTemplate === 'noir' ? 'bg-white/5' : 'bg-black/5'}`} />
-                          <div className={`h-3 rounded w-[80%] animate-pulse ${formData.pdfTemplate === 'noir' ? 'bg-white/5' : 'bg-black/5'}`} />
-                       </div>
-                    </section>
-
-                    <section className="space-y-4">
-                       <h3 className={`text-sm font-bold uppercase border-b pb-1 mb-2 ${formData.pdfTemplate === 'noir' ? 'border-white/10' : 'border-black/10'}`}>III. Findings detail</h3>
-                       <div className="space-y-3">
-                          {[1,2].map(i => (
-                             <div key={i} className={`p-3 border-l-2 ${formData.pdfTemplate === 'noir' ? 'border-[#00E5FF]/40 bg-white/5' : 'border-black bg-black/5'}`}>
-                                <div className={`h-2 rounded w-1/2 mb-2 ${formData.pdfTemplate === 'noir' ? 'bg-white/10' : 'border-black/10'}`} />
-                                <div className={`h-2 rounded w-full ${formData.pdfTemplate === 'noir' ? 'bg-white/5' : 'bg-black/5'}`} />
-                             </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[11px] font-black tracking-[0.15em]">DOCUMENT FORMAT</label>
+                        <div className="flex gap-2">
+                          {formats.map(f => (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, format: f.id })}
+                              className={`flex-1 py-3.5 rounded-xl border text-[9px] font-bold transition-all duration-300 transform-gpu active:scale-[0.95] ${
+                                formData.format === f.id 
+                                  ? 'bg-[#00E5FF]/10 border-[#00E5FF]/50 text-[#00E5FF]' 
+                                  : 'bg-white/5 border-white/5 text-white/30 hover:border-white/15'
+                              }`}
+                            >
+                              {f.label}
+                            </button>
                           ))}
-                       </div>
-                    </section>
-                  </div>
+                        </div>
+                      </div>
 
-                  {/* Footer */}
-                  <div className={`absolute bottom-12 left-12 right-12 pt-6 border-t flex justify-between items-center text-[8px] font-bold opacity-40 uppercase tracking-widest ${formData.pdfTemplate === 'noir' ? 'border-white/10' : 'border-black/10'}`}>
-                     <span>Generated by OsintSaas cluster</span>
-                     <span>Page 01 // 04</span>
+                      <div className="space-y-4">
+                        <label className="text-[11px] font-black tracking-[0.15em]">CLEARANCE</label>
+                        <select
+                          value={formData.classification}
+                          onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
+                          className="w-full px-6 py-4 bg-white/[0.02] border border-white/10 rounded-2xl text-white text-[12px] font-black uppercase tracking-tight focus:border-[#00E5FF]/40 outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="confidential" className="bg-black/20">confidential // internal</option>
+                          <option value="secret" className="bg-black/20">top secret // restricted</option>
+                          <option value="public" className="bg-black/20">open source // global</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-black tracking-[0.15em]">WORD_STYLE AUTOMATION</label>
+                      <div className="grid grid-cols-2 gap-3">
+                         {[
+                           { key: 'autoSummary', label: 'auto-summarize results' },
+                           { key: 'linkSources', label: 'cross-link evidence' }
+                         ].map(opt => (
+                           <div key={opt.key} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/10 rounded-2xl">
+                             <span className="text-[9px] font-normal text-white/50 lowercase">{opt.label}</span>
+                             <div className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] shadow-[0_0_5px_#2DD4BF]" />
+                           </div>
+                         ))}
+                      </div>
+                    </div>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* ACTION FOOTER */}
+            <div className="mt-auto pt-6 flex items-center justify-between gap-6 flex-shrink-0 border-t border-white/5">
+               <div className="flex items-center gap-4">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="flex items-center gap-2.5 px-6 py-3 border border-white/10 rounded-xl text-white/40 hover:text-[#00E5FF] hover:border-[#00E5FF]/40 transition-all duration-300 text-[10px] font-normal lowercase tracking-tight group active:scale-95"
+                    >
+                      <svg className="w-3.5 h-3.5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                      </svg>
+                      <span>[ back ]</span>
+                    </button>
+                  )}
                </div>
+
+               <button
+                  type="button"
+                  onClick={step === 3 ? handleGenerate : nextStep}
+                  disabled={!isStepValid() || generating}
+                  className={`flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all duration-500 transform-gpu active:scale-[0.97] ${
+                    isStepValid() 
+                      ? 'bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:brightness-110' 
+                      : 'bg-white/5 border border-white/10 text-white/20 grayscale cursor-not-allowed opacity-30'
+                  }`}
+               >
+                  <span>{generating ? 'synthesizing...' : (step === 3 ? "EXECUTE SYNTHESIS" : "NEXT PROTOCOL")}</span>
+                  {!generating && (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  )}
+               </button>
             </div>
           </div>
+
+          {/* RIGHT PANEL: LIVE DRAFT */}
+          <div className="hidden lg:flex flex-1 bg-black/40 flex-col overflow-hidden relative">
+             <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/[0.02] via-transparent to-transparent pointer-events-none" />
+             
+             {/* Preview Header */}
+             <div className="p-6 border-b border-white/[0.03] flex items-center justify-between relative z-10 bg-black/30">
+                <div className="flex items-center gap-4">
+                   <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF]" />
+                   <span className="text-[10px] font-bold text-white/30 tracking-[0.3em] uppercase italic">LIVE DRAFT</span>
+                </div>
+             </div>
+
+             {/* Preview Canvas */}
+             <div className="flex-1 p-10 overflow-y-auto no-scrollbar relative z-10 flex flex-col items-center bg-black/20">
+             <div className={`w-full max-w-[650px] p-12 sm:p-16 shadow-[0_40px_100px_rgba(0,0,0,1)] min-h-[900px] relative transform-gpu transition-all duration-700 ${
+             formData.theme === 'paper' ? 'bg-white text-gray-900 border-none' : 
+             formData.theme === 'executive' ? 'bg-[#1E293B] text-blue-100 border border-blue-400/20' :
+             formData.theme === 'slate' ? 'bg-[#334155] text-slate-100 border border-slate-400/20' :
+             'bg-[#080808] text-white border border-white/10'
+             }`}>                   
+                   {/* Security Watermark */}
+                   {formData.includeWatermark && (
+                      <div className={`absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none rotate-[-45deg] select-none ${formData.theme === 'paper' ? 'text-black' : 'text-current'}`}>
+                         <span className="text-[8rem] font-bold tracking-tighter leading-none">{formData.classification.toUpperCase()}</span>
+                      </div>
+                   )}
+
+                   <div className="relative z-20 h-full flex flex-col font-serif">
+                      {/* Document Header */}
+                      <div className={`flex justify-between items-start border-b-2 pb-6 mb-10 ${formData.theme === 'paper' ? 'border-gray-200' : 'border-current opacity-20'}`}>
+                        <div className="space-y-1">
+                          <h2 className="text-2xl font-bold tracking-tight uppercase leading-none font-['Poppins']">{formData.template} DOSSIER</h2>
+                          <div className="flex items-center gap-2 pt-1">
+                             <div className={`w-1 h-1 rounded-full ${formData.classification === 'secret' ? 'bg-red-600' : 'bg-[#00E5FF]'}`} />
+                             <p className="text-[8px] font-bold opacity-70 tracking-[0.2em] uppercase font-['Poppins']">{formData.classification} // ARCHIVE</p>
+                          </div>
+                        </div>
+                        <div className="text-right font-mono space-y-0.5">
+                          <p className="text-[8px] opacity-40 uppercase">TIMESTAMP: {new Date().toLocaleDateString()}</p>
+                          <p className={`text-[8px] uppercase tracking-tighter font-bold ${formData.theme === 'paper' ? 'text-[#00E5FF]' : 'text-current'}`}>ID: #ID-{formData.scanId || "PENDING"}</p>
+                        </div>
+                      </div>
+
+                      {/* Document Sections */}
+                      <div className="space-y-10 flex-1">
+                        <section className="space-y-4">
+                          <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] font-['Poppins'] ${formData.theme === 'paper' ? 'border-gray-100' : 'border-current opacity-10'} ${formData.includeSeparators ? 'border-b pb-2' : ''}`}>01. EXECUTIVE BRIEFING</h3>
+                          <p className={`text-[13px] leading-relaxed opacity-90 italic font-normal tracking-normal font-sans ${formData.name ? 'text-inherit' : 'text-gray-400'}`}>
+                            {formData.name || "awaiting nomenclature assignment from protocol stage 03..."}
+                          </p>
+                        </section>
+
+                        <section className="space-y-4">
+                          <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] font-['Poppins'] ${formData.theme === 'paper' ? 'border-gray-100' : 'border-current opacity-10'} ${formData.includeSeparators ? 'border-b pb-2' : ''}`}>02. INTEL VECTORS</h3>
+                          <div className="space-y-4">
+                             <div className={`flex items-center gap-4 p-4 rounded-2xl font-sans border transition-all ${formData.theme === 'paper' ? 'bg-gray-50 border-gray-100' : 'bg-white/[0.02] border-white/[0.05]'}`}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]" />
+                                <div className="min-w-0">
+                                   <span className="text-[10px] font-black uppercase opacity-40 block">PRIMARY_SOURCE</span>
+                                   <span className="text-[12px] font-black tracking-tight truncate block max-w-[220px]">{selectedScanName}</span>
+                                </div>
+                             </div>
+                          </div>
+                        </section>
+
+                        <section className="space-y-4">
+                          <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] font-['Poppins'] ${formData.theme === 'paper' ? 'border-gray-100' : 'border-current opacity-10'} ${formData.includeSeparators ? 'border-b pb-2' : ''}`}>03. DATA_SYNC_MAP</h3>
+                          <div className="grid grid-cols-2 gap-3 font-sans">
+                             {formData.sections.map((s) => (
+                                <div key={s} className={`px-3 py-2 border rounded-xl flex items-center justify-between ${formData.theme === 'paper' ? 'border-gray-100 bg-gray-50/50' : 'border-white/[0.05] bg-white/[0.01]'}`}>
+                                   <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{s}</span>
+                                   <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]" />
+                                </div>
+                             ))}
+                          </div>
+                        </section>
+                      </div>
+
+                      {/* Document Footer */}
+                      <div className={`mt-auto pt-8 border-t flex justify-between items-center text-[7px] font-bold opacity-30 uppercase tracking-[0.4em] font-['Poppins'] ${formData.theme === 'paper' ? 'border-gray-100' : 'border-current opacity-10'}`}>
+                         <span>OSINT_ARCHIVE_NODE</span>
+                         <span>PAGE_00{step}</span>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+
         </div>
 
       </div>
 
-      {/* Global CSS for Printing PDF Dossiers */}
       <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.97) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .animate-in { animation-duration: 400ms; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); animation-fill-mode: both; }
+        .fade-in { animation-name: fadeIn; }
+        .zoom-in-95 { animation-name: zoomIn; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @media print {
           body * { visibility: hidden; }
-          #report-preview-canvas, #report-preview-canvas * { visibility: visible; }
-          #report-preview-canvas { 
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-            width: 100%; 
-            height: auto; 
-            background: white !important;
-          }
-          .print\\:hidden { display: none !important; }
+          .print-section, .print-section * { visibility: visible; }
         }
       `}</style>
-    </Modal>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default ReportGenerator;

@@ -26,7 +26,7 @@ export async function GET(request) {
     // Get user profile from database
     const [users] = await db.execute(
       `SELECT id, email, first_name, last_name, bio, title, phone, 
-              location, website, social, created_at
+              location, website, social, has_seen_tours, created_at
        FROM users WHERE id = ?`,
       [decoded.id]
     );
@@ -62,6 +62,7 @@ export async function GET(request) {
         location: user.location,
         website: user.website,
         social: user.social ? (typeof user.social === 'string' ? JSON.parse(user.social) : user.social) : {},
+        hasSeenTours: user.has_seen_tours ? (typeof user.has_seen_tours === 'string' ? JSON.parse(user.has_seen_tours) : user.has_seen_tours) : {},
         createdAt: user.created_at,
         stats: stats[0]
       }

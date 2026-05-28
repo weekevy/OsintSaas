@@ -17,7 +17,7 @@ export async function GET(request) {
     if (decoded) {
       // Token is valid, get user data
       const [users] = await db.execute(
-        'SELECT id, email, username, first_name, last_name, role, credits FROM users WHERE id = ?',
+        'SELECT id, email, username, first_name, last_name, role, credits, has_seen_tours FROM users WHERE id = ?',
         [decoded.id]
       );
 
@@ -34,7 +34,8 @@ export async function GET(request) {
           firstName: users[0].first_name,
           lastName: users[0].last_name,
           role: users[0].role,
-          credits: users[0].credits
+          credits: users[0].credits,
+          hasSeenTours: users[0].has_seen_tours ? (typeof users[0].has_seen_tours === 'string' ? JSON.parse(users[0].has_seen_tours) : users[0].has_seen_tours) : {}
         }
       });
     }
@@ -52,7 +53,7 @@ export async function GET(request) {
         if (sessions.length > 0) {
           // Get user data
           const [users] = await db.execute(
-            'SELECT id, email, username, first_name, last_name, role, credits FROM users WHERE id = ?',
+            'SELECT id, email, username, first_name, last_name, role, credits, has_seen_tours FROM users WHERE id = ?',
             [sessions[0].user_id]
           );
 
@@ -75,7 +76,8 @@ export async function GET(request) {
                 firstName: users[0].first_name,
                 lastName: users[0].last_name,
                 role: users[0].role,
-                credits: users[0].credits
+                credits: users[0].credits,
+                hasSeenTours: users[0].has_seen_tours ? (typeof users[0].has_seen_tours === 'string' ? JSON.parse(users[0].has_seen_tours) : users[0].has_seen_tours) : {}
               }
             });
 

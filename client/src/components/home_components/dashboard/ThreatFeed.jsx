@@ -28,29 +28,20 @@ const generateRandomFeeds = (projectId = null) => {
   }));
 };
 
-const ThreatFeed = ({ feeds = [], selectedProjectId, onRefresh, isLoading }) => {
-  const [threatFeeds, setThreatFeeds] = useState([]);
-
-  useEffect(() => {
-    if (feeds && feeds.length > 0) {
-      // Map alerts format to threat feed format
-      const mapped = feeds.map(f => ({
-        id: f.id,
-        source: f.source || 'SYSTEM',
-        threat: f.threat || f.message || 'Unknown threat detected',
-        severity: f.severity || 'low',
-        time: f.time || 'Unknown'
-      }));
-      setThreatFeeds(mapped);
-    } else if (!selectedProjectId) {
-      // Only generate random feeds if NO project is selected
-      const newFeeds = generateRandomFeeds(selectedProjectId);
-      setThreatFeeds(newFeeds);
-    } else {
-      // Project selected but no feeds
-      setThreatFeeds([]);
-    }
-  }, [feeds, selectedProjectId]);
+const ThreatFeed = ({ feeds: externalFeeds = [], selectedProjectId, onRefresh, isLoading }) => {
+  // Strategic Update: Direct filtering and mapping of feeds
+  const threatFeeds = (externalFeeds && externalFeeds.length > 0)
+    ? externalFeeds
+        .filter(f => !selectedProjectId || !f.projectId || String(f.projectId) === String(selectedProjectId))
+        .map(f => ({
+          id: f.id,
+          source: f.source || 'SYSTEM',
+          threat: f.threat || f.message || 'Unknown threat detected',
+          severity: f.severity || 'low',
+          time: f.time || 'Unknown',
+          projectId: f.projectId
+        }))
+    : (!selectedProjectId ? generateRandomFeeds(null) : []);
 
   const getSeverityColor = (severity) => {
     switch(severity?.toLowerCase()) {

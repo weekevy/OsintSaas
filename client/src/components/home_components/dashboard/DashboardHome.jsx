@@ -97,10 +97,11 @@ const DashboardHome = ({
 
         <section className="mb-8 md:mb-10" id="tour-alerts">
           <AlertsSection 
-            alerts={selectedProjectStatus === 'completed' ? alerts : []} 
+            alerts={alerts} 
             selectedProjectId={selectedProjectId} 
             onRefresh={onRefresh}
             isLoading={isLoading} 
+            projectStatus={selectedProjectStatus}
           />
         </section>
 
@@ -110,7 +111,7 @@ const DashboardHome = ({
           </div>
           <div id="tour-threat-feed">
             <ThreatFeed 
-              feeds={selectedProjectStatus === 'completed' ? alerts : []} 
+              feeds={alerts} 
               selectedProjectId={selectedProjectId} 
               onRefresh={onRefresh}
               isLoading={isLoading} 

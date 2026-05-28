@@ -6,13 +6,13 @@ const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
-const path = require('fs'); // Re-using for path logic
+const path = require('path');
 
 // ── Manual Env Loading for standalone script ──
 try {
-  const envPath = require('path').join(__dirname, '.env');
-  if (require('fs').existsSync(envPath)) {
-    const envConfig = require('fs').readFileSync(envPath, 'utf8');
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envConfig = fs.readFileSync(envPath, 'utf8');
     envConfig.split('\n').forEach(line => {
       const [key, ...vals] = line.split('=');
       if (key && vals.length > 0) {
@@ -98,6 +98,63 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.user.id} joined team ${teamId}`);
   });
 
+  // Strategic Update: Fetch individual completed scans for Dossier Builder
+  socket.on('request_completed_scans', async () => {
+    console.log(`Completed scans request from user ${socket.user.id}`);
+    try {
+      const [scans] = await pool.execute(`
+        SELECT 
+          s.id, 
+          s.scan_type, 
+          s.status, 
+          s.created_at,
+          t.value as target_value,
+          t.label as target_label,
+          j.company_name,
+          j.job_title,
+          l.profile_name as linkedin_profile,
+          sm.display_name as social_display
+        FROM scans s
+        JOIN targets t ON s.target_id = t.id
+        JOIN projects p ON t.project_id = p.id
+        LEFT JOIN job_recruitment_scans j ON s.id = j.scan_id
+        LEFT JOIN linkedin_scans l ON s.id = l.scan_id
+        LEFT JOIN social_media_scans sm ON s.id = sm.scan_id
+        WHERE p.user_id = ? AND s.status = 'completed'
+        ORDER BY s.created_at DESC
+      `, [socket.user.id]);
+
+      // Format titles for the UI
+      const formattedScans = scans.map(scan => {
+        let title = scan.scan_type.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+        let subtitle = '';
+        
+        if (scan.scan_type === 'job-recruitment') {
+          subtitle = scan.job_title ? `${scan.job_title} at ${scan.company_name}` : scan.company_name;
+        } else if (scan.scan_type === 'linkedin') {
+          subtitle = scan.linkedin_profile || 'LinkedIn Profile';
+        } else if (scan.scan_type === 'social-media') {
+          subtitle = scan.social_display || 'Social Profile';
+        } else {
+          subtitle = scan.target_label || scan.target_value;
+        }
+
+        return {
+          id: String(scan.id),
+          name: String(title),
+          description: String(subtitle || 'No target data available'),
+          status: 'completed',
+          created_at: scan.created_at
+        };
+      });
+
+      socket.emit('completed_scans_list', { success: true, scans: formattedScans });
+    } catch (err) {
+      console.error('Socket completed scans fetch error:', err);
+      socket.emit('completed_scans_list', { success: false, error: 'Failed to fetch completed scans' });
+    }
+  });
+
   // Strategic Update: Socket-based data fetching for "Terminal" feel
   socket.on('request_scans', async (data) => {
     const { projectId } = data || {};
@@ -180,12 +237,15 @@ io.on('connection', (socket) => {
 app.post('/notify', (req, res) => {
   const { type, userId, projectId, data } = req.body;
   
-  if (userId) {
-    io.to(`user_${userId}`).emit(type, data);
-  }
-  
-  if (projectId) {
-    io.to(`project_${projectId}`).emit(type, data);
+  // Strategic Update: Multi-room targeting with built-in duplicate prevention.
+  // Socket.io ensures each socket receives the event only once even if it's in both rooms.
+  const rooms = [];
+  if (userId) rooms.push(`user_${userId}`);
+  if (projectId) rooms.push(`project_${projectId}`);
+
+  if (rooms.length > 0) {
+    io.to(rooms).emit(type, data);
+    console.log(`WS: Emitted ${type} to ${rooms.join(', ')}`);
   }
 
   res.status(200).json({ success: true });

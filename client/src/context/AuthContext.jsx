@@ -144,6 +144,25 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => prev ? { ...prev, credits: newCredits } : null);
   };
 
+  const markTourAsSeen = async (section) => {
+    try {
+      const response = await fetch('/api/user/tours', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(prev => prev ? { 
+          ...prev, 
+          hasSeenTours: data.tours 
+        } : null);
+      }
+    } catch (error) {
+      console.error('Failed to mark tour as seen:', error);
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -153,7 +172,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuth,
     finalizeLogin,
-    updateCredits
+    updateCredits,
+    markTourAsSeen
   };
 
   return (

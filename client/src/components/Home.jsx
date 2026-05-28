@@ -48,30 +48,67 @@ const Home = () => {
   const [searchType, setSearchType] = useState(() => ls('searchType', 'url'));
   const [recentScans, setRecentScans] = useState([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
-  const [riskScore, setRiskScore] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [alerts, setAlerts] = useState([]);
   const [timeRange, setTimeRange] = useState(() => ls('timeRange', 'week'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [tourSteps, setTourSteps] = useState([]);
+  const [currentTourSection, setCurrentTourSection] = useState(null);
   const [pricingOpen, setPricingOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, markTourAsSeen } = useAuth();
+
+  // ── Tour Definitions ──
+  const tours = {
+    dashboard: [
+      { target: '#tour-nav', title: 'Primary Navigation', content: 'Quickly toggle between core operational modes: the real-time Dashboard, the modular Scanner, in-depth intelligence Reports, and Team collaboration protocols.', position: 'top' },
+      { target: '#tour-credits', title: 'Resource Allocation', content: 'Investigations utilize computational resources. Monitor your current token balance here. High-priority scans may require additional clearance or replenishment.', position: 'bottom' },
+      { target: '#tour-notifications', title: 'Intelligence Feed', content: 'Stay updated with critical alerts, scan completions, and operational requests from your team. Check here regularly for decoded notifications.', position: 'bottom' },
+      { target: '#tour-start-scan', title: 'Launch Investigation', content: 'The starting point for every mission. Open the scanner to input targets (URLs, Emails, Phones) and select which intelligence modules to deploy.', position: 'bottom' },
+      { target: '#tour-project-list', title: 'Mission History', content: 'Your tactical repository of all active and historical investigations. Click any mission to synchronize the workspace and analyze its findings.', position: 'left' },
+      { target: '#tour-risk-circle', title: 'Risk Posture Hub', content: 'Mission-critical analysis at a glance. The Risk Circle visualizes the security posture of the selected target, highlighting critical vulnerabilities and analysis progress.', position: 'right' },
+      { target: '#tour-alerts', title: 'Threat Alerts', content: 'A prioritized list of security signals and anomalies detected during active scans. Each alert provides direct links to the underlying threat data.', position: 'bottom' },
+      { target: '#tour-recent-scans', title: 'Temporal Timeline', content: 'A chronological log of your recent activities. Use this for rapid context switching between your most frequent investigations.', position: 'bottom' }
+    ],
+    scan: [
+      { target: '#tour-scan-header', title: 'Scan Terminal', content: 'This is your primary operations center for launching and monitoring OSINT modules.', position: 'bottom' },
+      { target: '#tour-refresh-terminal', title: 'Terminal Sync', content: 'Synchronize your scan pipeline with the central processing unit to see real-time updates.', position: 'bottom' },
+      { target: '#tour-running-scans', title: 'Active Stream', content: 'Live investigations currently executing in the cloud. Monitor progress, edit assets, or terminate processes here.', position: 'bottom' },
+      { target: '#tour-initiate-module', title: 'Module Selection', content: 'Deploy specific intelligence gathering modules. Each tool is specialized for different target types like LinkedIn, Crypto, or Job Scams.', position: 'top' },
+      { target: '#tour-scan-archives', title: 'Archive Retrieval', content: 'Access completed scan results and historical intelligence data for deep-dive analysis.', position: 'top' }
+    ],
+    reports: [
+      { target: '#tour-reports-header', title: 'Intelligence Archives', content: 'Your repository for high-fidelity dossiers and consolidated investigation briefings.', position: 'bottom' },
+      { target: '#tour-assemble-dossier', title: 'Assemble Dossier', content: 'Synthesize findings from your scans into a professional intelligence report with automated summaries.', position: 'bottom' },
+      { target: '#tour-report-stats', title: 'Operational Metrics', content: 'Monitor your investigation output and intelligence sharing statistics across your entire organization.', position: 'bottom' },
+      { target: '#tour-recent-reports', title: 'Recent Briefings', content: 'Quickly access your most recently generated intelligence dossiers for review or distribution.', position: 'top' }
+    ],
+    team: [
+      { target: '#tour-team-header', title: 'Collaboration Hub', content: 'Coordinate with elite investigation squads. Share intelligence and manage collective missions from this interface.', position: 'bottom' },
+      { target: '#tour-new-command', title: 'New Command', content: 'Initialize a new investigation squad. Invite members and set clearance levels for shared projects.', position: 'bottom' },
+      { target: '#tour-team-cards', title: 'Active Squads', content: 'Your current network of operational teams. Each squad can have its own dedicated workspace and shared findings.', position: 'top' }
+    ]
+  };
 
   useEffect(() => {
-    if (user?.email) {
-      const tourKey = `hasSeenTour_${user.email}`;
-      const hasSeenTour = localStorage.getItem(tourKey);
-      if (!hasSeenTour) {
-        const timer = setTimeout(() => setIsTourOpen(true), 1500);
+    if (user) {
+      const hasSeenTour = user.hasSeenTours?.[activeTab];
+      
+      if (!hasSeenTour && tours[activeTab]) {
+        // Small delay to ensure component is fully rendered
+        const timer = setTimeout(() => {
+          setTourSteps(tours[activeTab]);
+          setCurrentTourSection(activeTab);
+          setIsTourOpen(true);
+        }, 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   const completeTour = () => {
-    if (user?.email) {
+    if (user && currentTourSection) {
       setIsTourOpen(false);
-      localStorage.setItem(`hasSeenTour_${user.email}`, 'true');
+      markTourAsSeen(currentTourSection);
     }
   };
 
@@ -82,7 +119,6 @@ const Home = () => {
     const p = lsJson('selectedProject', null);
     return p && p.id ? p : null;
   });
-  const [projectRiskScore, setProjectRiskScore] = useState(0);
   const [projectAlerts, setProjectAlerts] = useState([]);
   const [selectedRiskData, setSelectedRiskData] = useState(() => lsJson('selectedRiskData', null));
   const [selectedProjectName, setSelectedProjectName] = useState(() => ls('selectedProjectName', ''));
@@ -93,8 +129,26 @@ const Home = () => {
     return parseInt(v) || 0;
   });
   const [selectedModuleId, setSelectedModuleId] = useState(() => ls('currentModules_selectedId', null));
+  
+  const [projectRiskScore, setProjectRiskScore] = useState(() => {
+    const riskData = lsJson('selectedRiskData', null);
+    if (riskData && riskData.score !== undefined) return riskData.score;
+    const project = lsJson('selectedProject', null);
+    return project?.risk_score || 0;
+  });
+
+  useEffect(() => {
+    if (selectedRiskData?.score !== undefined) {
+      setProjectRiskScore(selectedRiskData.score);
+    } else if (selectedProject) {
+      setProjectRiskScore(selectedProject.risk_score || 0);
+    } else {
+      setProjectRiskScore(0);
+    }
+  }, [selectedRiskData, selectedProject]);
+
   const [dashboardRefreshTrigger, setDashboardRefreshTrigger] = useState(0);
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, joinProject } = useSocket();
 
   const fetchDashboardData = useCallback(async () => {
     setIsDashboardLoading(true);
@@ -107,13 +161,12 @@ const Home = () => {
       const response = await fetch(url, { credentials: 'include' });
       const data = await response.json();
       if (response.ok) {
-        setAlerts(data.alerts || []);
-        if (selectedProject) {
-          setProjectAlerts(data.alerts || []);
-        }
+        const fetchedAlerts = data.alerts || [];
+        setProjectAlerts(fetchedAlerts);
       }
     } catch (error) {
       console.error('Failed to fetch alerts:', error);
+      setProjectAlerts([]);
     }
 
     // ── Fetch Scans ──
@@ -143,14 +196,25 @@ const Home = () => {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
+    // Join the project room on the server for targeted updates
+    if (selectedProject?.id) {
+      joinProject(selectedProject.id);
+    }
+
     const handleUpdate = (data) => {
       console.log('WS: Dashboard Update', data);
       
-      // Only handle if it belongs to current project OR no project selected
-      if (!selectedProject?.id || !data?.projectId || String(data.projectId) === String(selectedProject.id)) {
-        
-        // If it's a new notification, optimistically add it to the dashboard alerts list
-        if (data.type === 'threat' || data.type === 'warning' || data.type === 'success') {
+      // Strategic Update: Strict project filtering and status-based suppression
+      // 1. If a project is selected, only handle if data matches THAT project.
+      // 2. If NO project is selected, handle everything to show global status.
+      const isCurrentProject = !selectedProject?.id || (data?.projectId && String(data.projectId) === String(selectedProject.id));
+
+      if (isCurrentProject) {
+        // Strategic Enhancement: Only show alerts/popups if the project is 'completed'.
+        // This prevents distractions during 'paused' or 'running' states.
+        const canShowAlerts = !selectedProject?.id || selectedProjectStatus === 'completed';
+
+        if (canShowAlerts && (data.type === 'threat' || data.type === 'warning' || data.type === 'success')) {
           const newAlert = {
             id: `ws_alert_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             title: data.title,
@@ -160,18 +224,11 @@ const Home = () => {
             scan_id: data.scan_id
           };
 
-          setAlerts(prev => {
+          setProjectAlerts(prev => {
             // Avoid duplicates
             if (prev.some(a => a.scan_id === data.scan_id && a.title === data.title)) return prev;
             return [newAlert, ...prev];
           });
-
-          if (selectedProject) {
-            setProjectAlerts(prev => {
-              if (prev.some(a => a.scan_id === data.scan_id && a.title === data.title)) return prev;
-              return [newAlert, ...prev];
-            });
-          }
         }
 
         // Small delay to let DB finish then re-sync for full data integrity
@@ -186,7 +243,7 @@ const Home = () => {
       socket.off('new_notification', handleUpdate);
       socket.off('scan_completed', handleUpdate);
     };
-  }, [socket, isConnected, fetchDashboardData]);
+  }, [socket, isConnected, fetchDashboardData, selectedProject, joinProject]);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
@@ -329,9 +386,13 @@ const Home = () => {
     setSelectedProject(project);
     setSelectedProjectStatus(project.status || 'idle');
     setSelectedProjectFindings(project.findings || 0);
+    setSelectedProjectName(project.name || '');
 
-    // Initial risk score before scan data is fetched
-    setProjectRiskScore(0);
+    // Synchronize risk score with project
+    setProjectRiskScore(project.risk_score || 0);
+    
+    // Clear specific scan risk data when switching projects
+    setSelectedRiskData(null);
   };
 
   const handleRiskDataChange = (riskData, target, name) => {
@@ -471,6 +532,7 @@ const Home = () => {
           isOpen={isTourOpen} 
           onComplete={completeTour} 
           onSkip={completeTour} 
+          steps={tourSteps}
         />
       </div>
     </>

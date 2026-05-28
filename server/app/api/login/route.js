@@ -28,7 +28,7 @@ export async function POST(request) {
 
     // Get user from database (check both email and username)
     const [users] = await db.execute(
-      'SELECT id, email, username, password, first_name, last_name, role, credits FROM users WHERE (email = ? OR username = ?) AND is_active = TRUE',
+      'SELECT id, email, username, password, first_name, last_name, role, credits, has_seen_tours FROM users WHERE (email = ? OR username = ?) AND is_active = TRUE',
       [email, email]
     );
 
@@ -81,10 +81,11 @@ export async function POST(request) {
         id: user.id,
         email: user.email,
         username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name,
+        lastName: user.last_name,
         role: user.role,
-        credits: user.credits
+        credits: user.credits,
+        hasSeenTours: user.has_seen_tours ? (typeof user.has_seen_tours === 'string' ? JSON.parse(user.has_seen_tours) : user.has_seen_tours) : {}
       }
     });
 

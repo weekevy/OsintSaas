@@ -99,7 +99,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
   if (!selectedTeam) {
     return (
       <div className={`${shellMax} px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-sans text-white animate-slide-up`}>
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 mb-8 lg:mb-12">
+        <header id="tour-team-header" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 mb-8 lg:mb-12">
           <div>
             <div className="flex items-center gap-3 mb-1 lg:mb-2">
               <div className="w-1.5 h-8 lg:h-10 bg-[#00E5FF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
@@ -108,6 +108,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
             <p className="text-white/40 text-[11px] lg:text-sm font-medium">Manage elite investigation squads and shared intelligence.</p>
           </div>
           <button
+            id="tour-new-command"
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full md:w-auto px-6 lg:px-8 py-3 lg:py-3.5 bg-[#00E5FF] text-black font-bold rounded-xl lg:rounded-2xl hover:brightness-110 transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)]"
           >
@@ -120,7 +121,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
             <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 animate-fade-in">
+          <div id="tour-team-cards" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 animate-fade-in">
             {teams.map((team, idx) => (
               <div key={team.id} style={{ animationDelay: `${idx * 0.05}s` }} className="contents">
                 <TeamCard team={team} onClick={() => handleTeamClick(team)} onAction={handleAction} />
@@ -172,7 +173,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
         </div>
 
         {/* Horizontal Scrollable Tabs - Professional Segmented Style */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div id="tour-team-tabs" className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -197,6 +198,7 @@ const TeamDashboard = ({ selectedProject, onProjectSelect, onTabChange }) => {
           <div className="bg-black border border-white/5 rounded-[28px] overflow-hidden flex flex-col shadow-xl">
             <div className="p-6 bg-gradient-to-br from-white/[0.03] to-transparent border-b border-white/5">
               <button 
+                id="tour-team-exit"
                 onClick={() => setSelectedTeam(null)}
                 className="flex items-center gap-2 text-white/30 hover:text-[#00E5FF] transition-all text-[10px] font-bold tracking-widest mb-6"
               >

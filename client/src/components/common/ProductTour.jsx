@@ -1,79 +1,23 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-const ProductTour = ({ isOpen, onComplete, onSkip }) => {
+const ProductTour = ({ isOpen, onComplete, onSkip, steps = [] }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [spotlightStyles, setSpotlightStyles] = useState({});
   const [popupStyles, setPopupStyles] = useState({});
   const [clipPath, setClipPath] = useState('');
 
-  const steps = [
-    {
-      target: '#tour-nav',
-      title: 'Primary Navigation',
-      content: 'Quickly toggle between core operational modes: the real-time Dashboard, the modular Scanner, in-depth intelligence Reports, and Team collaboration protocols.',
-      position: 'top'
-    },
-    {
-      target: '#tour-credits',
-      title: 'Resource Allocation',
-      content: 'Investigations utilize computational resources. Monitor your current token balance here. High-priority scans may require additional clearance or replenishment.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-notifications',
-      title: 'Intelligence Feed',
-      content: 'Stay updated with critical alerts, scan completions, and operational requests from your team. Check here regularly for decoded notifications.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-start-scan',
-      title: 'Launch Investigation',
-      content: 'The starting point for every mission. Open the scanner to input targets (URLs, Emails, Phones) and select which intelligence modules to deploy.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-project-list',
-      title: 'Mission History',
-      content: 'Your tactical repository of all active and historical investigations. Click any mission to synchronize the workspace and analyze its findings.',
-      position: 'left'
-    },
-    {
-      target: '#tour-risk-circle',
-      title: 'Risk Posture Hub',
-      content: 'Mission-critical analysis at a glance. The Risk Circle visualizes the security posture of the selected target, highlighting critical vulnerabilities and analysis progress.',
-      position: 'right'
-    },
-    {
-      target: '#tour-alerts',
-      title: 'Threat Alerts',
-      content: 'A prioritized list of security signals and anomalies detected during active scans. Each alert provides direct links to the underlying threat data.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-recent-scans',
-      title: 'Temporal Timeline',
-      content: 'A chronological log of your recent activities. Use this for rapid context switching between your most frequent investigations.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-threat-feed',
-      title: 'Global Signals',
-      content: 'Real-time feed of global OSINT signals and threat trends. Keep an eye on this section to stay ahead of emerging digital risks.',
-      position: 'bottom'
-    },
-    {
-      target: '#tour-quick-tools',
-      title: 'Tactical Toolkit',
-      content: 'A suite of utility functions for rapid intelligence gathering, including hash lookups, domain WHOIS, and IP geolocation.',
-      position: 'top'
+  // Reset step when tour is re-opened with different steps
+  useLayoutEffect(() => {
+    if (isOpen) {
+      setCurrentStep(0);
     }
-  ];
+  }, [isOpen, steps]);
 
   const currentData = steps[currentStep];
 
   useLayoutEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !steps.length || !currentData) return;
 
     const updatePositioning = () => {
       const step = steps[currentStep];
@@ -85,7 +29,7 @@ const ProductTour = ({ isOpen, onComplete, onSkip }) => {
         
         // 2. Accurate rect after scroll
         const rect = element.getBoundingClientRect();
-        const padding = 0;
+        const padding = 8; // Added some padding for better spotlight
         const t = rect.top - padding;
         const l = rect.left - padding;
         const b = rect.bottom + padding;
@@ -105,9 +49,9 @@ const ProductTour = ({ isOpen, onComplete, onSkip }) => {
         setClipPath(`polygon(0% 0%, 0% 100%, ${l}px 100%, ${l}px ${t}px, ${r}px ${t}px, ${r}px ${b}px, ${l}px ${b}px, ${l}px 100%, 100% 100%, 100% 0%)`);
 
         // Popup Calculation
-        const gap = 16;
+        const gap = 20;
         const popupWidth = Math.min(380, vW - 40);
-        const popupHeight = 180;
+        const popupHeight = 220; // Increased to accommodate content better
 
         if (vW < 768) {
           setPopupStyles({
@@ -164,7 +108,7 @@ const ProductTour = ({ isOpen, onComplete, onSkip }) => {
       }
     };
 
-    const timer = setTimeout(updatePositioning, 50);
+    const timer = setTimeout(updatePositioning, 100);
     window.addEventListener('resize', updatePositioning);
     window.addEventListener('scroll', updatePositioning);
     
@@ -173,9 +117,9 @@ const ProductTour = ({ isOpen, onComplete, onSkip }) => {
       window.removeEventListener('resize', updatePositioning);
       window.removeEventListener('scroll', updatePositioning);
     };
-  }, [isOpen, currentStep]);
+  }, [isOpen, currentStep, steps, currentData]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !steps.length || !currentData) return null;
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {

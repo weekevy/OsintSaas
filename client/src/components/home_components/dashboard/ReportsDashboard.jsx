@@ -61,7 +61,7 @@ const ReportsDashboard = () => {
   return (
     <div className="max-w-[1680px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-10 font-sans text-white animate-slide-up">
       {/* Intelligence Header - Responsive Spacing */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 px-2 sm:px-0">
+      <header id="tour-reports-header" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 px-2 sm:px-0">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-1.5 h-6 lg:h-8 bg-gradient-to-b from-[#00E5FF] to-[#2DD4BF] rounded-full shadow-[0_0_15px_rgba(0,229,255,0.4)]" />
@@ -71,6 +71,7 @@ const ReportsDashboard = () => {
         </div>
         
         <button
+          id="tour-assemble-dossier"
           onClick={() => setIsGeneratorOpen(true)}
           className="group relative w-full md:w-auto px-8 py-3.5 lg:py-4 bg-[#00E5FF] text-black font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(0,229,255,0.2)]"
         >
@@ -84,7 +85,7 @@ const ReportsDashboard = () => {
       </header>
 
       {/* Operational Stats - Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-8 lg:mb-12">
+      <div id="tour-report-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-8 lg:mb-12">
         {stats.map((stat, i) => (
           <div key={i} className="p-5 lg:p-6 rounded-3xl lg:rounded-[32px] bg-black border border-white/5 group hover:border-[#00E5FF]/20 transition-all duration-300">
             <div className="flex items-center justify-between mb-3 lg:mb-4">
@@ -99,7 +100,7 @@ const ReportsDashboard = () => {
       </div>
 
       {/* Main Content Area - Full Width */}
-      <main className="w-full min-h-[400px]">
+      <main id="tour-recent-reports" className="w-full min-h-[400px]">
         <div className="space-y-4 lg:space-y-6">
           <div className="flex items-center justify-between mb-2 px-2">
             <h3 className="text-[10px] lg:text-[11px] font-bold text-[#00E5FF] tracking-wider uppercase font-sans">Recent Reports</h3>

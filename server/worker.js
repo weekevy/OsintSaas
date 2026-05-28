@@ -52,12 +52,16 @@ async function refundCredits(userId, amount = 1) {
   }
 }
 
-async function notifyUI(userId, type, data) {
+async function notifyUI(userId, type, data, projectId = null) {
   try {
     await axios.post(WS_NOTIFY_URL, {
       type,
       userId,
-      data
+      projectId,
+      data: {
+        ...data,
+        projectId // Also include in data payload for client-side filtering
+      }
     });
   } catch (err) {
     console.error(`[Worker] WebSocket notification failed:`, err.message);
@@ -68,24 +72,31 @@ const worker = new Worker('scan-queue', async (job) => {
   const { scanId, target, userId, module } = job.data;
   console.log(`[Worker] Processing scan ${scanId} for user ${userId} using module ${module}`);
 
+  let projectId = null;
   try {
+    // Fetch projectId for routing
+    const [targetRows] = await pool.execute(
+      'SELECT t.project_id FROM scans s JOIN targets t ON s.target_id = t.id WHERE s.id = ?',
+      [scanId]
+    );
+    projectId = targetRows[0]?.project_id;
+
     // 1. Update status to 'running'
     await pool.execute('UPDATE scans SET status = "running", started_at = NOW() WHERE id = ?', [scanId]);
-    await notifyUI(userId, 'scan_progress', { scan_id: scanId, status: 'running', progress: 5 });
+    await notifyUI(userId, 'scan_progress', { scan_id: scanId, status: 'running', progress: 5 }, projectId);
     await notifyUI(userId, 'scan_log', { 
       scan_id: scanId, 
       message: `[SYSTEM] Worker picked up job. Launching ${module} module...`, 
       level: 'INFO',
       timestamp: new Date().toISOString()
-    });
+    }, projectId);
 
-    // 2. Determine Module API URL
+    // ... (keep module determine logic) ...
     let moduleUrl = '';
     switch (module) {
       case 'job-recruitment':
         moduleUrl = process.env.JOB_RECRUITMENT_API_URL || 'http://localhost:8000';
         break;
-      // Add other modules here
       default:
         throw new Error(`Unknown module: ${module}`);
     }
@@ -95,11 +106,12 @@ const worker = new Worker('scan-queue', async (job) => {
       message: `[SYSTEM] Dispatching target to ${moduleUrl}/scan/start`, 
       level: 'INFO',
       timestamp: new Date().toISOString()
-    });
+    }, projectId);
     const response = await axios.post(`${moduleUrl}/scan/start`, {
       scan_id: scanId,
       target: target,
-      user_id: userId
+      user_id: userId,
+      project_id: projectId // Send to module so it can echo it back
     }, {
       headers: { 'X-API-Key': DOCKER_API_KEY },
       timeout: 10000 // 10s to start
@@ -125,9 +137,9 @@ const worker = new Worker('scan-queue', async (job) => {
       scan_id: scanId, 
       error: error.message,
       message: 'System error. Your token has been refunded.' 
-    });
+    }, projectId);
 
-    await notifyUI(userId, 'token_update', { credits: updatedCredits });
+    await notifyUI(userId, 'token_update', { credits: updatedCredits }, projectId);
     
     await refundCredits(userId, 1);
     
