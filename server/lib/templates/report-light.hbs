@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{title}}</title>
+<style>
+  /* =====================================================
+     DESIGN REFERENCE TEMPLATE — OSINT DOSSIER (LIGHT)
+     ===================================================== */
+
+  /* --- FONTS --- */
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@400;600;700;800&display=swap');
+
+  /* --- CSS VARIABLES --- */
+  :root {
+    --bg-page:           #f8fafc;
+    --bg-card:           #ffffff;
+    --bg-card-alt:       #f1f5f9;
+    --bg-header:         #f1f5f9;
+    --border-primary:    #e2e8f0;
+    --border-accent:     #cbd5e1;
+    --accent-red:        #e63946;
+    --accent-red-dim:    #fee2e2;
+    --accent-orange:     #ff7c2a;
+    --accent-yellow:     #f4b942;
+    --accent-green:      #10b981;
+    --accent-blue:       #3b82f6;
+    --accent-blue-dim:   #dbeafe;
+    --text-primary:      #0f172a;
+    --text-secondary:    #475569;
+    --text-muted:        #64748b;
+    --text-label:        #94a3b8;
+    --font-display:      'Exo 2', sans-serif;
+    --font-body:         'Rajdhani', sans-serif;
+    --font-mono:         'Share Tech Mono', monospace;
+    --radius-sm:         3px;
+    --radius-md:         6px;
+    --radius-lg:         10px;
+  }
+
+  /* --- RESET --- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* --- PAGE --- */
+  body {
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* =====================================================
+     DOCUMENT WRAPPER
+     ===================================================== */
+  .document {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    min-height: 297mm;
+  }
+
+  /* =====================================================
+     TOP CLASSIFICATION BANNER
+     ===================================================== */
+  .classification-banner {
+    background: var(--accent-red);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-align: center;
+    padding: 5px 20px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .classification-banner span { opacity: 0.85; font-size: 10px; }
+
+  /* =====================================================
+     PAGE HEADER (top meta bar)
+     ===================================================== */
+  .page-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-accent);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .page-header .meta-left {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+  .page-header .meta-left strong {
+    color: var(--text-secondary);
+  }
+  .page-header .report-ref {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-blue);
+    letter-spacing: 0.1em;
+  }
+
+  /* =====================================================
+     DOCUMENT TITLE HERO
+     ===================================================== */
+  .doc-hero {
+    background: var(--bg-header);
+    border-bottom: 2px solid var(--accent-red);
+    padding: 28px 32px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .doc-hero-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-red);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .doc-hero-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .doc-hero-subtitle {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  /* --- RISK SCORE BADGE --- */
+  .risk-score-badge {
+    flex-shrink: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .risk-score-number {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--accent-orange);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .risk-score-pct {
+    font-size: 22px;
+    font-weight: 400;
+    vertical-align: super;
+    color: var(--accent-orange);
+    opacity: 0.7;
+  }
+  .risk-score-level {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--accent-orange);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .risk-score-sublabel {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  /* =====================================================
+     META INFO BAR
+     ===================================================== */
+  .meta-info-bar {
+    background: var(--bg-card-alt);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 14px 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+  .meta-field-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .meta-field-value {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+  .meta-field-value.highlight { color: var(--accent-blue); }
+  .meta-field-value.danger    { color: var(--accent-red); }
+  .meta-field-value.warning   { color: var(--accent-orange); }
+
+  /* =====================================================
+     SEVERITY SUMMARY BAR
+     ===================================================== */
+  .severity-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .severity-bar-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .sev-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px 5px 10px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .sev-pill .sev-count {
+    font-size: 18px;
+    font-weight: 800;
+    font-family: var(--font-display);
+    line-height: 1;
+  }
+  .sev-pill.critical { background: rgba(230,57,70,0.1); color: var(--accent-red); border: 1px solid rgba(230,57,70,0.2); }
+  .sev-pill.high     { background: rgba(255,124,42,0.08); color: var(--accent-orange); border: 1px solid rgba(255,124,42,0.2); }
+  .sev-pill.medium   { background: rgba(244,185,66,0.08); color: #b45309; border: 1px solid rgba(244,185,66,0.15); }
+  .sev-pill.low      { background: rgba(16,185,129,0.08); color: #047857;  border: 1px solid rgba(16,185,129,0.15); }
+  .sev-total {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* =====================================================
+     BODY CONTENT AREA
+     ===================================================== */
+  .doc-body {
+    padding: 28px 32px;
+  }
+
+  /* =====================================================
+     SECTION HEADERS
+     ===================================================== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    margin-top: 36px;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-number {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-blue);
+    letter-spacing: 0.12em;
+    background: rgba(58,123,213,0.1);
+    border: 1px solid rgba(58,123,213,0.25);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+  }
+  .section-divider {
+    height: 1px;
+    background: var(--border-primary);
+    flex: 1;
+  }
+
+  /* =====================================================
+     PROSE TEXT
+     ===================================================== */
+  .prose {
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    line-height: 1.75;
+    font-family: var(--font-body);
+    font-weight: 400;
+  }
+  .prose + .prose { margin-top: 10px; }
+
+  /* =====================================================
+     METHODOLOGY TABLE
+     ===================================================== */
+  .method-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 16px;
+  }
+  .method-table thead tr {
+    background: var(--bg-card-alt);
+    border-bottom: 1px solid var(--border-accent);
+  }
+  .method-table thead th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 9px 14px;
+    font-weight: 400;
+  }
+  .method-table tbody tr {
+    border-bottom: 1px solid var(--border-primary);
+  }
+  .method-table td {
+    padding: 9px 14px;
+    color: var(--text-secondary);
+    vertical-align: top;
+    font-family: var(--font-body);
+  }
+  .method-table td:first-child {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+  }
+  .method-table td:nth-child(2) {
+    color: var(--accent-blue);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  /* =====================================================
+     DETECTION CARD
+     ===================================================== */
+  .detection-card {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .detection-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-primary);
+    background: rgba(0,0,0,0.02);
+  }
+  .detection-index {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+  .detection-title {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+    letter-spacing: 0.02em;
+  }
+  .severity-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+  .severity-badge.critical { background: rgba(230,57,70,0.15); color: var(--accent-red); border: 1px solid rgba(230,57,70,0.35); }
+  .severity-badge.high     { background: rgba(255,124,42,0.12); color: var(--accent-orange); border: 1px solid rgba(255,124,42,0.3); }
+  .severity-badge.medium   { background: rgba(244,185,66,0.12); color: #b45309; border: 1px solid rgba(244,185,66,0.25); }
+  .severity-badge.low      { background: rgba(16,185,129,0.10); color: #047857;  border: 1px solid rgba(16,185,129,0.25); }
+
+  .detection-card-body {
+    padding: 14px 18px;
+  }
+  .detection-desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  /* --- DETECTION METADATA GRID --- */
+  .detection-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+  .dm-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11.5px;
+  }
+  .dm-key {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .dm-val {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 12px;
+    word-break: break-all;
+  }
+  .dm-val.status-bad    { color: var(--accent-red); }
+  .dm-val.status-mono   { font-family: var(--font-mono); color: var(--accent-blue); font-size: 11px; }
+
+  /* --- RISK SCORE INLINE BAR --- */
+  .risk-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+  .risk-bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border-primary);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .risk-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent-orange);
+  }
+  .risk-bar-fill.critical { background: var(--accent-red); }
+  .risk-bar-fill.high     { background: var(--accent-orange); }
+  .risk-bar-fill.medium   { background: var(--accent-yellow); }
+  .risk-bar-fill.low      { background: var(--accent-green); }
+  .risk-score-val {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-orange);
+    min-width: 64px;
+    text-align: right;
+    letter-spacing: 0;
+  }
+
+  /* --- RECOMMENDED ACTION BOX --- */
+  .rec-action {
+    background: rgba(58,123,213,0.04);
+    border: 1px solid rgba(58,123,213,0.15);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-top: 4px;
+  }
+  .rec-action-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--accent-blue);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .rec-action-text {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* =====================================================
+     REMEDIATION TIMELINE SECTION
+     ===================================================== */
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .timeline-card {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+  }
+  .timeline-phase {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .timeline-phase.immediate { color: var(--accent-red); }
+  .timeline-phase.short     { color: var(--accent-orange); }
+  .timeline-phase.medium    { color: #b45309; }
+  .timeline-window {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .timeline-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .timeline-items li {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .timeline-items li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+  }
+
+  /* =====================================================
+     AUDIT LOG SECTION
+     ===================================================== */
+  .audit-log {
+    background: #f8fafc;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: #475569;
+    line-height: 2;
+    margin-top: 16px;
+    white-space: pre-wrap;
+  }
+  .log-tag { color: #10b981; margin-right: 4px; }
+  .log-tag.warn { color: #f59e0b; }
+  .log-tag.info { color: #3b82f6; }
+  .log-dots { color: #cbd5e1; }
+  .log-status { color: #10b981; }
+
+  /* =====================================================
+     FOOTER
+     ===================================================== */
+  .doc-footer {
+    background: var(--bg-card-alt);
+    border-top: 1px solid var(--border-primary);
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footer-disclaimer {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  .footer-ref {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  /* --- UTILS --- */
+  .mt-4 { margin-top: 16px; }
+
+</style>
+</head>
+<body>
+
+<div class="document">
+
+  <!-- TOP CLASSIFICATION BANNER -->
+  <div class="classification-banner">
+    <span>{{classification}} // INTELLIGENCE DOSSIER // OSINT THREAT ANALYSIS</span>
+    <span>ISSUED: {{date}} | REF: #ID-{{reportId}}</span>
+  </div>
+
+  <!-- PAGE META BAR -->
+  <div class="page-header">
+    <div class="meta-left">
+      Report Synthesis — <strong>#ID-{{reportId}}</strong> — OSINT Intelligence
+    </div>
+    <div class="report-ref">REF: #ID-{{reportId}}</div>
+  </div>
+
+  <!-- TITLE HERO + RISK SCORE -->
+  <div class="doc-hero">
+    <div class="doc-hero-left">
+      <div class="doc-hero-label">Intelligence Dossier</div>
+      <div class="doc-hero-title">Threat Assessment Report</div>
+      <div class="doc-hero-subtitle">{{scanType}} — OSINT Reconnaissance &amp; Cyber Threat Analysis</div>
+    </div>
+    <div class="risk-score-badge">
+      <div class="risk-score-number">{{riskScore}}<span class="risk-score-pct">%</span></div>
+      <div class="risk-score-level">{{riskLevel}}</div>
+      <div class="risk-score-sublabel">Composite Risk Score</div>
+    </div>
+  </div>
+
+  <!-- META FIELDS BAR -->
+  <div class="meta-info-bar">
+    <div class="meta-field">
+      <div class="meta-field-label">Target URL / Identity</div>
+      <div class="meta-field-value highlight">{{targetValue}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Report Ref</div>
+      <div class="meta-field-value">#ID-{{reportId}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Scan Type</div>
+      <div class="meta-field-value">{{scanType}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">OSINT Date Issued</div>
+      <div class="meta-field-value">{{date}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Investigator</div>
+      <div class="meta-field-value">{{investigator}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Classification</div>
+      <div class="meta-field-value danger">{{classification}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Project</div>
+      <div class="meta-field-value">{{projectName}}</div>
+    </div>
+    <div class="meta-field">
+      <div class="meta-field-label">Detections</div>
+      <div class="meta-field-value warning">{{findingsCount}} Threat Indicators Identified</div>
+    </div>
+  </div>
+
+  <!-- SEVERITY SUMMARY BAR -->
+  <div class="severity-bar">
+    <span class="severity-bar-label">Severity Breakdown</span>
+    <div class="sev-pill critical"><span class="sev-count">{{severityDistribution.critical}}</span> Critical</div>
+    <div class="sev-pill high"><span class="sev-count">{{severityDistribution.high}}</span> High</div>
+    <div class="sev-pill medium"><span class="sev-count">{{severityDistribution.medium}}</span> Medium</div>
+    <div class="sev-pill low"><span class="sev-count">{{severityDistribution.low}}</span> Low</div>
+    <span class="sev-total">{{findingsCount}} indicators across active sub-modules</span>
+  </div>
+
+  <!-- DOCUMENT BODY -->
+  <div class="doc-body">
+
+    <!-- SECTION 01 — EXECUTIVE SUMMARY -->
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <span class="section-title">Executive Summary</span>
+      <div class="section-divider"></div>
+    </div>
+    <p class="prose">
+      {{investigatorNotes}}
+    </p>
+    <p class="prose" style="margin-top:10px;">
+      <strong style="color:var(--text-primary)">Assessment Verdict:</strong>
+      The target exhibits a {{riskLevel}} risk level. Immediate attention is required for critical vulnerabilities that could lead to identity theft or infrastructure compromise.
+    </p>
+
+    <!-- SECTION 02 — ANALYSIS METHODOLOGY -->
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <span class="section-title">Analysis Methodology</span>
+      <div class="section-divider"></div>
+    </div>
+    <p class="prose">{{methodologyDescription}}</p>
+
+    <div style="text-align: center; margin-top: 20px;">
+        {{{workflowDiagram}}}
+    </div>
+
+    <!-- SECTION 03 — DETAILED DETECTIONS -->
+    <div class="section-header" style="margin-top:36px;">
+      <span class="section-number">03</span>
+      <span class="section-title">Detailed Intelligence Detections</span>
+      <div class="section-divider"></div>
+    </div>
+    <p class="prose" style="margin-bottom:18px;">
+      The following {{findingsCount}} threat indicators were identified across the target's infrastructure.
+      Findings are listed in order of assessed impact.
+    </p>
+
+    {{#each detailedFindings}}
+    <div class="detection-card">
+      <div class="detection-card-header">
+        <span class="detection-index">{{@index}}</span>
+        <span class="detection-title">{{title}}</span>
+        <span class="severity-badge {{severity}}">{{severity}}</span>
+      </div>
+      <div class="detection-card-body">
+        <div class="detection-desc">
+          {{description}}
+        </div>
+
+        <div class="detection-meta">
+          <div class="dm-row">
+            <span class="dm-key">Source:</span>
+            <span class="dm-val">OSINT Public Intelligence</span>
+          </div>
+          <div class="dm-row">
+            <span class="dm-key">Logic:</span>
+            <span class="dm-val">{{how_found}}</span>
+          </div>
+        </div>
+
+        <div class="risk-bar-row">
+          <span>Finding Weight</span>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill {{severity}}" style="width: 70%"></div>
+          </div>
+        </div>
+
+        <div class="rec-action">
+          <div class="rec-action-label">Recommended Action</div>
+          <div class="rec-action-text">{{remediation}}</div>
+        </div>
+
+        {{#if module_raw}}
+        <div class="audit-log" style="font-size: 9px; margin-top: 10px; opacity: 0.8;">
+{{module_raw}}
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    {{/each}}
+
+    <!-- SECTION 04 — STRATEGIC REMEDIATION -->
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <span class="section-title">Strategic Remediation Guidance</span>
+      <div class="section-divider"></div>
+    </div>
+    <p class="prose" style="margin-bottom:16px;">Strategic remediation timeline based on threat severity and infrastructure impact.</p>
+
+    <div class="timeline-grid">
+      <div class="timeline-card">
+        <div class="timeline-phase immediate">Immediate</div>
+        <div class="timeline-window">0 to 24 Hours</div>
+        <ul class="timeline-items">
+          <li>Mitigate all Critical severity findings</li>
+          <li>Rotate compromised credentials</li>
+          <li>Notify relevant security stakeholders</li>
+        </ul>
+      </div>
+      <div class="timeline-card">
+        <div class="timeline-phase short">Short-Term</div>
+        <div class="timeline-window">1 to 7 Days</div>
+        <ul class="timeline-items">
+          <li>Address High severity findings</li>
+          <li>Update DNS security records</li>
+          <li>Review access control logs</li>
+        </ul>
+      </div>
+      <div class="timeline-card">
+        <div class="timeline-phase medium">Medium-Term</div>
+        <div class="timeline-window">1 to 4 Weeks</div>
+        <ul class="timeline-items">
+          <li>Implement Medium/Low remediations</li>
+          <li>Conduct full security audit</li>
+          <li>Schedule follow-up OSINT scan</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SECTION 05 — TECHNICAL AUDIT LOG -->
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <span class="section-title">Technical Audit Log</span>
+      <div class="section-divider"></div>
+    </div>
+
+    <div class="audit-log">
+{{technicalLogs}}
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div class="footer-disclaimer">
+      This report was generated by an automated OSINT reconnaissance system. All findings are derived exclusively
+      from publicly available information sources and passive analysis techniques. Risk scores represent algorithmic assessments. 
+      This document is classified {{classification}} and is intended solely for the authorized investigator.
+    </div>
+    <div class="footer-ref">DOSSIER #ID-{{reportId}}</div>
+  </div>
+
+  <!-- BOTTOM CLASSIFICATION BANNER -->
+  <div class="classification-banner">
+    <span>{{classification}} // INTELLIGENCE DOSSIER // OSINT THREAT ANALYSIS</span>
+    <span>ISSUED: {{date}} | REF: #ID-{{reportId}}</span>
+  </div>
+
+</div>
+
+</body>
+</html>

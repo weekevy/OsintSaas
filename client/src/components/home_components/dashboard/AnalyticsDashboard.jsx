@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../../../services/api';
 import {
   AnalyticsOverview,
-  ThreatTrends,
-  PerformanceMetrics
+  ThreatTrends
 } from '../analytics';
 
 const AnalyticsDashboard = () => {
   const [timeRange, setTimeRange] = useState('7d');
   const [activeTab, setActiveTab] = useState('overview');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const timeRanges = [
     { id: '24h', label: '24 Hours' },
@@ -19,8 +21,26 @@ const AnalyticsDashboard = () => {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'threats', label: 'Threats' },
-    { id: 'performance', label: 'Performance' }
+    { id: 'investigators', label: 'Investigators' }
   ];
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeRange]);
+
+  const fetchAnalytics = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get(`/api/dashboard/analytics?timeRange=${timeRange}`);
+      if (response.data.success) {
+        setData(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen font-sans text-white bg-black">
@@ -54,50 +74,121 @@ const AnalyticsDashboard = () => {
           </div>
         </header>
 
-        {/* Overview Cards */}
-        <div className="mb-8">
-          <AnalyticsOverview timeRange={timeRange} />
-        </div>
-
-        {/* Tabs */}
-        <div className="rounded-xl border border-white/10 bg-black p-1 mb-8">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 sm:flex-none px-8 py-3 text-sm md:text-base font-sans font-bold rounded-lg transition-colors duration-150 whitespace-nowrap
-                  ${activeTab === tab.id 
-                    ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
-                    : 'text-white/40 hover:text-white hover:bg-white/5'
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {loading ? (
+          <div className="py-32 text-center opacity-40">
+            <div className="w-12 h-12 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin mx-auto mb-6" />
+            <p className="text-xs font-black uppercase tracking-[0.4em]">Aggregating Intelligence...</p>
           </div>
-        </div>
-
-        {/* Content Sections */}
-        <div className="mt-8">
-          {activeTab === 'overview' && (
-            <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <ThreatTrends timeRange={timeRange} />
+        ) : (
+          <>
+            {/* Overview Cards */}
+            <div className="mb-8">
+              <AnalyticsOverview stats={data?.stats} />
             </div>
-          )}
 
-          {activeTab === 'threats' && (
-            <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <ThreatTrends timeRange={timeRange} detailed />
+            {/* Tabs */}
+            <div className="rounded-xl border border-white/10 bg-black p-1 mb-8">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 sm:flex-none px-8 py-3 text-sm md:text-base font-sans font-bold rounded-lg transition-colors duration-150 whitespace-nowrap
+                      ${activeTab === tab.id 
+                        ? 'bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30' 
+                        : 'text-white/40 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {activeTab === 'performance' && (
-            <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <PerformanceMetrics timeRange={timeRange} />
+            {/* Content Sections */}
+            <div className="mt-8">
+              {activeTab === 'overview' && (
+                <div className="rounded-2xl border border-white/10 bg-black p-6">
+                  <ThreatTrends 
+                    trends={data?.trends} 
+                    threatTypes={data?.threatTypes}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'threats' && (
+                <div className="rounded-2xl border border-white/10 bg-black p-6">
+                  <ThreatTrends 
+                    trends={data?.trends} 
+                    threatTypes={data?.threatTypes}
+                    topIOCs={data?.topIOCs}
+                    detailed 
+                  />
+                </div>
+              )}
+
+              {activeTab === 'investigators' && (
+                <div className="rounded-2xl border border-white/10 bg-black p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-white font-sans text-sm font-bold">Top Investigators</h3>
+                      <p className="text-white/30 text-[10px] mt-0.5">Most active operators in your network</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {data?.topInvestigators?.map((user, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 flex items-center justify-center">
+                              <span className="text-[#00E5FF] font-bold text-xs">{user.name.slice(0, 2).toUpperCase()}</span>
+                            </div>
+                            <div>
+                              <div className="text-white text-xs font-bold uppercase tracking-tight">{user.name}</div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-white/30 text-[9px] uppercase font-semibold">{user.scans} Scans</span>
+                                <span className="text-[#f87171] text-[9px] uppercase font-semibold">{user.threats} Threats</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-[#00E5FF] font-black text-sm">#{i + 1}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5">
+                      <h3 className="text-white font-sans text-sm font-bold mb-4">Activity Heatmap (Last 24h)</h3>
+                      <div className="flex items-end gap-1 h-24">
+                        {Array.from({ length: 24 }).map((_, hour) => {
+                          const hourData = data?.heatmap?.find(h => h.hour === hour);
+                          const count = hourData ? hourData.count : 0;
+                          const height = Math.min(100, (count / (Math.max(...(data?.heatmap?.map(h => h.count) || [1]))) * 100));
+                          return (
+                            <div key={hour} className="flex-1 group relative">
+                              <div 
+                                className="w-full bg-[#00E5FF]/20 group-hover:bg-[#00E5FF]/40 transition-all duration-300 rounded-t-sm"
+                                style={{ height: `${Math.max(4, height)}%` }}
+                              />
+                              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] text-white/20 font-bold hidden group-hover:block whitespace-nowrap">
+                                {hour}:00 ({count})
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-2 text-[8px] text-white/20 font-black uppercase tracking-[0.2em]">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>23:59</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

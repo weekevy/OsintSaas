@@ -11,13 +11,6 @@ const CustomReports = () => {
       metrics: ['threats', 'iocs', 'severity'],
       lastRun: '2024-03-18',
       schedule: 'Every Monday'
-    },
-    {
-      id: 2,
-      name: 'API Performance Report',
-      metrics: ['response_time', 'error_rate', 'requests'],
-      lastRun: '2024-03-19',
-      schedule: 'Daily'
     }
   ]);
 
@@ -56,16 +49,6 @@ const CustomReports = () => {
         { id: 'severity', name: 'Threat Severity Distribution', icon: '📊' },
         { id: 'types', name: 'Threat Types', icon: '🔬' },
         { id: 'sources', name: 'Threat Sources', icon: '🌐' }
-      ]
-    },
-    {
-      category: 'Performance',
-      items: [
-        { id: 'response_time', name: 'API Response Time', icon: '⚡' },
-        { id: 'error_rate', name: 'Error Rate', icon: '⚠️' },
-        { id: 'requests', name: 'Request Volume', icon: '📈' },
-        { id: 'uptime', name: 'System Uptime', icon: '✅' },
-        { id: 'queue', name: 'Queue Length', icon: '⏳' }
       ]
     },
     {

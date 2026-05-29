@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/database/config';
 import { verifyToken } from '@/lib/jwt';
+import { addReportToQueue } from '@/lib/queue';
 
 export async function GET(request) {
   try {
@@ -55,28 +56,46 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { projectId, name, template, classification, sections, investigatorNotes } = body;
+    const { scanId, name, template, theme, classification, sections, investigatorNotes } = body;
 
-    if (!projectId || !name) {
-      return NextResponse.json({ error: 'Project ID and Name are required' }, { status: 400 });
+    if (!scanId || !name) {
+      return NextResponse.json({ error: 'Scan ID and Name are required' }, { status: 400 });
     }
 
-    // 1. Create report record
+    // Fetch projectId from scanId
+    const [scanRows] = await db.execute(
+      'SELECT t.project_id FROM scans s JOIN targets t ON s.target_id = t.id WHERE s.id = ?',
+      [scanId]
+    );
+    
+    const projectId = scanRows[0]?.project_id || null;
+
+    // 1. Create report record in 'generating' status
     const [result] = await db.execute(
-      `INSERT INTO reports (user_id, project_id, title, type, template, classification, status, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, 'ready', NOW())`,
-      [decoded.id, projectId, name, template || 'technical', template, classification || 'confidential']
+      `INSERT INTO reports (user_id, project_id, scan_id, title, type, template, classification, status, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'generating', NOW())`,
+      [decoded.id, projectId, scanId, name, template || 'technical', theme || 'noir', classification || 'confidential']
     );
 
     const reportId = result.insertId;
 
-    // 2. Fetch all intelligence for this project to "bake" into the report
-    // (In a real system, we might generate a PDF here, but for now we just link the data)
+    // 2. Add to Queue for professional synthesis
+    await addReportToQueue({
+      reportId,
+      scanId,
+      userId: decoded.id,
+      name,
+      template,
+      theme,
+      classification,
+      sections,
+      investigatorNotes
+    });
     
     const response = NextResponse.json({
       success: true,
       reportId: reportId,
-      message: 'Intelligence dossier synthesized successfully'
+      message: 'Intelligence dossier synthesis initialized'
     });
 
     response.headers.set('Access-Control-Allow-Origin', origin);

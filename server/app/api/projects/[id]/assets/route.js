@@ -29,11 +29,12 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
     }
 
-    // Fetch targets as assets
+    // Fetch targets as assets (grouped by value to avoid duplicates from multiple scans)
     const [targets] = await db.execute(
-      `SELECT id, type as asset_type, value as url, label as title, created_at, status
+      `SELECT MIN(id) as id, type as asset_type, value as url, MIN(label) as title, MIN(created_at) as created_at, status
        FROM targets 
        WHERE project_id = ?
+       GROUP BY value, type
        ORDER BY created_at DESC`,
       [projectId]
     );
@@ -58,11 +59,21 @@ export async function GET(request, { params }) {
       [projectId]
     );
 
+    // Fetch reports for this project
+    const [reports] = await db.execute(
+      `SELECT id, title, type, status, file_path, created_at 
+       FROM reports 
+       WHERE project_id = ? AND status = 'ready'
+       ORDER BY created_at DESC`,
+      [projectId]
+    );
+
     const response = NextResponse.json({
       success: true,
       assets: targets,
       findings: findings,
-      scans: scans
+      scans: scans,
+      reports: reports
     });
 
     response.headers.set('Access-Control-Allow-Origin', origin);

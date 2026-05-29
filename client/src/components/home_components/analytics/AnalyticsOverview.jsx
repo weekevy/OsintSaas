@@ -1,9 +1,9 @@
-const AnalyticsOverview = ({ timeRange }) => {
-  const stats = [
+const AnalyticsOverview = ({ stats }) => {
+  const displayStats = [
     {
       label: 'Total Scans',
-      value: '1,234,567',
-      trend: '+12.3%',
+      value: stats?.totalScans?.toLocaleString() || '0',
+      trend: '+0.0%',
       trendUp: true,
       icon: (
         <svg className="w-5 h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -14,9 +14,9 @@ const AnalyticsOverview = ({ timeRange }) => {
     },
     {
       label: 'Threats Detected',
-      value: '89,234',
-      trend: '-5.2%',
-      trendUp: false,
+      value: stats?.threatsDetected?.toLocaleString() || '0',
+      trend: '+0.0%',
+      trendUp: true,
       icon: (
         <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -26,8 +26,8 @@ const AnalyticsOverview = ({ timeRange }) => {
     },
     {
       label: 'Avg Response Time',
-      value: '187ms',
-      trend: '-8.1%',
+      value: stats?.avgResponseTime || '---',
+      trend: '-0.0%',
       trendUp: true,
       icon: (
         <svg className="w-5 h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -38,8 +38,8 @@ const AnalyticsOverview = ({ timeRange }) => {
     },
     {
       label: 'Active Users',
-      value: '3,456',
-      trend: '+18.7%',
+      value: stats?.activeUsers?.toLocaleString() || '1',
+      trend: '+0.0%',
       trendUp: true,
       icon: (
         <svg className="w-5 h-5 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
@@ -52,7 +52,7 @@ const AnalyticsOverview = ({ timeRange }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-sans">
-      {stats.map((stat, idx) => (
+      {displayStats.map((stat, idx) => (
         <div
           key={idx}
           className="rounded-xl border border-white/10 bg-black p-5 transition-colors duration-150"

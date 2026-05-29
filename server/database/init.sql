@@ -100,10 +100,12 @@ CREATE TABLE IF NOT EXISTS reports (
     title VARCHAR(255) NOT NULL,
     type ENUM('technical', 'executive', 'squad') DEFAULT 'technical',
     status ENUM('generating', 'ready', 'failed') DEFAULT 'generating',
+    progress INT DEFAULT 0,
     file_path VARCHAR(500),
     template VARCHAR(100),
     classification VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
@@ -440,7 +442,26 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 22. TEAM INVITATIONS TABLE
+-- 23. API TOKENS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS api_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    permissions JSON,
+    status ENUM('active', 'revoked', 'expired') DEFAULT 'active',
+    last_used_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_token (token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 24. RECENT ACTIVITY LOGS VIEW (Optional)
 -- ============================================
 CREATE TABLE IF NOT EXISTS team_invitations (
     id INT AUTO_INCREMENT PRIMARY KEY,

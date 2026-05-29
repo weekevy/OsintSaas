@@ -9,6 +9,8 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
   const [scans, setScans] = useState([]);
   const [loadingScans, setLoadingScans] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState(0);
+  const [genStatus, setGenStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   const fetchTimeoutRef = useRef(null);
@@ -110,8 +112,17 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
       loadingRef.current = false;
     };
 
+    const handleReportProgress = (data) => {
+      setGenProgress(data.progress);
+      setGenStatus(data.status);
+    };
+
     socket.on('completed_scans_list', handleScans);
-    return () => socket.off('completed_scans_list', handleScans);
+    socket.on('report_progress', handleReportProgress);
+    return () => {
+      socket.off('completed_scans_list', handleScans);
+      socket.off('report_progress', handleReportProgress);
+    };
   }, [socket]);
 
   const handleGenerate = async () => {
@@ -120,15 +131,63 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
     try {
       const response = await api.post('/api/reports', formData);
       if (response.data.success) {
-        if (formData.format === 'pdf') {
-          window.print();
-        }
+        const reportId = response.data.reportId;
+        
+        // Notify parent immediately so it can show the "generating" report card
         if (onReportGenerated) onReportGenerated();
-        handleClose();
+        
+        // We'll listen for the 'report_ready' socket event for the auto-download
+        if (socket) {
+          const handleReportReady = (data) => {
+            if (data.reportId === reportId) {
+              setGenerating(false);
+              // Trigger download
+              const link = document.createElement('a');
+              link.href = data.filePath;
+              link.setAttribute('download', `${formData.name}.pdf`);
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              
+              if (onReportGenerated) onReportGenerated();
+              handleClose();
+              socket.off('report_ready', handleReportReady);
+            }
+          };
+          socket.on('report_ready', handleReportReady);
+          
+          // Fallback if socket fails: check every 3 seconds for 30 seconds
+          let checks = 0;
+          const checkInterval = setInterval(async () => {
+            checks++;
+            try {
+              const checkRes = await api.get('/api/reports');
+              const report = checkRes.data.reports.find(r => r.id === reportId);
+              if (report && report.status === 'ready') {
+                clearInterval(checkInterval);
+                if (generating) { // Only if socket didn't already handle it
+                  setGenerating(false);
+                  const link = document.createElement('a');
+                  link.href = `${api.defaults.baseURL}${report.file_path}`;
+                  link.setAttribute('download', `${report.title}.pdf`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  if (onReportGenerated) onReportGenerated();
+                  handleClose();
+                }
+              }
+            } catch (e) {}
+            if (checks > 10) clearInterval(checkInterval);
+          }, 3000);
+        } else {
+          // If no socket, just close and let user find it in reports list
+          if (onReportGenerated) onReportGenerated();
+          handleClose();
+        }
       }
     } catch (err) {
       console.error(err);
-    } finally {
       setGenerating(false);
     }
   };
@@ -136,6 +195,9 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
   const handleClose = () => {
     setStep(1);
     setSearchTerm('');
+    setGenerating(false);
+    setGenProgress(0);
+    setGenStatus('');
     setFormData({
       scanId: '',
       name: '',
@@ -525,23 +587,39 @@ const ReportGenerator = ({ isOpen, onClose, onReportGenerated }) => {
                   )}
                </div>
 
-               <button
-                  type="button"
-                  onClick={step === 3 ? handleGenerate : nextStep}
-                  disabled={!isStepValid() || generating}
-                  className={`flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all duration-500 transform-gpu active:scale-[0.97] ${
-                    isStepValid() 
-                      ? 'bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:brightness-110' 
-                      : 'bg-white/5 border border-white/10 text-white/20 grayscale cursor-not-allowed opacity-30'
-                  }`}
-               >
-                  <span>{generating ? 'synthesizing...' : (step === 3 ? "EXECUTE SYNTHESIS" : "NEXT PROTOCOL")}</span>
-                  {!generating && (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  )}
-               </button>
+               <div className="flex flex-col gap-2 flex-1">
+                 {generating && (
+                   <div className="w-full space-y-2 animate-in fade-in duration-500">
+                     <div className="flex justify-between items-center px-1">
+                       <span className="text-[9px] font-black text-[#00E5FF] uppercase tracking-widest">{genStatus || 'Initializing Synthesis...'}</span>
+                       <span className="text-[9px] font-black text-[#00E5FF]">{genProgress}%</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                       <div 
+                         className="h-full bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+                         style={{ width: `${genProgress}%` }}
+                       />
+                     </div>
+                   </div>
+                 )}
+                 <button
+                    type="button"
+                    onClick={step === 3 ? handleGenerate : nextStep}
+                    disabled={!isStepValid() || generating}
+                    className={`flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all duration-500 transform-gpu active:scale-[0.97] w-full ${
+                      isStepValid() 
+                        ? 'bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:brightness-110' 
+                        : 'bg-white/5 border border-white/10 text-white/20 grayscale cursor-not-allowed opacity-30'
+                    }`}
+                 >
+                    <span>{generating ? 'synthesizing...' : (step === 3 ? "EXECUTE SYNTHESIS" : "NEXT PROTOCOL")}</span>
+                    {!generating && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    )}
+                 </button>
+               </div>
             </div>
           </div>
 

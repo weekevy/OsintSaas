@@ -13,6 +13,9 @@ export const connection = new IORedis({
 export const scanQueue = new Queue('scan-queue', { connection });
 export const scanQueueEvents = new QueueEvents('scan-queue', { connection });
 
+export const reportQueue = new Queue('report-queue', { connection });
+export const reportQueueEvents = new QueueEvents('report-queue', { connection });
+
 /**
  * Adds a new scan job to the BullMQ queue.
  * @param {Object} data - The scan job data.
@@ -28,6 +31,18 @@ export const addScanToQueue = async (data) => {
       type: 'exponential',
       delay: 5000,
     },
+    removeOnComplete: true,
+    removeOnFail: false,
+  });
+};
+
+/**
+ * Adds a new report synthesis job to the BullMQ queue.
+ * @param {Object} data - The report job data.
+ */
+export const addReportToQueue = async (data) => {
+  return await reportQueue.add('report-synthesis', data, {
+    attempts: 2,
     removeOnComplete: true,
     removeOnFail: false,
   });

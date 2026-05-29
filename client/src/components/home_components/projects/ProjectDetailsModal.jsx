@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
   const modalRef = useRef(null);
-  const [data, setData] = useState({ assets: [], findings: [], scans: [] });
+  const [data, setData] = useState({ assets: [], findings: [], scans: [], reports: [] });
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveTab] = useState('overview');
 
@@ -43,6 +43,14 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
 
   if (!isOpen || !project) return null;
 
+  // Determine the primary display name (Resilient to 'Unknown' or generic project names)
+  const firstAsset = data.assets?.[0];
+  const firstAssetTitle = (firstAsset?.title && firstAsset.title !== 'Unknown' && !firstAsset.title.includes('Investigation')) ? firstAsset.title : null;
+  const isGenericProject = project.name === 'Default Project' || project.name?.includes('Unknown') || project.name?.includes('Investigation');
+  const validProjectName = !isGenericProject ? project.name : null;
+  
+  const displayName = firstAssetTitle || validProjectName || firstAsset?.url || 'Intelligence Dossier';
+
   const getSeverityColor = (sev) => {
     switch(sev?.toLowerCase()) {
       case 'critical': return 'text-red-500 bg-red-500/10 border-red-500/20';
@@ -53,38 +61,57 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div 
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-fade-in"
+      onClick={onClose}
+    >
       <div
         ref={modalRef}
-        className="relative w-full max-w-[90%] lg:max-w-[85%] xl:max-w-[80%] h-[90vh] bg-[#0A0C10] rounded-[40px] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-[90%] lg:max-w-[85%] xl:max-w-[80%] h-[90vh] bg-[#0a0a0a] rounded-[40px] border border-white/10 shadow-[0_0_80px_rgba(0,229,255,0.08)] overflow-hidden flex flex-col animate-slide-up"
       >
         {/* Intelligence Header */}
-        <div className="relative p-8 lg:p-10 border-b border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent">
+        <div className="relative p-8 lg:p-10 border-b border-white/5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-6">
               <div className="relative group">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-3xl bg-gradient-to-br from-[#00E5FF]/20 to-[#2DD4BF]/20 flex items-center justify-center border border-[#00E5FF]/30 shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-3xl bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(0,229,255,0.2)]">
                   <svg className="w-8 h-8 lg:w-10 lg:h-10 text-[#00E5FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.03 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <div className="absolute -inset-2 bg-[#00E5FF]/10 rounded-[36px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
               
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl lg:text-4xl font-black text-white tracking-tighter uppercase">{project.name}</h2>
-                  <span className="px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-[10px] font-black tracking-widest rounded-full uppercase">Verified Briefing</span>
+                  <h2 className="text-2xl lg:text-4xl font-bold text-white tracking-tight uppercase">{displayName}</h2>
+                  <span className="px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-[10px] font-bold tracking-widest rounded-full uppercase">Verified Briefing</span>
                 </div>
                 <p className="text-white/40 text-xs lg:text-sm font-medium max-w-2xl line-clamp-1">{project.description || 'Confidential investigation data.'}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col items-end mr-4">
-                <span className="text-[10px] font-bold text-white/20 tracking-widest uppercase">Classification</span>
-                <span className="text-xs font-black text-red-500 tracking-wider">TOP SECRET // LEVEL 5</span>
-              </div>
+              {data.reports && data.reports.length > 0 ? (
+                <a
+                  href={data.reports[0].file_path}
+                  download
+                  className="px-6 py-3 bg-gradient-to-r from-[#00E5FF] to-[#2DD4BF] text-black rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-90 transition-all shadow-[0_0_30px_rgba(0,229,255,0.2)] active:scale-95 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Dossier
+                </a>
+              ) : (
+                <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-white/20 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 cursor-default">
+                   <svg className="w-4 h-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  No Report Yet
+                </div>
+              )}
+
               <button
                 onClick={onClose}
                 className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-95"
@@ -98,14 +125,14 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
 
           {/* Tab Navigation */}
           <div className="flex items-center gap-2 mt-10">
-            {['overview', 'findings', 'assets', 'metadata'].map((tab) => (
+            {['overview', 'findings', 'reports', 'metadata'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 border ${
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 border ${
                   activeView === tab 
                     ? 'bg-[#00E5FF] text-black border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.2)]' 
-                    : 'text-white/30 border-transparent hover:text-white/60 hover:bg-white/5'
+                    : 'text-white/20 border-transparent hover:text-white/60 hover:bg-white/5'
                 }`}
               >
                 {tab}
@@ -115,7 +142,7 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
         </div>
 
         {/* Intelligence Content */}
-        <div className="flex-1 overflow-y-auto p-8 lg:p-10 no-scrollbar bg-black/20">
+        <div className="flex-1 overflow-y-auto p-8 lg:p-10 no-scrollbar">
           {loading ? (
             <div className="h-full flex flex-col items-center justify-center gap-6 opacity-40">
               <div className="w-16 h-16 border-2 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin" />
@@ -129,11 +156,10 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Summary Cards */}
                   <div className="lg:col-span-2 space-y-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
                         { label: 'Scans Performed', val: data.scans.length, color: '#00E5FF' },
-                        { label: 'Threats Detected', val: data.findings.length, color: '#F43F5E' },
-                        { label: 'Assets Synced', val: data.assets.length, color: '#2DD4BF' }
+                        { label: 'Threats Detected', val: data.findings.length, color: '#F43F5E' }
                       ].map((stat, i) => (
                         <div key={i} className="p-6 rounded-[32px] bg-white/[0.02] border border-white/5 group hover:border-white/10 transition-all">
                           <span className="block text-[10px] font-black text-white/20 tracking-widest uppercase mb-2">{stat.label}</span>
@@ -237,31 +263,59 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
                 </div>
               )}
 
-              {/* VIEW: ASSETS */}
-              {activeView === 'assets' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {data.assets.map((asset, idx) => (
-                    <a
-                      key={asset.id}
-                      href={asset.url.startsWith('http') ? asset.url : `https://${asset.url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-6 rounded-[32px] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-all group animate-slide-up block"
-                      style={{ animationDelay: `${idx * 0.03}s` }}
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-[#00E5FF]/40 transition-colors">
-                        <svg className="w-6 h-6 text-white/20 group-hover:text-[#00E5FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
+              {/* VIEW: REPORTS */}
+              {activeView === 'reports' && (
+                <div className="space-y-8 max-w-5xl mx-auto">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xl font-black text-white uppercase tracking-tighter">Investigation Dossiers</h3>
+                    <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em]">Total Archives: {data.reports?.length || 0}</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {data.reports && data.reports.length > 0 ? (
+                      data.reports.map((report, idx) => (
+                        <div 
+                          key={report.id}
+                          className="group p-6 rounded-[32px] bg-white/[0.02] border border-white/5 hover:border-[#00E5FF]/30 transition-all flex items-center justify-between animate-slide-up"
+                          style={{ animationDelay: `${idx * 0.05}s` }}
+                        >
+                          <div className="flex items-center gap-6">
+                            <div className="w-14 h-14 rounded-2xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center text-[#00E5FF]">
+                              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className="text-base font-black text-white uppercase tracking-tight mb-1 group-hover:text-[#00E5FF] transition-colors">{report.title}</h4>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">{new Date(report.created_at).toLocaleString()}</span>
+                                <div className="w-1 h-1 rounded-full bg-white/10" />
+                                <span className="text-[9px] font-black text-[#2DD4BF] uppercase tracking-widest">{report.type} dossier</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <a 
+                            href={report.file_path}
+                            download
+                            className="px-8 py-3 bg-[#00E5FF]/10 hover:bg-[#00E5FF] text-[#00E5FF] hover:text-black border border-[#00E5FF]/30 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(0,229,255,0.1)] active:scale-95"
+                          >
+                            Download Report
+                          </a>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-24 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-[40px]">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 opacity-20">
+                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-sm font-black text-white/40 uppercase tracking-[0.3em] mb-2">No Reports Generated Yet</h4>
+                        <p className="text-[10px] text-white/20 lowercase tracking-normal">intel dossiers are synthesized upon successful completion of active scan protocols</p>
                       </div>
-                      <h5 className="text-sm font-black text-white mb-1 truncate uppercase tracking-tight">{asset.title}</h5>
-                      <p className="text-[10px] text-white/30 truncate mb-4 font-medium">{asset.url}</p>
-                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                        <span className="text-[9px] font-black text-[#00E5FF]/40 tracking-widest uppercase">{asset.asset_type}</span>
-                        <span className="text-[9px] font-bold text-white/10 uppercase">{new Date(asset.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </a>
-                  ))}
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -294,30 +348,16 @@ const ProjectDetailsModal = ({ isOpen, onClose, project }) => {
         </div>
 
         {/* Intelligence Footer */}
-        <div className="p-6 lg:px-10 lg:py-6 border-t border-white/5 bg-[#0D0F14] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 lg:px-10 lg:py-6 border-t border-white/5 bg-[#0a0a0a] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-white/20">
             <div className="flex -space-x-2">
               {[1, 2, 3].map(i => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0D0F14] bg-white/5 flex items-center justify-center">
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0a0a0a] bg-white/5 flex items-center justify-center">
                   <div className="w-1 h-1 rounded-full bg-current" />
                 </div>
               ))}
             </div>
-            <span className="text-[10px] font-black tracking-widest uppercase italic">Secure Briefing Mode Active</span>
-          </div>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-             <button
-              onClick={onClose}
-              className="flex-1 sm:flex-none px-10 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white/60 text-[10px] font-black tracking-[0.2em] uppercase transition-all"
-            >
-              Terminate Session
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="flex-1 sm:flex-none px-10 py-3.5 bg-[#00E5FF] text-black rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase hover:brightness-110 transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)]"
-            >
-              Export Intel
-            </button>
+            <span className="text-[10px] font-bold tracking-widest uppercase italic">Secure Briefing Mode Active</span>
           </div>
         </div>
       </div>

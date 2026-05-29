@@ -1,8 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../../services/api';
+import { useSocket } from '../../../context/SocketContext';
 
-const ReportCard = ({ report, onDelete }) => {
+const ReportCard = ({ report: initialReport, onDelete, onProgressClick }) => {
+  const [report, setReport] = useState(initialReport);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    setReport(initialReport);
+  }, [initialReport]);
+
+  useEffect(() => {
+    if (!socket || report.status !== 'generating') return;
+
+    const handleProgress = (data) => {
+      if (data.reportId === report.id) {
+        setReport(prev => ({ ...prev, progress: data.progress }));
+      }
+    };
+
+    const handleReady = (data) => {
+      if (data.reportId === report.id) {
+        setReport(prev => ({ ...prev, status: 'ready', progress: 100, file_path: data.filePath }));
+      }
+    };
+
+    socket.on('report_progress', handleProgress);
+    socket.on('report_ready', handleReady);
+
+    return () => {
+      socket.off('report_progress', handleProgress);
+      socket.off('report_ready', handleReady);
+    };
+  }, [socket, report.id, report.status]);
 
   const handleDelete = async (e) => {
     e.stopPropagation();
@@ -63,7 +94,10 @@ const ReportCard = ({ report, onDelete }) => {
   };
 
   return (
-    <div className="group relative p-6 rounded-[32px] bg-white/[0.02] border border-white/5 hover:border-[#00E5FF]/20 transition-all duration-500 animate-slide-up font-sans">
+    <div 
+      onClick={() => { if (report.status === 'generating' && onProgressClick) onProgressClick(report); }}
+      className={`group relative p-6 rounded-[32px] bg-white/[0.02] border border-white/5 hover:border-[#00E5FF]/20 transition-all duration-500 animate-slide-up font-sans ${report.status === 'generating' ? 'cursor-pointer' : ''}`}
+    >
       {/* Glow Effect */}
       <div className="absolute inset-0 bg-[#00E5FF]/5 blur-2xl rounded-[32px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       
@@ -88,6 +122,21 @@ const ReportCard = ({ report, onDelete }) => {
           </span>
         </div>
 
+        {report.status === 'generating' && (
+          <div className="mb-6 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[8px] font-black text-[#fbbf24] uppercase tracking-widest">Synthesizing Dossier...</span>
+              <span className="text-[8px] font-black text-[#fbbf24]">{report.progress || 0}%</span>
+            </div>
+            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-[#fbbf24] transition-all duration-1000 ease-out shadow-[0_0_8px_#fbbf24]"
+                style={{ width: `${report.progress || 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-6 border-t border-white/5">
           <div className="flex flex-col">
             <span className="text-[8px] font-bold text-white/10 uppercase tracking-widest">Generated on</span>
@@ -95,11 +144,20 @@ const ReportCard = ({ report, onDelete }) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <button className="w-9 h-9 rounded-xl flex items-center justify-center text-white/20 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10 border border-white/5 hover:border-[#00E5FF]/30 transition-all active:scale-90">
+            <a 
+              href={report.file_path || '#'} 
+              download={`${report.title}.pdf`}
+              onClick={(e) => { if (!report.file_path) e.preventDefault(); }}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 ${
+                report.status === 'ready' 
+                  ? 'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30 hover:brightness-110' 
+                  : 'text-white/10 bg-white/5 border-white/5 cursor-not-allowed opacity-50'
+              }`}
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-            </button>
+            </a>
             <button 
               onClick={handleDelete}
               disabled={isDeleting}
